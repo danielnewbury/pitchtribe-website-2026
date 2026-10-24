@@ -1,0 +1,23 @@
+# Traefik local data & certificates
+traefik/acme.json
+traefik/certs/
+traefik/logs/
+
+# System & Editor files
+.DS_Store
+Thumbs.db
+*.swp
+*.tmp
+*~
+.idea/
+.vscode/
+
+# Environment files with sensitive credentials
+.env
+.env.local
+.env.production
+
+# Node / Build artifacts (if adding JS builds later)
+node_modules/
+dist/
+.cache/
