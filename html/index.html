@@ -1,23 +1,325 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>PitchTribe | Connected Football Media & Display Systems</title>
-    <script src="https://cdn.tailwindcss.com"></script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PitchTribe — Connected Football Media &amp; Display Systems</title>
+  <meta name="description" content="PitchTribe connects every screen in the stadium. Live matchday media, fan engagement and sponsor delivery on one edge-delivered platform built for 2027–2040.">
+  <meta name="theme-color" content="#050a12">
+  <link rel="canonical" href="https://pitchtribe.media/">
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="PitchTribe — Connected Football Media">
+  <meta property="og:description" content="Every screen in the stadium. One connected voice. Live matchday media, fan engagement and sponsor delivery on Cloudflare's global edge.">
+  <meta property="og:url" content="https://pitchtribe.media/">
+  <meta name="twitter:card" content="summary_large_image">
+  <link rel="icon" href="/assets/favicon.svg" type="image/svg+xml">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/assets/styles.css">
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Organization",
+    "name": "PitchTribe",
+    "url": "https://pitchtribe.media",
+    "description": "Connected football media and display systems for clubs, venues and partners.",
+    "email": "danielnewbury.dev@protonmail.com"
+  }
+  </script>
 </head>
-<body class="bg-slate-950 text-white font-sans min-h-screen flex items-center justify-center">
-    <div class="text-center p-8 bg-slate-900 rounded-2xl border border-emerald-500/30 max-w-lg shadow-2xl">
-        <div class="inline-block px-3 py-1 bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 rounded-full text-xs font-mono font-bold uppercase tracking-wider mb-4">
-            Node Active | Development
-        </div>
-        <h1 class="text-4xl font-black tracking-tight mb-2">PITCH<span class="text-emerald-400">TRIBE</span></h1>
-        <p class="text-slate-400 text-sm mb-6">Connected Football Media & Display Networks (2027–2040)</p>
-        <div class="p-4 bg-slate-950 rounded-lg border border-slate-800 text-left font-mono text-xs text-slate-300">
-            <div><span class="text-emerald-400">STATUS:</span> ONLINE</div>
-            <div><span class="text-emerald-400">DOMAIN:</span> pitchtribe.media / pitchtribe.co.uk</div>
-            <div><span class="text-emerald-400">PROXY:</span> Traefik v3 Container</div>
-        </div>
+<body>
+  <a class="skip-link" href="#main">Skip to content</a>
+
+  <header class="site-header">
+    <div class="container header-inner">
+      <a class="brand" href="/" aria-label="PitchTribe home">
+        <span class="brand-mark" aria-hidden="true">
+          <svg viewBox="0 0 32 32" role="img" focusable="false">
+            <path d="M16 2 29 9v14L16 30 3 23V9z" fill="none" stroke="currentColor" stroke-width="1.6"/>
+            <path d="M16 9.5 22 13v6l-6 3.5L10 19v-6z" fill="currentColor" opacity=".9"/>
+          </svg>
+        </span>
+        <span class="brand-word">PITCH<span>TRIBE</span></span>
+      </a>
+
+      <button class="nav-toggle" type="button" aria-expanded="false" aria-controls="primary-nav">
+        <span class="nav-toggle-box" aria-hidden="true"><span></span><span></span></span>
+        <span class="sr-only">Toggle navigation</span>
+      </button>
+
+      <nav class="site-nav" id="primary-nav" aria-label="Primary">
+        <a href="#platform">Platform</a>
+        <a href="#solutions">Solutions</a>
+        <a href="#network">Network</a>
+        <a href="#contact">Contact</a>
+        <a class="btn btn-small btn-primary" href="#contact">Request access</a>
+      </nav>
     </div>
+  </header>
+
+  <main id="main">
+    <section class="hero">
+      <div class="hero-glow" aria-hidden="true"></div>
+      <div class="container hero-inner">
+        <div class="hero-copy">
+          <p class="eyebrow"><span class="pulse" aria-hidden="true"></span> Connected football media · 2027–2040</p>
+          <h1>Every screen in the stadium.<br><em>One connected voice.</em></h1>
+          <p class="lede">PitchTribe brings live matchday media, fan engagement and sponsor delivery together across every display in the ground — delivered from Cloudflare's global edge.</p>
+          <div class="hero-actions">
+            <a class="btn btn-primary" href="#contact">Request early access</a>
+            <a class="btn btn-ghost" href="#platform">Explore the platform</a>
+          </div>
+          <dl class="hero-facts">
+            <div><dt>Edge-first</dt><dd>Global delivery</dd></div>
+            <div><dt>Matchday-ready</dt><dd>Real-time control</dd></div>
+            <div><dt>Open by design</dt><dd>API &amp; integrations</dd></div>
+          </dl>
+        </div>
+
+        <div class="hero-visual" aria-hidden="true">
+          <div class="screen">
+            <div class="screen-bar">
+              <span class="screen-dot"></span>
+              <span class="screen-title">MATCHDAY CONTROL</span>
+              <span class="screen-live">LIVE</span>
+            </div>
+            <div class="screen-body">
+              <div class="screen-score">
+                <span class="team">PITCH</span>
+                <span class="score">2–1</span>
+                <span class="team">TRIBE</span>
+              </div>
+              <div class="screen-meta">
+                <span>74:12</span>
+                <span>SECOND HALF</span>
+                <span>ATT 42,118</span>
+              </div>
+              <div class="screen-grid">
+                <div class="tile tile-a"><span>North stand</span><b>ONLINE</b></div>
+                <div class="tile tile-b"><span>Concourse</span><b>ONLINE</b></div>
+                <div class="tile tile-c"><span>Hospitality</span><b>ONLINE</b></div>
+                <div class="tile tile-d"><span>Big screen</span><b>LIVE</b></div>
+              </div>
+              <div class="screen-footer">
+                <span class="bars"><i></i><i></i><i></i><i></i><i></i></span>
+                <span>128 displays synced</span>
+              </div>
+            </div>
+          </div>
+          <div class="orbit orbit-one"></div>
+          <div class="orbit orbit-two"></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="marquee" aria-label="Platform capabilities">
+      <div class="marquee-track">
+        <span>Live matchday media</span><span aria-hidden="true">◆</span>
+        <span>Fan engagement</span><span aria-hidden="true">◆</span>
+        <span>Sponsor delivery</span><span aria-hidden="true">◆</span>
+        <span>Display control</span><span aria-hidden="true">◆</span>
+        <span>Real-time analytics</span><span aria-hidden="true">◆</span>
+        <span>Edge delivery</span><span aria-hidden="true">◆</span>
+        <span>Live matchday media</span><span aria-hidden="true">◆</span>
+        <span>Fan engagement</span><span aria-hidden="true">◆</span>
+        <span>Sponsor delivery</span><span aria-hidden="true">◆</span>
+        <span>Display control</span><span aria-hidden="true">◆</span>
+        <span>Real-time analytics</span><span aria-hidden="true">◆</span>
+        <span>Edge delivery</span><span aria-hidden="true">◆</span>
+      </div>
+    </section>
+
+    <section class="section" id="platform">
+      <div class="container">
+        <header class="section-head">
+          <p class="eyebrow">The platform</p>
+          <h2>One system for the whole matchday</h2>
+          <p class="section-lede">From the big screen to the concourse, PitchTribe keeps every display on message, on time and connected to the live game.</p>
+        </header>
+
+        <div class="cards">
+          <article class="card">
+            <span class="card-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24"><rect x="2.5" y="4" width="19" height="13" rx="2" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M8 21h8M12 17v4" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><path d="M6 13.5 9.5 10l2.5 2.5L18 7" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </span>
+            <h3>Matchday Display OS</h3>
+            <p>Control every screen from one place. Push line-ups, scores, safety messages and sponsor rotations to the right display at the right second.</p>
+            <ul class="card-list">
+              <li>Screen groups and zones</li>
+              <li>Scheduled and live content</li>
+              <li>Fail-safe playback</li>
+            </ul>
+          </article>
+
+          <article class="card card-featured">
+            <span class="card-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M12 2.5v3M12 18.5v3M2.5 12h3M18.5 12h3M5.2 5.2l2.1 2.1M16.7 16.7l2.1 2.1M18.8 5.2l-2.1 2.1M7.3 16.7l-2.1 2.1" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+            </span>
+            <h3>Fan Media Network</h3>
+            <p>Turn passive screens into a two-way channel. Live stats, club storytelling and matchday experiences that fans actually look at.</p>
+            <ul class="card-list">
+              <li>Live scores and stats</li>
+              <li>Club and competition feeds</li>
+              <li>Mobile-connected experiences</li>
+            </ul>
+          </article>
+
+          <article class="card">
+            <span class="card-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24"><path d="M4 19.5V10l8-6 8 6v9.5" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M9 19.5V14h6v5.5" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/><path d="M2.5 19.5h19" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+            </span>
+            <h3>Brand &amp; Sponsor Delivery</h3>
+            <p>Give partners measurable presence across the ground. Schedule, target and prove delivery with real-time reporting.</p>
+            <ul class="card-list">
+              <li>Campaign scheduling</li>
+              <li>Audience-aware placement</li>
+              <li>Delivery reporting</li>
+            </ul>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section class="section section-split" id="solutions">
+      <div class="container">
+        <header class="section-head">
+          <p class="eyebrow">Solutions</p>
+          <h2>Built for every side of the game</h2>
+          <p class="section-lede">Whether you run the ground, the broadcast or the brand budget, the same connected platform keeps everyone in sync.</p>
+        </header>
+
+        <div class="solutions">
+          <article class="solution">
+            <p class="solution-tag">Clubs &amp; venues</p>
+            <h3>The matchday command centre</h3>
+            <p>Run every display from the press box to the family stand. React to the game as it happens and keep fans informed, entertained and safe.</p>
+            <ul class="check-list">
+              <li>Live score, lineup and VAR messaging</li>
+              <li>Safety and wayfinding across concourses</li>
+              <li>Hospitality and premium screen control</li>
+              <li>Multi-venue and tournament mode</li>
+            </ul>
+          </article>
+
+          <article class="solution solution-alt">
+            <p class="solution-tag">Brands &amp; partners</p>
+            <h3>Presence where the crowd is</h3>
+            <p>Reach fans in the moments that matter. PitchTribe gives partners a programmable surface across the stadium and the club's digital estate.</p>
+            <ul class="check-list">
+              <li>Matchday and season-long campaigns</li>
+              <li>Zone and audience targeting</li>
+              <li>Creative rotation and approvals</li>
+              <li>Delivery evidence for every placement</li>
+            </ul>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="network">
+      <div class="container">
+        <div class="how">
+          <div class="how-copy">
+            <p class="eyebrow">The network</p>
+            <h2>From source to screen in seconds</h2>
+            <p class="section-lede">PitchTribe sits between your content, your screens and the cloud — so a goal, a substitution or a sponsor change reaches every display without a manual scramble.</p>
+            <a class="btn btn-ghost" href="#contact">Talk to us about your ground</a>
+          </div>
+          <ol class="steps">
+            <li>
+              <span class="step-no">01</span>
+              <div><h3>Connect</h3><p>Bring existing displays, media players and feeds onto one managed network.</p></div>
+            </li>
+            <li>
+              <span class="step-no">02</span>
+              <div><h3>Publish</h3><p>Schedule or trigger content from the control room, the club app or an approved partner.</p></div>
+            </li>
+            <li>
+              <span class="step-no">03</span>
+              <div><h3>Prove</h3><p>See what played, where and when — with delivery data you can share with partners.</p></div>
+            </li>
+          </ol>
+        </div>
+      </div>
+    </section>
+
+    <section class="tech-band" aria-label="Technology">
+      <div class="container tech-inner">
+        <div>
+          <p class="eyebrow">Under the hood</p>
+          <h2>Edge delivery, matchday reliability</h2>
+          <p>The site and platform are built to ship from Cloudflare's global network, with security headers, caching and previews handled at the edge.</p>
+        </div>
+        <div class="tech-chips">
+          <span>Cloudflare Pages</span>
+          <span>Global edge</span>
+          <span>HTTPS by default</span>
+          <span>Instant previews</span>
+          <span>Accessible UI</span>
+          <span>API-first</span>
+        </div>
+      </div>
+    </section>
+
+    <section class="section contact" id="contact">
+      <div class="container contact-inner">
+        <div>
+          <p class="eyebrow">Get involved</p>
+          <h2>Put your ground on the network</h2>
+          <p class="section-lede">We're opening PitchTribe to clubs, venues and partners ahead of the 2027 season. Tell us what you're building and we'll show you the platform.</p>
+        </div>
+        <div class="contact-card">
+          <p class="contact-label">Start a conversation</p>
+          <a class="contact-mail" href="mailto:danielnewbury.dev@protonmail.com?subject=PitchTribe%20early%20access">danielnewbury.dev@protonmail.com</a>
+          <div class="contact-actions">
+            <a class="btn btn-primary" href="mailto:danielnewbury.dev@protonmail.com?subject=PitchTribe%20early%20access">Request early access</a>
+            <a class="btn btn-ghost" href="https://pitchtribe.media">pitchtribe.media</a>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="container footer-inner">
+      <div class="footer-brand">
+        <a class="brand" href="/" aria-label="PitchTribe home">
+          <span class="brand-mark" aria-hidden="true">
+            <svg viewBox="0 0 32 32" role="img" focusable="false">
+              <path d="M16 2 29 9v14L16 30 3 23V9z" fill="none" stroke="currentColor" stroke-width="1.6"/>
+              <path d="M16 9.5 22 13v6l-6 3.5L10 19v-6z" fill="currentColor" opacity=".9"/>
+            </svg>
+          </span>
+          <span class="brand-word">PITCH<span>TRIBE</span></span>
+        </a>
+        <p>Connected football media and display systems for 2027–2040.</p>
+      </div>
+      <div class="footer-links">
+        <div>
+          <h4>Platform</h4>
+          <a href="#platform">Overview</a>
+          <a href="#network">The network</a>
+          <a href="#solutions">Solutions</a>
+        </div>
+        <div>
+          <h4>Company</h4>
+          <a href="#contact">Contact</a>
+          <a href="mailto:danielnewbury.dev@protonmail.com">Email</a>
+        </div>
+        <div>
+          <h4>Domains</h4>
+          <a href="https://pitchtribe.media">pitchtribe.media</a>
+          <a href="https://pitchtribe.co.uk">pitchtribe.co.uk</a>
+        </div>
+      </div>
+    </div>
+    <div class="container footer-bottom">
+      <p>© <span data-year>2026</span> PitchTribe. All rights reserved.</p>
+      <p class="footer-status"><span class="pulse" aria-hidden="true"></span> Systems online</p>
+    </div>
+  </footer>
+
+  <script src="/assets/main.js" defer></script>
 </body>
 </html>
