@@ -1,3 +1,4 @@
+# Local preview with nginx. Run `npm run build` first (serves the built dist/).
 services:
   web:
     image: nginx:alpine
@@ -6,4 +7,4 @@ services:
     ports:
       - "8088:80"   # Direct host mapping: http://localhost:8088
     volumes:
-      - ./html:/usr/share/nginx/html:ro
+      - ./dist:/usr/share/nginx/html:ro
