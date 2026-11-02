@@ -1,0 +1,187 @@
+/* PitchTribe — Tailwind v4 entry point.
+   Compiled by `npm run build:css` into dist/assets/app.css. */
+@import "tailwindcss";
+
+/* Scan the static root for class names. */
+@source "../html";
+
+/* ---- Design tokens (dark default, light via OS preference or data-theme) ---- */
+:root {
+  --pt-bg: #060c16;
+  --pt-surface: #0e1e30;
+  --pt-surface-2: #162943;
+  --pt-surface-3: #1e3555;
+  --pt-fg: #e4f0f8;
+  --pt-muted: #7da0b8;
+  --pt-dim: #5f84a3;
+  --pt-accent: #2ce6a8;
+  --pt-amber: #f7c94b;
+  --pt-sky: #58a6ff;
+  --pt-violet: #bc64ff;
+  --pt-line: rgb(100 160 200 / 0.15);
+  --pt-line-hi: rgb(100 160 200 / 0.28);
+  --pt-header: rgb(6 12 22 / 0.88);
+  color-scheme: dark;
+}
+
+@media (prefers-color-scheme: light) {
+  :root:not([data-theme="dark"]) {
+    --pt-bg: #f0f4f8;
+    --pt-surface: #ffffff;
+    --pt-surface-2: #e8f0f7;
+    --pt-surface-3: #d8e6f0;
+    --pt-fg: #0d1f2e;
+    --pt-muted: #3d5a72;
+    --pt-dim: #557790;
+    --pt-accent: #00855f;
+    --pt-amber: #a86600;
+    --pt-sky: #1f6fd1;
+    --pt-violet: #8a3fd1;
+    --pt-line: rgb(0 50 90 / 0.12);
+    --pt-line-hi: rgb(0 50 90 / 0.22);
+    --pt-header: rgb(240 244 248 / 0.88);
+    color-scheme: light;
+  }
+}
+
+:root[data-theme="light"] {
+  --pt-bg: #f0f4f8;
+  --pt-surface: #ffffff;
+  --pt-surface-2: #e8f0f7;
+  --pt-surface-3: #d8e6f0;
+  --pt-fg: #0d1f2e;
+  --pt-muted: #3d5a72;
+  --pt-dim: #557790;
+  --pt-accent: #00855f;
+  --pt-amber: #a86600;
+  --pt-sky: #1f6fd1;
+  --pt-violet: #8a3fd1;
+  --pt-line: rgb(0 50 90 / 0.12);
+  --pt-line-hi: rgb(0 50 90 / 0.22);
+  --pt-header: rgb(240 244 248 / 0.88);
+  color-scheme: light;
+}
+
+@theme inline {
+  --color-bg: var(--pt-bg);
+  --color-surface: var(--pt-surface);
+  --color-surface-2: var(--pt-surface-2);
+  --color-surface-3: var(--pt-surface-3);
+  --color-fg: var(--pt-fg);
+  --color-muted: var(--pt-muted);
+  --color-dim: var(--pt-dim);
+  --color-accent: var(--pt-accent);
+  --color-amber: var(--pt-amber);
+  --color-sky: var(--pt-sky);
+  --color-violet: var(--pt-violet);
+  --color-line: var(--pt-line);
+  --color-line-hi: var(--pt-line-hi);
+  --color-header: var(--pt-header);
+}
+
+@theme {
+  /* Fixed colours used inside the always-dark TV / Pi mockups. */
+  --color-ink: #060c16;
+  --color-screen: #08101c;
+  --color-led: #2ce6a8;
+  --color-gold: #f7c94b;
+  --color-board: #021408;
+
+  --font-head: "Barlow Semi Condensed", ui-sans-serif, system-ui, sans-serif;
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
+
+  --animate-ticker: ticker 50s linear infinite;
+
+  @keyframes ticker {
+    from { transform: translateX(0); }
+    to { transform: translateX(-50%); }
+  }
+}
+
+@layer base {
+  html {
+    scroll-behavior: smooth;
+    scroll-padding-top: 5rem;
+  }
+  body {
+    background-color: var(--pt-bg);
+    color: var(--pt-fg);
+    -webkit-font-smoothing: antialiased;
+  }
+  h1, h2, h3 {
+    font-family: var(--font-head);
+    letter-spacing: -0.015em;
+  }
+  :focus-visible {
+    outline: 2px solid var(--pt-accent);
+    outline-offset: 3px;
+  }
+}
+
+@layer components {
+  .btn {
+    @apply inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-[10px] border-[1.5px] px-6 py-3 text-[0.9375rem] font-semibold transition;
+  }
+  .btn-primary {
+    @apply border-accent bg-accent text-ink hover:-translate-y-px hover:brightness-110;
+  }
+  .btn-ghost {
+    @apply border-line-hi text-fg hover:border-muted hover:bg-surface-2;
+  }
+  .eyebrow {
+    @apply mb-2.5 text-xs font-bold uppercase tracking-[0.11em] text-accent;
+  }
+  .section-title {
+    @apply text-[clamp(1.7rem,4vw,2.75rem)] font-extrabold leading-[1.06] text-balance text-fg;
+  }
+  .check-list li {
+    @apply flex items-start gap-2 text-sm text-muted;
+  }
+  .check-list li::before {
+    content: "✓";
+    @apply shrink-0 font-bold text-accent;
+  }
+
+  /* Display mockup: only the active screen is visible. */
+  .scr { @apply absolute inset-0 hidden flex-col font-head; }
+  .scr.is-active { @apply flex; }
+}
+
+/* State rules live outside @layer so they override utility classes on the element. */
+.scr-tab[aria-selected="true"] {
+  border-color: var(--pt-accent);
+  background-color: color-mix(in oklab, var(--pt-accent) 10%, transparent);
+  color: var(--pt-accent);
+}
+#primary-nav.is-open {
+  display: flex;
+}
+
+/* Ambient background glow */
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background:
+    radial-gradient(ellipse 900px 500px at 82% -5%, rgb(44 230 168 / 0.07), transparent 65%),
+    radial-gradient(ellipse 600px 400px at 5% 18%, rgb(40 100 180 / 0.08), transparent 58%);
+}
+
+/* Scroll reveal (progressive — content is visible without JS). */
+@media (prefers-reduced-motion: no-preference) {
+  .js .reveal {
+    opacity: 0;
+    transform: translateY(18px);
+    transition: opacity 0.5s ease, transform 0.5s ease;
+  }
+  .js .reveal.is-in {
+    opacity: 1;
+    transform: none;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .animate-ticker { animation: none; }
+}

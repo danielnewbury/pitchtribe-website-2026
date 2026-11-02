@@ -1,1101 +1,424 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en-GB">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-  <title>PitchTribe — Club Digital Signage</title>
-  <meta name="description" content="Open-source Raspberry Pi 5 digital signage for sports and social clubs. Noticeboards, fixtures, bar menus, and guest Wi-Fi — managed from your phone.">
-  <meta name="theme-color" content="#060c16">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>PitchTribe — Raspberry Pi 5 Digital Signage for Clubs</title>
+  <meta name="description" content="Open-source Raspberry Pi 5 digital signage for sports and social clubs. Noticeboards, fixtures, bar menus and a guest Wi-Fi portal — managed from your phone, with no monthly fees.">
+  <link rel="canonical" href="https://pitchtribe.media/">
+  <meta name="theme-color" content="#060c16" media="(prefers-color-scheme: dark)">
+  <meta name="theme-color" content="#f0f4f8" media="(prefers-color-scheme: light)">
+  <meta name="color-scheme" content="dark light">
+
+  <!-- Open Graph / social -->
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="PitchTribe">
+  <meta property="og:title" content="PitchTribe — Raspberry Pi 5 Digital Signage for Clubs">
+  <meta property="og:description" content="Turn a £60 Raspberry Pi 5 into your clubhouse noticeboard, fixtures display, bar menu and guest Wi-Fi portal. Open source, no monthly fees.">
+  <meta property="og:url" content="https://pitchtribe.media/">
+  <meta property="og:locale" content="en_GB">
+  <meta name="twitter:card" content="summary">
+
   <link rel="icon" href="/assets/favicon.svg" type="image/svg+xml">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Semi+Condensed:wght@600;700;800&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap">
+  <link rel="stylesheet" href="/assets/app.css">
 
-  <style>
-    /* ============================================================
-       PitchTribe — Open-Source Club Signage
-       Layout: full-width bands · dark-navy · LED-green palette
-       ============================================================ */
+  <!-- Enables progressive scroll-reveal; hash is allow-listed in _headers CSP. -->
+  <script>document.documentElement.classList.add('js')</script>
+  <script src="/assets/main.js" defer></script>
 
-    /* -- Tokens: light values on :root (dark is default) -------- */
-    :root {
-      --bg:           #060c16;
-      --bg-soft:      #0d1a2b;
-      --surface:      #0e1e30;
-      --surface-2:    #162943;
-      --surface-3:    #1e3555;
-      --fg:           #e4f0f8;
-      --fg-muted:     #7da0b8;
-      --fg-dim:       #4d7290;
-      --accent:       #2ce6a8;
-      --accent-bg:    rgba(44,230,168,.10);
-      --accent-line:  rgba(44,230,168,.30);
-      --amber:        #f7c94b;
-      --amber-bg:     rgba(247,201,75,.10);
-      --border:       rgba(100,160,200,.15);
-      --border-hi:    rgba(100,160,200,.28);
-      --radius:       10px;
-      --radius-lg:    18px;
-      --radius-xl:    24px;
-      --head:         'Barlow Semi Condensed', system-ui, sans-serif;
-      --body:         'Inter', system-ui, sans-serif;
-      --mono:         'JetBrains Mono', ui-monospace, monospace;
-      color-scheme: dark;
-    }
-
-    @media (prefers-color-scheme: light) {
-      :root:not([data-theme="dark"]) {
-        --bg:          #f0f4f8;
-        --bg-soft:     #ffffff;
-        --surface:     #ffffff;
-        --surface-2:   #e8f0f7;
-        --surface-3:   #d8e6f0;
-        --fg:          #0d1f2e;
-        --fg-muted:    #3d5a72;
-        --fg-dim:      #6890a8;
-        --accent:      #009d72;
-        --accent-bg:   rgba(0,157,114,.08);
-        --accent-line: rgba(0,157,114,.25);
-        --amber:       #c97a00;
-        --amber-bg:    rgba(201,122,0,.08);
-        --border:      rgba(0,50,90,.12);
-        --border-hi:   rgba(0,50,90,.22);
-        color-scheme: light;
-      }
-    }
-    :root[data-theme="light"] {
-      --bg:          #f0f4f8;
-      --bg-soft:     #ffffff;
-      --surface:     #ffffff;
-      --surface-2:   #e8f0f7;
-      --surface-3:   #d8e6f0;
-      --fg:          #0d1f2e;
-      --fg-muted:    #3d5a72;
-      --fg-dim:      #6890a8;
-      --accent:      #009d72;
-      --accent-bg:   rgba(0,157,114,.08);
-      --accent-line: rgba(0,157,114,.25);
-      --amber:       #c97a00;
-      --amber-bg:    rgba(201,122,0,.08);
-      --border:      rgba(0,50,90,.12);
-      --border-hi:   rgba(0,50,90,.22);
-      color-scheme: light;
-    }
-
-    *, *::before, *::after { box-sizing: border-box; }
-    html { scroll-behavior: smooth; }
-
-    body {
-      margin: 0;
-      font-family: var(--body);
-      background: var(--bg);
-      color: var(--fg);
-      font-size: 1rem;
-      line-height: 1.6;
-      -webkit-font-smoothing: antialiased;
-      overflow-x: hidden;
-    }
-
-    body::before {
-      content: "";
-      position: fixed; inset: 0; z-index: -1; pointer-events: none;
-      background:
-        radial-gradient(ellipse 900px 500px at 82% -5%, rgba(44,230,168,.07), transparent 65%),
-        radial-gradient(ellipse 600px 400px at 5% 18%, rgba(40,100,180,.08), transparent 58%);
-    }
-
-    /* Safe-area cover above sticky header */
-    body::after {
-      content: "";
-      position: fixed; inset: 0 0 auto;
-      height: env(safe-area-inset-top, 0px);
-      z-index: 201;
-      background: rgba(6,12,22,.92);
-      backdrop-filter: blur(16px);
-    }
-
-    img, svg { display: block; max-width: 100%; }
-    a { color: inherit; text-decoration: none; }
-    h1,h2,h3,h4,p,ul,ol { margin: 0; padding: 0; }
-    ul,ol { list-style: none; }
-    h1,h2,h3,h4 {
-      line-height: 1.06;
-      font-family: var(--head);
-      letter-spacing: -.015em;
-      font-weight: 700;
-    }
-
-    .container {
-      width: min(100%, 1120px);
-      margin-inline: auto;
-      padding-left:  max(24px, env(safe-area-inset-left, 0px));
-      padding-right: max(24px, env(safe-area-inset-right, 0px));
-    }
-
-    .sr-only {
-      position: absolute; width: 1px; height: 1px;
-      padding: 0; margin: -1px; overflow: hidden;
-      clip: rect(0,0,0,0); white-space: nowrap; border: 0;
-    }
-
-    /* ---- Buttons ---- */
-    .btn {
-      display: inline-flex; align-items: center; gap: 8px;
-      font-family: var(--body); font-size: .9375rem; font-weight: 600;
-      padding: 12px 24px; border-radius: var(--radius);
-      border: 1.5px solid transparent; cursor: pointer;
-      text-decoration: none; white-space: nowrap;
-      transition: filter .15s, transform .15s, background .15s, border-color .15s;
-    }
-    .btn-primary {
-      background: var(--accent); color: #060c16; border-color: var(--accent);
-    }
-    .btn-primary:hover { filter: brightness(1.09); transform: translateY(-1px); }
-    .btn-ghost {
-      background: transparent; color: var(--fg); border-color: var(--border-hi);
-    }
-    .btn-ghost:hover { border-color: var(--fg-muted); background: var(--surface-2); }
-    .btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
-
-    /* ---- Chip ---- */
-    .chip {
-      display: inline-flex; align-items: center; gap: 6px;
-      font-family: var(--body); font-size: .72rem; font-weight: 700;
-      letter-spacing: .09em; text-transform: uppercase;
-      padding: 4px 12px; border-radius: 100px;
-      border: 1px solid var(--accent-line);
-      color: var(--accent); background: var(--accent-bg);
-    }
-
-    /* ===================== NAV ===================== */
-    .site-header {
-      position: sticky;
-      top: env(safe-area-inset-top, 0px);
-      z-index: 200;
-      background: rgba(6,12,22,.92);
-      backdrop-filter: blur(16px);
-      -webkit-backdrop-filter: blur(16px);
-      border-bottom: 1px solid var(--border);
-    }
-
-    .header-inner {
-      display: flex; align-items: center; gap: 32px;
-      padding-block: 14px;
-    }
-
-    .brand {
-      display: flex; align-items: center; gap: 10px;
-      font-family: var(--head); font-weight: 800;
-      font-size: 1.2rem; letter-spacing: .05em; flex-shrink: 0;
-    }
-    .brand-mark { width: 30px; height: 30px; color: var(--accent); }
-    .brand-text { color: var(--fg); }
-    .brand-text em { font-style: normal; color: var(--accent); }
-
-    .site-nav {
-      display: flex; align-items: center; gap: 28px;
-      margin-left: auto;
-    }
-    .site-nav a:not(.btn) {
-      font-size: .9rem; font-weight: 500; color: var(--fg-muted);
-      transition: color .15s;
-    }
-    .site-nav a:not(.btn):hover { color: var(--fg); }
-
-    .nav-toggle {
-      display: none; background: none; border: none; cursor: pointer;
-      padding: 4px; color: var(--fg); margin-left: auto;
-    }
-    .nav-toggle:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
-
-    @media (max-width: 680px) {
-      .nav-toggle { display: flex; }
-      .site-nav {
-        display: none; position: absolute; top: 100%; left: 0; right: 0;
-        flex-direction: column; align-items: stretch;
-        background: var(--bg-soft); border-bottom: 1px solid var(--border);
-        padding: 16px max(24px, env(safe-area-inset-left, 0px));
-        gap: 4px;
-      }
-      .site-nav.open { display: flex; }
-      .site-nav a:not(.btn) { padding: 10px 0; border-bottom: 1px solid var(--border); }
-      .site-nav .btn { margin-top: 8px; justify-content: center; }
-    }
-
-    /* ===================== TICKER ===================== */
-    .ticker-band {
-      background: var(--accent);
-      color: #040b10;
-      overflow: hidden;
-      padding-block: 7px;
-      font-family: var(--head); font-size: .82rem; font-weight: 700;
-      letter-spacing: .07em; text-transform: uppercase;
-    }
-    .ticker-track {
-      display: flex; width: max-content;
-      animation: ticker 50s linear infinite;
-    }
-    .ticker-track:hover { animation-play-state: paused; }
-    .ticker-item { padding-inline: 32px; }
-    .ticker-sep { opacity: .45; }
-
-    @keyframes ticker {
-      from { transform: translateX(0); }
-      to   { transform: translateX(-50%); }
-    }
-
-    /* ===================== HERO ===================== */
-    .hero { padding-block: 80px 64px; }
-
-    .hero-layout {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 64px; align-items: center;
-    }
-    @media (max-width: 820px) {
-      .hero-layout { grid-template-columns: 1fr; gap: 48px; }
-      .hero { padding-block: 56px 48px; }
-    }
-
-    .hero-content { min-width: 0; }
-
-    .hero-eyebrow { margin-bottom: 22px; }
-
-    .hero-h1 {
-      font-family: var(--head);
-      font-size: clamp(2.4rem, 5.5vw, 3.75rem);
-      font-weight: 800; line-height: 1.02;
-      letter-spacing: -.025em;
-      text-wrap: balance; margin-bottom: 20px;
-    }
-    .hero-h1 em { font-style: normal; color: var(--accent); }
-
-    .hero-sub {
-      font-size: 1.0625rem; color: var(--fg-muted);
-      line-height: 1.65; max-width: 48ch; margin-bottom: 36px;
-    }
-
-    .hero-ctas {
-      display: flex; flex-wrap: wrap; gap: 12px; margin-bottom: 44px;
-    }
-
-    .hero-stats { display: flex; flex-wrap: wrap; gap: 28px; }
-    .stat { display: flex; flex-direction: column; }
-    .stat-val {
-      font-family: var(--head); font-size: 1.8rem; font-weight: 800;
-      color: var(--fg); line-height: 1;
-      font-variant-numeric: tabular-nums;
-    }
-    .stat-val em { font-style: normal; color: var(--accent); }
-    .stat-label {
-      font-size: .72rem; color: var(--fg-dim); font-weight: 600;
-      letter-spacing: .06em; text-transform: uppercase; margin-top: 3px;
-    }
-
-    /* ---- TV display mockup ---- */
-    .tv-frame {
-      background: #08101c;
-      border: 2px solid rgba(100,160,200,.18);
-      border-radius: 14px;
-      box-shadow:
-        0 0 0 1px rgba(0,0,0,.5),
-        0 40px 90px -20px rgba(0,0,0,.6),
-        0 0 70px -15px rgba(44,230,168,.1);
-      overflow: hidden;
-    }
-    .tv-bar {
-      display: flex; align-items: center; gap: 7px;
-      padding: 9px 14px;
-      background: #060d19;
-      border-bottom: 1px solid rgba(100,160,200,.1);
-    }
-    .tv-dot { width: 9px; height: 9px; border-radius: 50%; }
-    .tv-dot:nth-child(1) { background: #f85149; }
-    .tv-dot:nth-child(2) { background: #f7c94b; }
-    .tv-dot:nth-child(3) { background: #2ee6a8; }
-    .tv-lbl {
-      margin-left: auto; font-family: var(--mono); font-size: .65rem;
-      color: rgba(100,160,200,.4); letter-spacing: .1em;
-    }
-
-    .tv-screen { aspect-ratio: 16/10; position: relative; overflow: hidden; }
-
-    .scr {
-      position: absolute; inset: 0;
-      display: none; flex-direction: column;
-      font-family: var(--head);
-    }
-    .scr.active { display: flex; }
-
-    /* -- Screen: Noticeboard -- */
-    .scr-nb {
-      background: linear-gradient(160deg, #020a18, #091525);
-      padding: 18px;
-    }
-    .scr-nb-head {
-      display: flex; justify-content: space-between; align-items: center;
-      border-bottom: 1.5px solid rgba(44,230,168,.22);
-      padding-bottom: 10px; margin-bottom: 14px;
-    }
-    .scr-club { font-size: clamp(.85rem,2.2vw,1.25rem); font-weight: 800; letter-spacing: .07em; text-transform: uppercase; }
-    .scr-clock { font-family: var(--mono); font-size: clamp(.65rem,1.4vw,.8rem); color: var(--accent); font-variant-numeric: tabular-nums; }
-    .scr-notice {
-      display: flex; gap: 9px; align-items: flex-start;
-      padding: 8px 0; border-bottom: 1px solid rgba(100,160,200,.09);
-    }
-    .scr-notice:last-of-type { border-bottom: none; }
-    .scr-bullet { width: 7px; height: 7px; border-radius: 50%; background: var(--accent); flex-shrink: 0; margin-top: 4px; }
-    .scr-ntitle { font-size: clamp(.7rem,1.7vw,.9rem); font-weight: 700; }
-    .scr-nbody { font-size: clamp(.6rem,1.3vw,.74rem); color: #7da0b8; margin-top: 2px; font-family: var(--body); font-weight: 400; }
-    .scr-ticker {
-      margin-top: auto; background: var(--accent); color: #020a18;
-      font-size: clamp(.58rem,1.1vw,.7rem); font-weight: 800;
-      letter-spacing: .1em; text-transform: uppercase;
-      padding: 5px 18px; margin-inline: -18px;
-      white-space: nowrap; overflow: hidden;
-    }
-
-    /* -- Screen: Fixtures -- */
-    .scr-fx { background: linear-gradient(160deg, #020b1c, #09162a); }
-    .scr-fx-hdr {
-      background: var(--accent); color: #020a18;
-      text-align: center;
-      font-size: clamp(.8rem,1.9vw,1rem); font-weight: 800;
-      letter-spacing: .1em; text-transform: uppercase;
-      padding: 8px 18px; flex-shrink: 0;
-    }
-    .scr-fx-body { padding: 12px 18px; display: flex; flex-direction: column; gap: 0; }
-    .scr-fx-row {
-      display: grid; grid-template-columns: 5.5em 1fr auto;
-      gap: 8px; align-items: center;
-      padding: 7px 0; border-bottom: 1px solid rgba(100,160,200,.09);
-      font-size: clamp(.62rem,1.4vw,.78rem); min-width: 0;
-    }
-    .scr-fx-row:last-child { border-bottom: none; }
-    .scr-fx-date { font-weight: 700; color: var(--amber); font-variant-numeric: tabular-nums; }
-    .scr-fx-match { font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-    .scr-fx-badge {
-      font-size: clamp(.52rem,1vw,.62rem); color: var(--fg-dim);
-      background: rgba(100,160,200,.1); padding: 2px 6px;
-      border-radius: 4px; white-space: nowrap;
-    }
-
-    /* -- Screen: Menu -- */
-    .scr-menu { background: linear-gradient(160deg, #0b0600, #1a0e00); padding: 16px 18px; }
-    .scr-menu-hdr {
-      text-align: center;
-      font-size: clamp(.9rem,2.2vw,1.2rem); font-weight: 800; letter-spacing: .09em;
-      color: var(--amber); border-bottom: 1px solid rgba(247,201,75,.18);
-      padding-bottom: 9px; margin-bottom: 12px;
-    }
-    .scr-menu-cat {
-      font-size: clamp(.56rem,1.1vw,.66rem); font-weight: 700;
-      letter-spacing: .12em; text-transform: uppercase;
-      color: var(--amber); opacity: .65; margin-bottom: 5px;
-    }
-    .scr-menu-item {
-      display: flex; justify-content: space-between; align-items: baseline;
-      padding: 4px 0; border-bottom: 1px dotted rgba(247,201,75,.1);
-      font-size: clamp(.62rem,1.4vw,.76rem);
-    }
-    .scr-menu-name { color: #e8d4b0; font-weight: 600; }
-    .scr-menu-price { font-family: var(--mono); color: var(--amber); font-weight: 600; font-variant-numeric: tabular-nums; }
-    .scr-menu-gap { margin-top: 9px; }
-
-    /* -- Screen: WiFi portal -- */
-    .scr-wifi {
-      background: linear-gradient(160deg, #040b1a, #09152a);
-      justify-content: center; align-items: center;
-      gap: 12px; padding: 24px; text-align: center;
-    }
-    .scr-wifi-icon { color: var(--accent); }
-    .scr-wifi-name { font-size: clamp(.95rem,2.3vw,1.2rem); font-weight: 800; letter-spacing: .05em; }
-    .scr-wifi-name em { font-style: normal; color: var(--accent); }
-    .scr-wifi-ssid {
-      font-family: var(--mono); font-size: clamp(.62rem,1.3vw,.75rem);
-      color: var(--fg-muted); background: rgba(44,230,168,.08);
-      border: 1px solid rgba(44,230,168,.18); padding: 4px 12px; border-radius: 6px;
-    }
-    .scr-wifi-btn {
-      background: var(--accent); color: #040b1a; font-weight: 800;
-      font-size: clamp(.68rem,1.5vw,.82rem); padding: 8px 22px; border-radius: 8px;
-    }
-    .scr-wifi-small { font-size: clamp(.55rem,1vw,.65rem); color: var(--fg-dim); font-family: var(--body); }
-
-    /* -- Screen tabs -- */
-    .screen-tabs {
-      display: flex; flex-wrap: wrap; gap: 8px; margin-top: 14px;
-    }
-    .scr-tab {
-      font-family: var(--body); font-size: .77rem; font-weight: 600;
-      padding: 6px 14px; border-radius: 7px; cursor: pointer;
-      border: 1.5px solid var(--border-hi); background: transparent;
-      color: var(--fg-muted); transition: .14s;
-    }
-    .scr-tab.active, .scr-tab:hover {
-      border-color: var(--accent); color: var(--accent); background: var(--accent-bg);
-    }
-    .scr-tab:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
-
-    /* ===================== STATS BAND ===================== */
-    .stats-band {
-      background: var(--surface);
-      border-top: 1px solid var(--border);
-      border-bottom: 1px solid var(--border);
-      padding-block: 32px;
-    }
-    .stats-row {
-      display: grid;
-      grid-template-columns: repeat(4, 1fr);
-    }
-    @media (max-width: 560px) { .stats-row { grid-template-columns: repeat(2, 1fr); gap: 0; } }
-
-    .stat-cell {
-      display: flex; flex-direction: column; align-items: center;
-      text-align: center; gap: 4px; padding: 8px 16px;
-      border-right: 1px solid var(--border);
-    }
-    .stat-cell:last-child { border-right: none; }
-    @media (max-width: 560px) {
-      .stat-cell:nth-child(2) { border-right: none; }
-      .stat-cell:nth-child(3) { border-right: 1px solid var(--border); }
-      .stat-cell:nth-child(3), .stat-cell:nth-child(4) { border-top: 1px solid var(--border); }
-    }
-
-    .stat-big {
-      font-family: var(--head); font-size: 2.25rem; font-weight: 800;
-      color: var(--fg); font-variant-numeric: tabular-nums; line-height: 1;
-    }
-    .stat-big em { font-style: normal; color: var(--accent); }
-    .stat-small { font-size: .78rem; color: var(--fg-muted); font-weight: 500; }
-
-    /* ===================== SECTION BASE ===================== */
-    section { padding-block: 80px; }
-
-    .s-head { text-align: center; margin-bottom: 52px; }
-    .s-eye {
-      font-size: .74rem; font-weight: 700; letter-spacing: .11em;
-      text-transform: uppercase; color: var(--accent); margin-bottom: 10px;
-    }
-    .s-title {
-      font-family: var(--head); font-size: clamp(1.7rem, 4vw, 2.75rem);
-      font-weight: 800; color: var(--fg); text-wrap: balance; margin-bottom: 12px;
-    }
-    .s-sub {
-      font-size: 1.0625rem; color: var(--fg-muted); max-width: 52ch; margin-inline: auto;
-    }
-
-    /* ===================== FEATURES ===================== */
-    .features-bg { background: var(--surface); }
-
-    .feat-grid {
-      display: grid; grid-template-columns: repeat(2, 1fr);
-      gap: 2px; background: var(--border);
-      border: 1px solid var(--border); border-radius: var(--radius-lg);
-      overflow: hidden;
-    }
-    @media (max-width: 600px) { .feat-grid { grid-template-columns: 1fr; } }
-
-    .feat-card {
-      background: var(--surface); padding: 36px 32px;
-      display: flex; flex-direction: column; gap: 12px;
-      transition: background .15s;
-    }
-    .feat-card:hover { background: var(--surface-2); }
-
-    .feat-icon {
-      width: 46px; height: 46px;
-      display: flex; align-items: center; justify-content: center;
-      border-radius: 11px; flex-shrink: 0;
-      background: var(--accent-bg); border: 1px solid var(--accent-line);
-      color: var(--accent);
-    }
-    .feat-icon svg { width: 22px; height: 22px; }
-    .feat-icon.amber { background: var(--amber-bg); border-color: rgba(247,201,75,.3); color: var(--amber); }
-    .feat-icon.blue  { background: rgba(88,166,255,.1); border-color: rgba(88,166,255,.3); color: #58a6ff; }
-    .feat-icon.purple{ background: rgba(188,100,255,.1); border-color: rgba(188,100,255,.3); color: #bc64ff; }
-
-    .feat-title {
-      font-family: var(--head); font-size: 1.15rem; font-weight: 700; color: var(--fg);
-    }
-    .feat-desc { font-size: .9375rem; color: var(--fg-muted); line-height: 1.6; max-width: 40ch; }
-
-    .feat-list { display: flex; flex-direction: column; gap: 5px; margin-top: 4px; }
-    .feat-list li {
-      display: flex; gap: 8px; align-items: flex-start;
-      font-size: .875rem; color: var(--fg-muted);
-    }
-    .feat-list li::before { content: "✓"; color: var(--accent); font-weight: 700; flex-shrink: 0; }
-
-    /* ===================== HOW IT WORKS ===================== */
-    .how-grid {
-      display: grid; grid-template-columns: repeat(3, 1fr); gap: 40px;
-    }
-    @media (max-width: 680px) { .how-grid { grid-template-columns: 1fr; gap: 32px; } }
-
-    .how-step { display: flex; flex-direction: column; gap: 14px; min-width: 0; }
-    .step-n {
-      width: 46px; height: 46px;
-      display: flex; align-items: center; justify-content: center;
-      border-radius: 50%;
-      background: var(--accent-bg); border: 2px solid var(--accent-line);
-      font-family: var(--head); font-size: 1.05rem; font-weight: 800; color: var(--accent);
-    }
-    .step-t { font-family: var(--head); font-size: 1.1rem; font-weight: 700; color: var(--fg); }
-    .step-d { font-size: .9375rem; color: var(--fg-muted); line-height: 1.6; }
-    .step-code {
-      font-family: var(--mono); font-size: .76rem;
-      background: var(--surface-2); border: 1px solid var(--border);
-      border-radius: 8px; padding: 10px 14px; color: var(--accent);
-      overflow-x: auto; white-space: nowrap;
-    }
-
-    /* ===================== CLUB TYPES ===================== */
-    .clubs-bg { background: var(--surface); }
-
-    .clubs-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
-      gap: 14px;
-    }
-    .club-card {
-      background: var(--surface-2); border: 1px solid var(--border);
-      border-radius: var(--radius-lg); padding: 26px 22px;
-      display: flex; flex-direction: column; gap: 9px;
-      transition: border-color .15s, background .15s;
-    }
-    .club-card:hover { border-color: var(--accent-line); background: var(--surface-3); }
-    .club-emoji { font-size: 1.8rem; line-height: 1; }
-    .club-name { font-family: var(--head); font-size: 1rem; font-weight: 700; color: var(--fg); }
-    .club-desc { font-size: .83rem; color: var(--fg-muted); line-height: 1.5; }
-
-    /* ===================== TECH SECTION ===================== */
-    .tech-layout {
-      display: grid; grid-template-columns: 1fr 1fr;
-      gap: 64px; align-items: center;
-    }
-    @media (max-width: 800px) { .tech-layout { grid-template-columns: 1fr; gap: 40px; } }
-
-    .tech-content { min-width: 0; }
-    .tech-desc { font-size: 1.0625rem; color: var(--fg-muted); line-height: 1.65; margin-bottom: 26px; }
-
-    .spec-list { display: flex; flex-direction: column; }
-    .spec-row {
-      display: flex; justify-content: space-between; align-items: baseline;
-      gap: 12px; padding: 9px 0; border-bottom: 1px solid var(--border);
-      font-size: .9rem;
-    }
-    .spec-row:last-child { border-bottom: none; }
-    .spec-k { color: var(--fg-muted); font-weight: 500; }
-    .spec-v { font-family: var(--mono); font-size: .78rem; color: var(--fg); text-align: right; }
-
-    /* Pi 5 board illustration */
-    .pi-board {
-      background: #021408;
-      border: 1.5px solid rgba(44,230,168,.2);
-      border-radius: 12px; padding: 22px;
-      box-shadow: 0 0 60px -15px rgba(44,230,168,.18);
-    }
-    .pi-top {
-      display: flex; justify-content: space-between; align-items: center;
-      margin-bottom: 18px;
-    }
-    .pi-logo-t {
-      font-family: var(--head); font-size: .95rem; font-weight: 800;
-      letter-spacing: .07em; color: var(--accent);
-    }
-    .pi-model {
-      font-family: var(--mono); font-size: .65rem;
-      color: rgba(44,230,168,.55); border: 1px solid rgba(44,230,168,.18);
-      padding: 2px 7px; border-radius: 4px;
-    }
-    .pi-chips {
-      display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 14px;
-    }
-    .pi-chip {
-      background: rgba(44,230,168,.06); border: 1px solid rgba(44,230,168,.13);
-      border-radius: 7px; padding: 9px;
-    }
-    .pi-chip-lbl {
-      font-size: .54rem; font-weight: 700; letter-spacing: .11em;
-      text-transform: uppercase; color: rgba(44,230,168,.5); display: block;
-    }
-    .pi-chip-val {
-      font-family: var(--mono); font-size: .7rem; font-weight: 600;
-      color: var(--accent); font-variant-numeric: tabular-nums;
-    }
-    .pi-ports { display: flex; flex-wrap: wrap; gap: 7px; }
-    .pi-port {
-      font-size: .6rem; font-weight: 600; letter-spacing: .08em;
-      text-transform: uppercase; color: rgba(44,230,168,.45);
-      border: 1px solid rgba(44,230,168,.12); padding: 3px 7px; border-radius: 4px;
-    }
-
-    /* ===================== OSS BAND ===================== */
-    .oss-band {
-      background: var(--surface);
-      border-top: 1px solid var(--border);
-      border-bottom: 1px solid var(--border);
-      padding-block: 38px;
-    }
-    .oss-inner {
-      display: flex; flex-wrap: wrap; gap: 22px;
-      align-items: center; justify-content: space-between;
-    }
-    .oss-text { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
-    .oss-h { font-family: var(--head); font-size: 1.35rem; font-weight: 800; color: var(--fg); }
-    .oss-s { font-size: .875rem; color: var(--fg-muted); }
-    .oss-badges { display: flex; flex-wrap: wrap; gap: 9px; }
-    .badge {
-      display: inline-flex; align-items: center; gap: 6px;
-      font-size: .73rem; font-weight: 600;
-      background: var(--surface-2); border: 1px solid var(--border);
-      padding: 5px 11px; border-radius: 6px; color: var(--fg-muted);
-    }
-    .dot { width: 7px; height: 7px; border-radius: 50%; }
-    .dot-g { background: #2ee6a8; }
-    .dot-y { background: #f7c94b; }
-    .dot-b { background: #58a6ff; }
-
-    /* ===================== INSTALL CTA ===================== */
-    .install-section { text-align: center; }
-    .install-box {
-      background: var(--surface);
-      border: 1px solid var(--border); border-radius: var(--radius-xl);
-      padding: 56px 40px; max-width: 700px; margin-inline: auto;
-    }
-    @media (max-width: 560px) { .install-box { padding: 40px 24px; } }
-    .install-h {
-      font-family: var(--head); font-size: clamp(1.7rem, 4vw, 2.4rem);
-      font-weight: 800; color: var(--fg); margin-bottom: 12px; text-wrap: balance;
-    }
-    .install-s {
-      font-size: 1.0625rem; color: var(--fg-muted); margin-bottom: 32px;
-      max-width: 46ch; margin-inline: auto;
-    }
-
-    .code-wrap {
-      display: flex; align-items: center; gap: 10px;
-      background: var(--bg); border: 1px solid var(--border);
-      border-radius: var(--radius); padding: 14px 18px; margin-bottom: 26px;
-      text-align: left;
-    }
-    .code-wrap code {
-      font-family: var(--mono); font-size: .875rem; color: var(--accent);
-      flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
-      min-width: 0;
-    }
-    .copy-btn {
-      background: var(--surface-2); border: 1px solid var(--border);
-      border-radius: 6px; padding: 6px 12px;
-      font-family: var(--body); font-size: .78rem; font-weight: 600;
-      color: var(--fg-muted); cursor: pointer; white-space: nowrap;
-      transition: border-color .14s, color .14s; flex-shrink: 0;
-    }
-    .copy-btn:hover { border-color: var(--accent); color: var(--accent); }
-    .copy-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
-
-    .install-btns { display: flex; flex-wrap: wrap; gap: 12px; justify-content: center; }
-
-    /* ===================== FOOTER ===================== */
-    .site-footer { border-top: 1px solid var(--border); padding-block: 36px; }
-    .footer-top {
-      display: flex; flex-wrap: wrap; gap: 24px;
-      align-items: center; justify-content: space-between;
-      margin-bottom: 24px;
-    }
-    .footer-brand-t {
-      font-family: var(--head); font-weight: 800; font-size: 1.1rem; color: var(--fg-muted);
-    }
-    .footer-brand-t em { font-style: normal; color: var(--accent); }
-    .footer-links { display: flex; flex-wrap: wrap; gap: 18px; }
-    .footer-links a { font-size: .875rem; color: var(--fg-dim); transition: color .14s; }
-    .footer-links a:hover { color: var(--fg); }
-    .footer-legal {
-      font-size: .78rem; color: var(--fg-dim);
-      border-top: 1px solid var(--border); padding-top: 20px;
-      display: flex; flex-wrap: wrap; gap: 16px; justify-content: space-between;
-    }
-
-    /* ===================== REVEAL ANIMATION ===================== */
-    @media (prefers-reduced-motion: no-preference) {
-      .rev { opacity: 0; transform: translateY(18px); transition: opacity .5s ease, transform .5s ease; }
-      .rev.in { opacity: 1; transform: translateY(0); }
-    }
-    @media (prefers-reduced-motion: reduce) { .rev { opacity: 1; } }
-  </style>
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "SoftwareApplication",
+    "name": "PitchTribe",
+    "applicationCategory": "MultimediaApplication",
+    "operatingSystem": "Raspberry Pi OS (Raspberry Pi 5)",
+    "description": "Open-source digital signage for sports and social clubs, running on a Raspberry Pi 5.",
+    "url": "https://pitchtribe.media/",
+    "license": "https://opensource.org/licenses/MIT",
+    "offers": { "@type": "Offer", "price": "0", "priceCurrency": "GBP" }
+  }
+  </script>
 </head>
-<body>
+<body class="min-h-dvh overflow-x-hidden font-sans text-base leading-relaxed">
 
-<a class="sr-only" href="#main">Skip to main content</a>
+<a href="#main" class="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-[300] focus:rounded-md focus:bg-accent focus:px-4 focus:py-2 focus:font-semibold focus:text-ink">Skip to main content</a>
 
-<!-- ===================== NAV ===================== -->
-<header class="site-header">
-  <div class="container header-inner">
-    <a class="brand" href="#" aria-label="PitchTribe home">
-      <svg class="brand-mark" viewBox="0 0 30 30" fill="none" aria-hidden="true">
+<!-- ===================== HEADER ===================== -->
+<header class="sticky top-0 z-[200] border-b border-line bg-header pt-[env(safe-area-inset-top)] backdrop-blur-lg">
+  <div class="relative mx-auto flex w-full max-w-6xl items-center gap-8 px-4 py-3.5 sm:px-6">
+    <a href="/" class="flex shrink-0 items-center gap-2.5 font-head text-xl font-extrabold tracking-[0.05em]" aria-label="PitchTribe home">
+      <svg class="size-[30px] text-accent" viewBox="0 0 30 30" fill="none" aria-hidden="true">
         <path d="M15 2.5 27 9v12L15 27.5 3 21V9z" stroke="currentColor" stroke-width="1.8"/>
         <path d="M15 10 21 13.5v7L15 24l-6-3.5v-7z" fill="currentColor" opacity=".9"/>
-        <circle cx="15" cy="17" r="2" fill="#060c16"/>
+        <circle cx="15" cy="17" r="2" class="fill-bg"/>
       </svg>
-      <span class="brand-text">PITCH<em>TRIBE</em></span>
+      <span>PITCH<span class="text-accent">TRIBE</span></span>
     </a>
-    <button class="nav-toggle" type="button" aria-expanded="false" aria-controls="primary-nav" aria-label="Toggle navigation">
-      <svg width="22" height="22" viewBox="0 0 22 22" fill="none" aria-hidden="true">
-        <rect x="2" y="5"  width="18" height="2" rx="1" fill="currentColor"/>
+
+    <button id="nav-toggle" type="button" class="ml-auto inline-flex rounded p-1 text-fg md:hidden" aria-expanded="false" aria-controls="primary-nav" aria-label="Toggle navigation">
+      <svg width="24" height="24" viewBox="0 0 22 22" fill="none" aria-hidden="true">
+        <rect x="2" y="5" width="18" height="2" rx="1" fill="currentColor"/>
         <rect x="2" y="10" width="18" height="2" rx="1" fill="currentColor"/>
         <rect x="2" y="15" width="18" height="2" rx="1" fill="currentColor"/>
       </svg>
     </button>
-    <nav class="site-nav" id="primary-nav" aria-label="Primary navigation">
-      <a href="#features">Features</a>
-      <a href="#how-it-works">How it works</a>
-      <a href="#tech">Technical</a>
-      <a href="#install" class="btn btn-primary">Get Started</a>
+
+    <nav id="primary-nav" aria-label="Primary"
+         class="absolute inset-x-0 top-full hidden flex-col gap-1 border-b border-line bg-surface px-4 py-4 sm:px-6
+                md:static md:ml-auto md:flex md:flex-row md:items-center md:gap-7 md:border-0 md:bg-transparent md:p-0">
+      <a href="#features" class="border-b border-line py-2.5 text-[0.9rem] font-medium text-muted transition hover:text-fg md:border-0 md:py-0">Features</a>
+      <a href="#how-it-works" class="border-b border-line py-2.5 text-[0.9rem] font-medium text-muted transition hover:text-fg md:border-0 md:py-0">How it works</a>
+      <a href="#tech" class="border-b border-line py-2.5 text-[0.9rem] font-medium text-muted transition hover:text-fg md:border-0 md:py-0">Technical</a>
+      <a href="#faq" class="border-b border-line py-2.5 text-[0.9rem] font-medium text-muted transition hover:text-fg md:border-0 md:py-0">FAQ</a>
+      <a href="#install" class="btn btn-primary mt-2 md:mt-0 md:px-5 md:py-2.5">Get started</a>
     </nav>
   </div>
 </header>
 
 <!-- ===================== TICKER ===================== -->
-<div class="ticker-band" aria-hidden="true">
-  <div class="ticker-track">
-    <span class="ticker-item">Open source &amp; free forever</span><span class="ticker-item ticker-sep">✦</span>
-    <span class="ticker-item">Runs on Raspberry Pi 5</span><span class="ticker-item ticker-sep">✦</span>
-    <span class="ticker-item">Zero monthly fees</span><span class="ticker-item ticker-sep">✦</span>
-    <span class="ticker-item">5-minute setup</span><span class="ticker-item ticker-sep">✦</span>
-    <span class="ticker-item">HDMI 4K output</span><span class="ticker-item ticker-sep">✦</span>
-    <span class="ticker-item">Manage from any device</span><span class="ticker-item ticker-sep">✦</span>
-    <span class="ticker-item">Built-in captive portal</span><span class="ticker-item ticker-sep">✦</span>
-    <span class="ticker-item">MIT Licence</span><span class="ticker-item ticker-sep">✦</span>
+<div class="overflow-hidden bg-accent py-[7px] font-head text-[0.82rem] font-bold uppercase tracking-[0.07em] text-ink" aria-hidden="true">
+  <div class="flex w-max animate-ticker hover:[animation-play-state:paused]">
+    <span class="px-8">Open source &amp; free forever</span><span class="px-8 opacity-45">✦</span>
+    <span class="px-8">Runs on Raspberry Pi 5</span><span class="px-8 opacity-45">✦</span>
+    <span class="px-8">Zero monthly fees</span><span class="px-8 opacity-45">✦</span>
+    <span class="px-8">5-minute setup</span><span class="px-8 opacity-45">✦</span>
+    <span class="px-8">HDMI 4K output</span><span class="px-8 opacity-45">✦</span>
+    <span class="px-8">Manage from any device</span><span class="px-8 opacity-45">✦</span>
+    <span class="px-8">Built-in captive portal</span><span class="px-8 opacity-45">✦</span>
+    <span class="px-8">MIT licence</span><span class="px-8 opacity-45">✦</span>
     <!-- duplicate for seamless loop -->
-    <span class="ticker-item">Open source &amp; free forever</span><span class="ticker-item ticker-sep">✦</span>
-    <span class="ticker-item">Runs on Raspberry Pi 5</span><span class="ticker-item ticker-sep">✦</span>
-    <span class="ticker-item">Zero monthly fees</span><span class="ticker-item ticker-sep">✦</span>
-    <span class="ticker-item">5-minute setup</span><span class="ticker-item ticker-sep">✦</span>
-    <span class="ticker-item">HDMI 4K output</span><span class="ticker-item ticker-sep">✦</span>
-    <span class="ticker-item">Manage from any device</span><span class="ticker-item ticker-sep">✦</span>
-    <span class="ticker-item">Built-in captive portal</span><span class="ticker-item ticker-sep">✦</span>
-    <span class="ticker-item">MIT Licence</span><span class="ticker-item ticker-sep">✦</span>
+    <span class="px-8">Open source &amp; free forever</span><span class="px-8 opacity-45">✦</span>
+    <span class="px-8">Runs on Raspberry Pi 5</span><span class="px-8 opacity-45">✦</span>
+    <span class="px-8">Zero monthly fees</span><span class="px-8 opacity-45">✦</span>
+    <span class="px-8">5-minute setup</span><span class="px-8 opacity-45">✦</span>
+    <span class="px-8">HDMI 4K output</span><span class="px-8 opacity-45">✦</span>
+    <span class="px-8">Manage from any device</span><span class="px-8 opacity-45">✦</span>
+    <span class="px-8">Built-in captive portal</span><span class="px-8 opacity-45">✦</span>
+    <span class="px-8">MIT licence</span><span class="px-8 opacity-45">✦</span>
   </div>
 </div>
 
-<!-- ===================== HERO ===================== -->
 <main id="main">
-<section class="hero">
-  <div class="container">
-    <div class="hero-layout">
 
-      <!-- Left: copy -->
-      <div class="hero-content">
-        <div class="hero-eyebrow">
-          <span class="chip">Open Source · Raspberry Pi 5</span>
-        </div>
-        <h1 class="hero-h1">Your club's screens,<br><em>working for you</em></h1>
-        <p class="hero-sub">PitchTribe turns a £60 Raspberry Pi 5 into a dynamic digital noticeboard, fixtures display, bar menu board, and guest Wi-Fi portal — all managed from your phone, with no ongoing costs.</p>
-        <div class="hero-ctas">
-          <a href="#install" class="btn btn-primary">
-            <svg width="17" height="17" viewBox="0 0 17 17" fill="none" aria-hidden="true">
-              <path d="M8.5 2v9M5 7.5l3.5 3.5L12 7.5M3 13.5h11" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
-            </svg>
-            Get Started Free
-          </a>
-          <a href="https://github.com/pitchtribe/pitchtribe-display" class="btn btn-ghost" target="_blank" rel="noopener noreferrer">
-            <svg width="17" height="17" viewBox="0 0 17 17" fill="none" aria-hidden="true">
-              <path fill-rule="evenodd" clip-rule="evenodd" d="M8.5 1C4.358 1 1 4.358 1 8.5c0 3.314 2.15 6.127 5.134 7.123.375.069.513-.163.513-.36 0-.18-.007-.654-.01-1.283-2.088.454-2.529-.99-2.529-.99-.34-.866-.831-1.097-.831-1.097-.68-.464.052-.455.052-.455.752.053 1.148.772 1.148.772.668 1.145 1.753.815 2.18.623.068-.484.261-.815.475-1.003-1.666-.19-3.417-.833-3.417-3.708 0-.819.292-1.489.772-2.013-.077-.19-.334-.953.073-1.987 0 0 .63-.202 2.063.77A7.2 7.2 0 018.5 5.53c.638.003 1.28.086 1.88.254 1.43-.972 2.058-.77 2.058-.77.41 1.034.152 1.797.075 1.987.481.524.773 1.194.773 2.013 0 2.882-1.755 3.516-3.427 3.702.27.232.51.69.51 1.39 0 1.003-.009 1.812-.009 2.058 0 .2.135.432.515.36C14.353 14.625 16.5 11.814 16.5 8.5 16.5 4.358 13.142 1 8.5 1z" fill="currentColor"/>
-            </svg>
-            View on GitHub
-          </a>
-        </div>
-        <div class="hero-stats">
-          <div class="stat">
-            <span class="stat-val"><em>£60</em></span>
-            <span class="stat-label">Hardware cost</span>
-          </div>
-          <div class="stat">
-            <span class="stat-val"><em>5</em> min</span>
-            <span class="stat-label">Setup time</span>
-          </div>
-          <div class="stat">
-            <span class="stat-val"><em>£0</em></span>
-            <span class="stat-label">Monthly fees</span>
-          </div>
-        </div>
+<!-- ===================== HERO ===================== -->
+<section class="py-14 md:pt-20 md:pb-16">
+  <div class="mx-auto grid w-full max-w-6xl items-center gap-12 px-4 sm:px-6 md:grid-cols-2 md:gap-16">
+
+    <div class="min-w-0">
+      <span class="mb-5 inline-flex items-center gap-1.5 rounded-full border border-accent/30 bg-accent/10 px-3 py-1 text-[0.72rem] font-bold uppercase tracking-[0.09em] text-accent">
+        Open source · Raspberry Pi 5
+      </span>
+      <h1 class="mb-5 text-[clamp(2.4rem,5.5vw,3.75rem)] font-extrabold leading-[1.02] tracking-[-0.025em] text-balance">
+        Your club's screens,<br><span class="text-accent">working for you</span>
+      </h1>
+      <p class="mb-9 max-w-[48ch] text-[1.0625rem] leading-relaxed text-muted">
+        PitchTribe turns a £60 Raspberry Pi 5 into a dynamic digital noticeboard, fixtures display, bar menu board and guest Wi-Fi portal — all managed from your phone, with no ongoing costs.
+      </p>
+      <div class="mb-11 flex flex-wrap gap-3">
+        <a href="#install" class="btn btn-primary">
+          <svg width="17" height="17" viewBox="0 0 17 17" fill="none" aria-hidden="true"><path d="M8.5 2v9M5 7.5l3.5 3.5L12 7.5M3 13.5h11" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          Get started free
+        </a>
+        <a href="https://github.com/pitchtribe/pitchtribe-display" class="btn btn-ghost" target="_blank" rel="noopener noreferrer">
+          <svg width="17" height="17" viewBox="0 0 17 17" aria-hidden="true"><path fill="currentColor" fill-rule="evenodd" d="M8.5 1C4.358 1 1 4.358 1 8.5c0 3.314 2.15 6.127 5.134 7.123.375.069.513-.163.513-.36 0-.18-.007-.654-.01-1.283-2.088.454-2.529-.99-2.529-.99-.34-.866-.831-1.097-.831-1.097-.68-.464.052-.455.052-.455.752.053 1.148.772 1.148.772.668 1.145 1.753.815 2.18.623.068-.484.261-.815.475-1.003-1.666-.19-3.417-.833-3.417-3.708 0-.819.292-1.489.772-2.013-.077-.19-.334-.953.073-1.987 0 0 .63-.202 2.063.77A7.2 7.2 0 0 1 8.5 5.53c.638.003 1.28.086 1.88.254 1.43-.972 2.058-.77 2.058-.77.41 1.034.152 1.797.075 1.987.481.524.773 1.194.773 2.013 0 2.882-1.755 3.516-3.427 3.702.27.232.51.69.51 1.39 0 1.003-.009 1.812-.009 2.058 0 .2.135.432.515.36C14.353 14.625 16.5 11.814 16.5 8.5 16.5 4.358 13.142 1 8.5 1z"/></svg>
+          View on GitHub
+        </a>
       </div>
-
-      <!-- Right: display mockup -->
-      <div>
-        <div class="tv-frame">
-          <div class="tv-bar">
-            <div class="tv-dot"></div><div class="tv-dot"></div><div class="tv-dot"></div>
-            <span class="tv-lbl">PITCHTRIBE · HDMI OUT</span>
-          </div>
-          <div class="tv-screen" id="tvScreen">
-
-            <!-- Noticeboard -->
-            <div class="scr scr-nb active" id="scr-noticeboard">
-              <div class="scr-nb-head">
-                <span class="scr-club">Riverside FC</span>
-                <span class="scr-clock" id="liveClock">14:32</span>
-              </div>
-              <div class="scr-notice">
-                <div class="scr-bullet"></div>
-                <div>
-                  <div class="scr-ntitle">AGM — Friday 7th November, 7pm</div>
-                  <div class="scr-nbody">All members welcome · Club bar opens 6:30pm · Proxy votes accepted</div>
-                </div>
-              </div>
-              <div class="scr-notice">
-                <div class="scr-bullet" style="background:var(--amber)"></div>
-                <div>
-                  <div class="scr-ntitle">Junior Training — Updated Timings</div>
-                  <div class="scr-nbody">U12s now 9:00am · U14s 10:30am · Pitch 3 · Bring shin pads</div>
-                </div>
-              </div>
-              <div class="scr-notice">
-                <div class="scr-bullet" style="background:#58a6ff"></div>
-                <div>
-                  <div class="scr-ntitle">New Kit Available in the Clubhouse Shop</div>
-                  <div class="scr-nbody">Home &amp; away shirts in stock · All sizes · Cash or card accepted</div>
-                </div>
-              </div>
-              <div class="scr-ticker">⚽ Next home: Sat 9 Nov · Riverside FC vs Rovers United · KO 14:00 ⚽ Bar open from 12:00 · Members' draw Friday</div>
-            </div>
-
-            <!-- Fixtures -->
-            <div class="scr scr-fx" id="scr-fixtures">
-              <div class="scr-fx-hdr">Upcoming Fixtures — Riverside FC</div>
-              <div class="scr-fx-body">
-                <div class="scr-fx-row"><span class="scr-fx-date">Sat 9 Nov</span><span class="scr-fx-match">Riverside FC vs Rovers United</span><span class="scr-fx-badge">League</span></div>
-                <div class="scr-fx-row"><span class="scr-fx-date">Tue 12 Nov</span><span class="scr-fx-match">Training · Astroturf Pitch A</span><span class="scr-fx-badge">19:30</span></div>
-                <div class="scr-fx-row"><span class="scr-fx-date">Sat 16 Nov</span><span class="scr-fx-match">City Athletic vs Riverside FC</span><span class="scr-fx-badge">Away</span></div>
-                <div class="scr-fx-row"><span class="scr-fx-date">Sat 23 Nov</span><span class="scr-fx-match">Riverside FC vs Northdale Ath</span><span class="scr-fx-badge">Cup</span></div>
-                <div class="scr-fx-row"><span class="scr-fx-date">Tue 26 Nov</span><span class="scr-fx-match">Training · Astroturf Pitch A</span><span class="scr-fx-badge">19:30</span></div>
-              </div>
-            </div>
-
-            <!-- Bar Menu -->
-            <div class="scr scr-menu" id="scr-menu">
-              <div class="scr-menu-hdr">Bar &amp; Kitchen — Today's Menu</div>
-              <div class="scr-menu-cat">Draught</div>
-              <div class="scr-menu-item"><span class="scr-menu-name">Lager (Pint)</span><span class="scr-menu-price">£4.50</span></div>
-              <div class="scr-menu-item"><span class="scr-menu-name">Real Ale (Pint)</span><span class="scr-menu-price">£4.80</span></div>
-              <div class="scr-menu-item"><span class="scr-menu-name">Stout (Pint)</span><span class="scr-menu-price">£4.70</span></div>
-              <div class="scr-menu-gap"></div>
-              <div class="scr-menu-cat">Food</div>
-              <div class="scr-menu-item"><span class="scr-menu-name">Beef Burger &amp; Chips</span><span class="scr-menu-price">£8.50</span></div>
-              <div class="scr-menu-item"><span class="scr-menu-name">Chicken &amp; Mushroom Pie</span><span class="scr-menu-price">£7.00</span></div>
-              <div class="scr-menu-item"><span class="scr-menu-name">Chips</span><span class="scr-menu-price">£3.00</span></div>
-            </div>
-
-            <!-- WiFi portal -->
-            <div class="scr scr-wifi" id="scr-wifi">
-              <svg class="scr-wifi-icon" width="46" height="46" viewBox="0 0 46 46" fill="none" aria-hidden="true">
-                <path d="M23 36a2.5 2.5 0 110-5 2.5 2.5 0 010 5z" fill="currentColor"/>
-                <path d="M15 28.5a11.3 11.3 0 0116 0" stroke="currentColor" stroke-width="2.3" stroke-linecap="round"/>
-                <path d="M8.5 22a20.5 20.5 0 0129 0" stroke="currentColor" stroke-width="2.3" stroke-linecap="round"/>
-                <path d="M2.5 15.5a29.5 29.5 0 0141 0" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" opacity=".3"/>
-              </svg>
-              <div class="scr-wifi-name">PITCH<em>TRIBE</em> GUEST WI-FI</div>
-              <div class="scr-wifi-ssid">📶 &nbsp;RiversideFC-Guest</div>
-              <div class="scr-wifi-btn">Connect &amp; Browse Free</div>
-              <div class="scr-wifi-small">By connecting you agree to our acceptable use policy.<br>Bandwidth courtesy of Riverside FC.</div>
-            </div>
-
-          </div><!-- /tv-screen -->
-        </div><!-- /tv-frame -->
-
-        <div class="screen-tabs" role="tablist" aria-label="Display screen types">
-          <button class="scr-tab active" role="tab" aria-selected="true"  data-scr="noticeboard" type="button">Noticeboard</button>
-          <button class="scr-tab"        role="tab" aria-selected="false" data-scr="fixtures"    type="button">Fixtures</button>
-          <button class="scr-tab"        role="tab" aria-selected="false" data-scr="menu"        type="button">Bar Menu</button>
-          <button class="scr-tab"        role="tab" aria-selected="false" data-scr="wifi"        type="button">Guest Wi-Fi</button>
+      <dl class="flex flex-wrap gap-7">
+        <div class="flex flex-col-reverse">
+          <dt class="mt-1 text-[0.72rem] font-semibold uppercase tracking-[0.06em] text-dim">Hardware cost</dt>
+          <dd class="font-head text-3xl font-extrabold leading-none tabular-nums text-accent">£60</dd>
         </div>
-      </div>
-
-    </div><!-- /hero-layout -->
-  </div>
-</section><!-- /hero -->
-
-<!-- ===================== STATS ===================== -->
-<div class="stats-band">
-  <div class="container">
-    <div class="stats-row">
-      <div class="stat-cell"><div class="stat-big"><em>£60</em></div><div class="stat-small">Full hardware setup</div></div>
-      <div class="stat-cell"><div class="stat-big"><em>4K</em></div><div class="stat-small">HDMI output</div></div>
-      <div class="stat-cell"><div class="stat-big"><em>£0</em></div><div class="stat-small">Monthly fees</div></div>
-      <div class="stat-cell"><div class="stat-big"><em>∞</em></div><div class="stat-small">Screens on LAN</div></div>
+        <div class="flex flex-col-reverse">
+          <dt class="mt-1 text-[0.72rem] font-semibold uppercase tracking-[0.06em] text-dim">Setup time</dt>
+          <dd class="font-head text-3xl font-extrabold leading-none tabular-nums"><span class="text-accent">5</span> min</dd>
+        </div>
+        <div class="flex flex-col-reverse">
+          <dt class="mt-1 text-[0.72rem] font-semibold uppercase tracking-[0.06em] text-dim">Monthly fees</dt>
+          <dd class="font-head text-3xl font-extrabold leading-none tabular-nums text-accent">£0</dd>
+        </div>
+      </dl>
     </div>
+
+    <!-- Display mockup (always dark: it's a TV) -->
+    <div class="min-w-0">
+      <div class="overflow-hidden rounded-[14px] border-2 border-[#64a0c8]/20 bg-screen shadow-[0_0_0_1px_rgb(0_0_0/0.5),0_40px_90px_-20px_rgb(0_0_0/0.6),0_0_70px_-15px_rgb(44_230_168/0.12)]">
+        <div class="flex items-center gap-[7px] border-b border-[#64a0c8]/10 bg-[#060d19] px-3.5 py-2.5">
+          <span class="size-[9px] rounded-full bg-[#f85149]"></span>
+          <span class="size-[9px] rounded-full bg-gold"></span>
+          <span class="size-[9px] rounded-full bg-led"></span>
+          <span class="ml-auto font-mono text-[0.65rem] tracking-[0.1em] text-[#64a0c8]/60">PITCHTRIBE · HDMI OUT</span>
+        </div>
+
+        <div class="relative aspect-[16/10] overflow-hidden text-[#e4f0f8]">
+
+          <!-- Noticeboard -->
+          <div class="scr is-active bg-linear-160 from-[#020a18] to-[#091525] p-[18px]" id="scr-noticeboard" role="tabpanel" aria-labelledby="tab-noticeboard">
+            <div class="mb-3.5 flex items-center justify-between border-b-[1.5px] border-led/25 pb-2.5">
+              <span class="text-[clamp(0.85rem,2.2vw,1.25rem)] font-extrabold uppercase tracking-[0.07em]">Riverside FC</span>
+              <span class="font-mono text-[clamp(0.65rem,1.4vw,0.8rem)] tabular-nums text-led" data-clock>14:32</span>
+            </div>
+            <div class="flex items-start gap-2.5 border-b border-[#64a0c8]/10 py-2">
+              <span class="mt-1 size-[7px] shrink-0 rounded-full bg-led"></span>
+              <div>
+                <div class="text-[clamp(0.7rem,1.7vw,0.9rem)] font-bold">AGM — Friday 7th November, 7pm</div>
+                <div class="mt-0.5 font-sans text-[clamp(0.6rem,1.3vw,0.74rem)] text-[#7da0b8]">All members welcome · Club bar opens 6:30pm · Proxy votes accepted</div>
+              </div>
+            </div>
+            <div class="flex items-start gap-2.5 border-b border-[#64a0c8]/10 py-2">
+              <span class="mt-1 size-[7px] shrink-0 rounded-full bg-gold"></span>
+              <div>
+                <div class="text-[clamp(0.7rem,1.7vw,0.9rem)] font-bold">Junior Training — Updated Timings</div>
+                <div class="mt-0.5 font-sans text-[clamp(0.6rem,1.3vw,0.74rem)] text-[#7da0b8]">U12s now 9:00am · U14s 10:30am · Pitch 3 · Bring shin pads</div>
+              </div>
+            </div>
+            <div class="flex items-start gap-2.5 py-2">
+              <span class="mt-1 size-[7px] shrink-0 rounded-full bg-[#58a6ff]"></span>
+              <div>
+                <div class="text-[clamp(0.7rem,1.7vw,0.9rem)] font-bold">New Kit Available in the Clubhouse Shop</div>
+                <div class="mt-0.5 font-sans text-[clamp(0.6rem,1.3vw,0.74rem)] text-[#7da0b8]">Home &amp; away shirts in stock · All sizes · Cash or card accepted</div>
+              </div>
+            </div>
+            <div class="-mx-[18px] mt-auto overflow-hidden whitespace-nowrap bg-led px-[18px] py-1.5 text-[clamp(0.58rem,1.1vw,0.7rem)] font-extrabold uppercase tracking-[0.1em] text-ink">
+              ⚽ Next home: Sat 9 Nov · Riverside FC vs Rovers United · KO 14:00 · Bar open from 12:00 · Members' draw Friday
+            </div>
+          </div>
+
+          <!-- Fixtures -->
+          <div class="scr bg-linear-160 from-[#020b1c] to-[#09162a]" id="scr-fixtures" role="tabpanel" aria-labelledby="tab-fixtures">
+            <div class="shrink-0 bg-led px-[18px] py-2 text-center text-[clamp(0.8rem,1.9vw,1rem)] font-extrabold uppercase tracking-[0.1em] text-ink">Upcoming Fixtures — Riverside FC</div>
+            <div class="flex flex-col px-[18px] py-3 text-[clamp(0.62rem,1.4vw,0.78rem)]">
+              <div class="grid grid-cols-[5.5em_1fr_auto] items-center gap-2 border-b border-[#64a0c8]/10 py-[7px]"><span class="font-bold tabular-nums text-gold">Sat 9 Nov</span><span class="truncate font-semibold">Riverside FC vs Rovers United</span><span class="rounded bg-[#64a0c8]/10 px-1.5 py-0.5 text-[0.85em] text-[#7da0b8]">League</span></div>
+              <div class="grid grid-cols-[5.5em_1fr_auto] items-center gap-2 border-b border-[#64a0c8]/10 py-[7px]"><span class="font-bold tabular-nums text-gold">Tue 12 Nov</span><span class="truncate font-semibold">Training · Astroturf Pitch A</span><span class="rounded bg-[#64a0c8]/10 px-1.5 py-0.5 text-[0.85em] text-[#7da0b8]">19:30</span></div>
+              <div class="grid grid-cols-[5.5em_1fr_auto] items-center gap-2 border-b border-[#64a0c8]/10 py-[7px]"><span class="font-bold tabular-nums text-gold">Sat 16 Nov</span><span class="truncate font-semibold">City Athletic vs Riverside FC</span><span class="rounded bg-[#64a0c8]/10 px-1.5 py-0.5 text-[0.85em] text-[#7da0b8]">Away</span></div>
+              <div class="grid grid-cols-[5.5em_1fr_auto] items-center gap-2 border-b border-[#64a0c8]/10 py-[7px]"><span class="font-bold tabular-nums text-gold">Sat 23 Nov</span><span class="truncate font-semibold">Riverside FC vs Northdale Ath</span><span class="rounded bg-[#64a0c8]/10 px-1.5 py-0.5 text-[0.85em] text-[#7da0b8]">Cup</span></div>
+              <div class="grid grid-cols-[5.5em_1fr_auto] items-center gap-2 py-[7px]"><span class="font-bold tabular-nums text-gold">Tue 26 Nov</span><span class="truncate font-semibold">Training · Astroturf Pitch A</span><span class="rounded bg-[#64a0c8]/10 px-1.5 py-0.5 text-[0.85em] text-[#7da0b8]">19:30</span></div>
+            </div>
+          </div>
+
+          <!-- Bar menu -->
+          <div class="scr bg-linear-160 from-[#0b0600] to-[#1a0e00] px-[18px] py-4 text-[clamp(0.62rem,1.4vw,0.76rem)]" id="scr-menu" role="tabpanel" aria-labelledby="tab-menu">
+            <div class="mb-3 border-b border-gold/20 pb-2.5 text-center text-[clamp(0.9rem,2.2vw,1.2rem)] font-extrabold tracking-[0.09em] text-gold">Bar &amp; Kitchen — Today's Menu</div>
+            <div class="mb-1 text-[0.85em] font-bold uppercase tracking-[0.12em] text-gold/70">Draught</div>
+            <div class="flex items-baseline justify-between border-b border-dotted border-gold/15 py-1"><span class="font-semibold text-[#e8d4b0]">Lager (pint)</span><span class="font-mono font-semibold tabular-nums text-gold">£4.50</span></div>
+            <div class="flex items-baseline justify-between border-b border-dotted border-gold/15 py-1"><span class="font-semibold text-[#e8d4b0]">Real ale (pint)</span><span class="font-mono font-semibold tabular-nums text-gold">£4.80</span></div>
+            <div class="flex items-baseline justify-between border-b border-dotted border-gold/15 py-1"><span class="font-semibold text-[#e8d4b0]">Stout (pint)</span><span class="font-mono font-semibold tabular-nums text-gold">£4.70</span></div>
+            <div class="mt-2.5 mb-1 text-[0.85em] font-bold uppercase tracking-[0.12em] text-gold/70">Food</div>
+            <div class="flex items-baseline justify-between border-b border-dotted border-gold/15 py-1"><span class="font-semibold text-[#e8d4b0]">Beef burger &amp; chips</span><span class="font-mono font-semibold tabular-nums text-gold">£8.50</span></div>
+            <div class="flex items-baseline justify-between border-b border-dotted border-gold/15 py-1"><span class="font-semibold text-[#e8d4b0]">Chicken &amp; mushroom pie</span><span class="font-mono font-semibold tabular-nums text-gold">£7.00</span></div>
+            <div class="flex items-baseline justify-between py-1"><span class="font-semibold text-[#e8d4b0]">Chips</span><span class="font-mono font-semibold tabular-nums text-gold">£3.00</span></div>
+          </div>
+
+          <!-- Guest Wi-Fi -->
+          <div class="scr items-center justify-center gap-3 bg-linear-160 from-[#040b1a] to-[#09152a] p-6 text-center" id="scr-wifi" role="tabpanel" aria-labelledby="tab-wifi">
+            <svg class="text-led" width="46" height="46" viewBox="0 0 46 46" fill="none" aria-hidden="true">
+              <path d="M23 36a2.5 2.5 0 1 1 0-5 2.5 2.5 0 0 1 0 5z" fill="currentColor"/>
+              <path d="M15 28.5a11.3 11.3 0 0 1 16 0" stroke="currentColor" stroke-width="2.3" stroke-linecap="round"/>
+              <path d="M8.5 22a20.5 20.5 0 0 1 29 0" stroke="currentColor" stroke-width="2.3" stroke-linecap="round"/>
+              <path d="M2.5 15.5a29.5 29.5 0 0 1 41 0" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" opacity=".3"/>
+            </svg>
+            <div class="text-[clamp(0.95rem,2.3vw,1.2rem)] font-extrabold tracking-[0.05em]">PITCH<span class="text-led">TRIBE</span> GUEST WI-FI</div>
+            <div class="rounded-md border border-led/20 bg-led/10 px-3 py-1 font-mono text-[clamp(0.62rem,1.3vw,0.75rem)] text-[#7da0b8]">RiversideFC-Guest</div>
+            <div class="rounded-lg bg-led px-5 py-2 text-[clamp(0.68rem,1.5vw,0.82rem)] font-extrabold text-ink">Connect &amp; browse free</div>
+            <div class="font-sans text-[clamp(0.55rem,1vw,0.65rem)] text-[#7da0b8]">By connecting you agree to our acceptable use policy.<br>Bandwidth courtesy of Riverside FC.</div>
+          </div>
+
+        </div>
+      </div>
+
+      <div class="mt-3.5 flex flex-wrap gap-2" role="tablist" aria-label="Example display screens">
+        <button id="tab-noticeboard" class="scr-tab rounded-md border-[1.5px] border-line-hi px-3.5 py-1.5 text-[0.77rem] font-semibold text-muted transition hover:border-accent hover:text-accent" role="tab" type="button" aria-selected="true" aria-controls="scr-noticeboard" data-scr="noticeboard">Noticeboard</button>
+        <button id="tab-fixtures" class="scr-tab rounded-md border-[1.5px] border-line-hi px-3.5 py-1.5 text-[0.77rem] font-semibold text-muted transition hover:border-accent hover:text-accent" role="tab" type="button" aria-selected="false" aria-controls="scr-fixtures" data-scr="fixtures" tabindex="-1">Fixtures</button>
+        <button id="tab-menu" class="scr-tab rounded-md border-[1.5px] border-line-hi px-3.5 py-1.5 text-[0.77rem] font-semibold text-muted transition hover:border-accent hover:text-accent" role="tab" type="button" aria-selected="false" aria-controls="scr-menu" data-scr="menu" tabindex="-1">Bar menu</button>
+        <button id="tab-wifi" class="scr-tab rounded-md border-[1.5px] border-line-hi px-3.5 py-1.5 text-[0.77rem] font-semibold text-muted transition hover:border-accent hover:text-accent" role="tab" type="button" aria-selected="false" aria-controls="scr-wifi" data-scr="wifi" tabindex="-1">Guest Wi-Fi</button>
+      </div>
+    </div>
+
   </div>
+</section>
+
+<!-- ===================== STATS BAND ===================== -->
+<div class="border-y border-line bg-surface py-8">
+  <dl class="mx-auto grid w-full max-w-6xl grid-cols-2 px-4 sm:px-6 md:grid-cols-4">
+    <div class="flex flex-col-reverse items-center gap-1 border-r border-line px-4 py-2 text-center">
+      <dt class="text-[0.78rem] font-medium text-muted">Full hardware setup</dt>
+      <dd class="font-head text-4xl font-extrabold leading-none tabular-nums text-accent">£60</dd>
+    </div>
+    <div class="flex flex-col-reverse items-center gap-1 px-4 py-2 text-center md:border-r md:border-line">
+      <dt class="text-[0.78rem] font-medium text-muted">HDMI output</dt>
+      <dd class="font-head text-4xl font-extrabold leading-none tabular-nums text-accent">4K</dd>
+    </div>
+    <div class="flex flex-col-reverse items-center gap-1 border-r border-t border-line px-4 py-2 text-center md:border-t-0">
+      <dt class="text-[0.78rem] font-medium text-muted">Monthly fees</dt>
+      <dd class="font-head text-4xl font-extrabold leading-none tabular-nums text-accent">£0</dd>
+    </div>
+    <div class="flex flex-col-reverse items-center gap-1 border-t border-line px-4 py-2 text-center md:border-t-0">
+      <dt class="text-[0.78rem] font-medium text-muted">Screens per club network</dt>
+      <dd class="font-head text-4xl font-extrabold leading-none tabular-nums text-accent">∞</dd>
+    </div>
+  </dl>
 </div>
 
 <!-- ===================== FEATURES ===================== -->
-<section class="features-bg" id="features">
-  <div class="container">
-    <div class="s-head rev">
-      <div class="s-eye">What PitchTribe does</div>
-      <h2 class="s-title">Everything your club needs on screen</h2>
-      <p class="s-sub">Four powerful display modes, all managed from a single web dashboard accessible from any device on your club network.</p>
+<section id="features" class="bg-surface py-20">
+  <div class="mx-auto w-full max-w-6xl px-4 sm:px-6">
+    <div class="reveal mb-13 text-center">
+      <p class="eyebrow">What PitchTribe does</p>
+      <h2 class="section-title mb-3">Everything your club needs on screen</h2>
+      <p class="mx-auto max-w-[52ch] text-[1.0625rem] text-muted">Four display modes, all managed from a single web dashboard on any device connected to your club network.</p>
     </div>
-    <div class="feat-grid">
 
-      <div class="feat-card rev">
-        <div class="feat-icon">
-          <svg viewBox="0 0 22 22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
-            <rect x="2" y="3" width="18" height="16" rx="2"/>
-            <path d="M6 8h10M6 12h6"/>
-          </svg>
+    <div class="grid gap-0.5 overflow-hidden rounded-[18px] border border-line bg-line sm:grid-cols-2">
+      <article class="reveal flex flex-col gap-3 bg-surface px-6 py-9 transition hover:bg-surface-2 sm:px-8">
+        <div class="flex size-[46px] items-center justify-center rounded-[11px] border border-accent/30 bg-accent/10 text-accent">
+          <svg class="size-[22px]" viewBox="0 0 22 22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><rect x="2" y="3" width="18" height="16" rx="2"/><path d="M6 8h10M6 12h6"/></svg>
         </div>
-        <div class="feat-title">Dynamic Digital Noticeboard</div>
-        <p class="feat-desc">Publish announcements and news instantly from your phone. Updates appear on screen within seconds — no print runs, no laminating.</p>
-        <ul class="feat-list">
+        <h3 class="text-[1.15rem] font-bold">Dynamic digital noticeboard</h3>
+        <p class="max-w-[40ch] text-[0.9375rem] text-muted">Publish announcements and news from your phone. Updates appear on screen within seconds — no print runs, no laminating.</p>
+        <ul class="check-list mt-1 flex flex-col gap-1.5">
           <li>Unlimited notice categories</li>
           <li>Scheduled publish &amp; expiry times</li>
           <li>Rich text, images and pinned items</li>
           <li>Live scrolling ticker strip</li>
         </ul>
-      </div>
+      </article>
 
-      <div class="feat-card rev">
-        <div class="feat-icon amber">
-          <svg viewBox="0 0 22 22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
-            <rect x="2" y="2" width="18" height="18" rx="2"/>
-            <path d="M15 2v4M7 2v4M2 10h18M7 14h2M13 14h2M7 18h2"/>
-          </svg>
+      <article class="reveal flex flex-col gap-3 bg-surface px-6 py-9 transition hover:bg-surface-2 sm:px-8">
+        <div class="flex size-[46px] items-center justify-center rounded-[11px] border border-amber/30 bg-amber/10 text-amber">
+          <svg class="size-[22px]" viewBox="0 0 22 22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><rect x="2" y="2" width="18" height="18" rx="2"/><path d="M15 2v4M7 2v4M2 10h18M7 14h2M13 14h2M7 18h2"/></svg>
         </div>
-        <div class="feat-title">Scheduled Fixtures &amp; Events</div>
-        <p class="feat-desc">Pull in match schedules and club events. The display rotates through upcoming fixtures and updates in real time when results come in.</p>
-        <ul class="feat-list">
-          <li>Import from CSV or connect your league site</li>
+        <h3 class="text-[1.15rem] font-bold">Scheduled fixtures &amp; events</h3>
+        <p class="max-w-[40ch] text-[0.9375rem] text-muted">Pull in match schedules and club events. The display rotates through upcoming fixtures and updates when results come in.</p>
+        <ul class="check-list mt-1 flex flex-col gap-1.5">
+          <li>Import from CSV or your league site</li>
           <li>Matchday countdown timers</li>
           <li>Multi-team and multi-sport support</li>
           <li>Auto-archive past fixtures</li>
         </ul>
-      </div>
+      </article>
 
-      <div class="feat-card rev">
-        <div class="feat-icon blue">
-          <svg viewBox="0 0 22 22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
-            <path d="M9 6h10M9 11h10M9 16h6M3 6h2M3 11h2M3 16h2"/>
-          </svg>
+      <article class="reveal flex flex-col gap-3 bg-surface px-6 py-9 transition hover:bg-surface-2 sm:px-8">
+        <div class="flex size-[46px] items-center justify-center rounded-[11px] border border-sky/30 bg-sky/10 text-sky">
+          <svg class="size-[22px]" viewBox="0 0 22 22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M9 6h10M9 11h10M9 16h6M3 6h2M3 11h2M3 16h2"/></svg>
         </div>
-        <div class="feat-title">Instant Bar &amp; Kitchen Menus</div>
-        <p class="feat-desc">Manage bar and food menus from a simple dashboard. Change prices, mark items sold out, or switch to a matchday special in seconds.</p>
-        <ul class="feat-list">
+        <h3 class="text-[1.15rem] font-bold">Instant bar &amp; kitchen menus</h3>
+        <p class="max-w-[40ch] text-[0.9375rem] text-muted">Change prices, mark items sold out, or switch to a matchday special in seconds from a simple dashboard.</p>
+        <ul class="check-list mt-1 flex flex-col gap-1.5">
           <li>Real-time price and availability updates</li>
           <li>Multiple menu boards per screen</li>
           <li>Scheduled menus (lunch, evening, matchday)</li>
           <li>Allergen information display</li>
         </ul>
-      </div>
+      </article>
 
-      <div class="feat-card rev">
-        <div class="feat-icon purple">
-          <svg viewBox="0 0 22 22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
-            <path d="M5 11.5a9 9 0 0112 0M1.5 8a14.5 14.5 0 0119 0M9 15a4 4 0 014 0M11 19h.01"/>
-          </svg>
+      <article class="reveal flex flex-col gap-3 bg-surface px-6 py-9 transition hover:bg-surface-2 sm:px-8">
+        <div class="flex size-[46px] items-center justify-center rounded-[11px] border border-violet/30 bg-violet/10 text-violet">
+          <svg class="size-[22px]" viewBox="0 0 22 22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M5 11.5a9 9 0 0 1 12 0M1.5 8a14.5 14.5 0 0 1 19 0M9 15a4 4 0 0 1 4 0M11 19h.01"/></svg>
         </div>
-        <div class="feat-title">Guest Wi-Fi Captive Portal</div>
-        <p class="feat-desc">Turn your Pi into a Wi-Fi gateway. Visitors connect and see a branded splash page before getting online — your branding, your message.</p>
-        <ul class="feat-list">
+        <h3 class="text-[1.15rem] font-bold">Guest Wi-Fi captive portal</h3>
+        <p class="max-w-[40ch] text-[0.9375rem] text-muted">Turn your Pi into a Wi-Fi gateway. Visitors see a branded splash page before getting online — your logo, your message.</p>
+        <ul class="check-list mt-1 flex flex-col gap-1.5">
           <li>Custom splash page with club logo</li>
           <li>Terms &amp; acceptable-use acceptance</li>
-          <li>Bandwidth controls per session</li>
+          <li>Per-session bandwidth controls</li>
           <li>No third-party portal service needed</li>
         </ul>
-      </div>
-
+      </article>
     </div>
   </div>
 </section>
 
 <!-- ===================== HOW IT WORKS ===================== -->
-<section id="how-it-works">
-  <div class="container">
-    <div class="s-head rev">
-      <div class="s-eye">Getting started</div>
-      <h2 class="s-title">Set up in an afternoon</h2>
-      <p class="s-sub">Three steps from unboxing to a live display. You need a Raspberry Pi 5 (4 GB+), a microSD card, and an HDMI screen.</p>
+<section id="how-it-works" class="py-20">
+  <div class="mx-auto w-full max-w-6xl px-4 sm:px-6">
+    <div class="reveal mb-13 text-center">
+      <p class="eyebrow">Getting started</p>
+      <h2 class="section-title mb-3">Set up in an afternoon</h2>
+      <p class="mx-auto max-w-[52ch] text-[1.0625rem] text-muted">Three steps from unboxing to a live display. You need a Raspberry Pi 5 (4&nbsp;GB+), a microSD card and an HDMI screen.</p>
     </div>
-    <div class="how-grid">
-      <div class="how-step rev">
-        <div class="step-n">1</div>
-        <div class="step-t">Flash the SD card</div>
-        <p class="step-d">Download the PitchTribe OS image and flash it to microSD. One command installs Raspberry Pi OS Lite, the PitchTribe stack, and kiosk mode automatically.</p>
-        <div class="step-code">pitchtribe-2.1.0-rpi5.img.xz</div>
-      </div>
-      <div class="how-step rev">
-        <div class="step-n">2</div>
-        <div class="step-t">Connect and boot</div>
-        <p class="step-d">Plug the Pi 5 into any HDMI display and power it on. PitchTribe boots straight into full-screen kiosk mode — no keyboard or mouse needed after first boot.</p>
-        <div class="step-code">HDMI out → Power on → Done</div>
-      </div>
-      <div class="how-step rev">
-        <div class="step-n">3</div>
-        <div class="step-t">Manage from anywhere</div>
-        <p class="step-d">Open the PitchTribe dashboard on any phone, tablet, or laptop on your club Wi-Fi. Update notices, menus, and fixtures live — from the bar, the car park, wherever.</p>
-        <div class="step-code">http://pitchtribe.local</div>
-      </div>
-    </div>
+    <ol class="grid gap-8 md:grid-cols-3 md:gap-10">
+      <li class="reveal flex min-w-0 flex-col gap-3.5">
+        <span class="flex size-[46px] items-center justify-center rounded-full border-2 border-accent/30 bg-accent/10 font-head text-lg font-extrabold text-accent" aria-hidden="true">1</span>
+        <h3 class="text-lg font-bold">Flash the SD card</h3>
+        <p class="text-[0.9375rem] text-muted">Download the PitchTribe OS image and flash it with Raspberry Pi Imager. It bundles Raspberry Pi OS Lite, the PitchTribe stack and kiosk mode.</p>
+        <code class="block overflow-x-auto whitespace-nowrap rounded-lg border border-line bg-surface-2 px-3.5 py-2.5 font-mono text-[0.76rem] text-accent">pitchtribe-2.1.0-rpi5.img.xz</code>
+      </li>
+      <li class="reveal flex min-w-0 flex-col gap-3.5">
+        <span class="flex size-[46px] items-center justify-center rounded-full border-2 border-accent/30 bg-accent/10 font-head text-lg font-extrabold text-accent" aria-hidden="true">2</span>
+        <h3 class="text-lg font-bold">Connect and boot</h3>
+        <p class="text-[0.9375rem] text-muted">Plug the Pi 5 into any HDMI display and power it on. PitchTribe boots straight into full-screen kiosk mode — no keyboard or mouse needed.</p>
+        <code class="block overflow-x-auto whitespace-nowrap rounded-lg border border-line bg-surface-2 px-3.5 py-2.5 font-mono text-[0.76rem] text-accent">HDMI out → Power on → Live</code>
+      </li>
+      <li class="reveal flex min-w-0 flex-col gap-3.5">
+        <span class="flex size-[46px] items-center justify-center rounded-full border-2 border-accent/30 bg-accent/10 font-head text-lg font-extrabold text-accent" aria-hidden="true">3</span>
+        <h3 class="text-lg font-bold">Manage from anywhere</h3>
+        <p class="text-[0.9375rem] text-muted">Open the dashboard on any phone, tablet or laptop on your club network. Update notices, menus and fixtures live — from the bar, the car park, wherever.</p>
+        <code class="block overflow-x-auto whitespace-nowrap rounded-lg border border-line bg-surface-2 px-3.5 py-2.5 font-mono text-[0.76rem] text-accent">http://pitchtribe.local</code>
+      </li>
+    </ol>
   </div>
 </section>
 
 <!-- ===================== CLUB TYPES ===================== -->
-<section class="clubs-bg">
-  <div class="container">
-    <div class="s-head rev">
-      <div class="s-eye">Who uses PitchTribe</div>
-      <h2 class="s-title">Built for every kind of club</h2>
+<section class="bg-surface py-20" aria-labelledby="clubs-title">
+  <div class="mx-auto w-full max-w-6xl px-4 sm:px-6">
+    <div class="reveal mb-13 text-center">
+      <p class="eyebrow">Who it's for</p>
+      <h2 id="clubs-title" class="section-title">Built for every kind of club</h2>
     </div>
-    <div class="clubs-grid">
-      <div class="club-card rev"><div class="club-emoji">⚽</div><div class="club-name">Football &amp; Rugby</div><p class="club-desc">Fixtures, results, training times, and matchday bar menus in the clubhouse and changing rooms.</p></div>
-      <div class="club-card rev"><div class="club-emoji">🏏</div><div class="club-name">Cricket &amp; Bowls</div><p class="club-desc">Season fixtures, league tables, pavilion notices, and the teas menu at a glance.</p></div>
-      <div class="club-card rev"><div class="club-emoji">🍺</div><div class="club-name">Social Clubs</div><p class="club-desc">Bar menus, entertainment schedules, event notices, and guest Wi-Fi splash pages.</p></div>
-      <div class="club-card rev"><div class="club-emoji">🏌️</div><div class="club-name">Golf &amp; Tennis</div><p class="club-desc">Competition draws, tee-time availability, pro shop offers, and member notices.</p></div>
-      <div class="club-card rev"><div class="club-emoji">🏠</div><div class="club-name">Community Halls</div><p class="club-desc">Room schedules, local notices, upcoming events, and visitor Wi-Fi — one small device.</p></div>
-      <div class="club-card rev"><div class="club-emoji">🏊</div><div class="club-name">Leisure Centres</div><p class="club-desc">Class timetables, pool availability, café menus, and promotions across multiple screens.</p></div>
-    </div>
+    <ul class="grid grid-cols-[repeat(auto-fit,minmax(190px,1fr))] gap-3.5">
+      <li class="reveal flex flex-col gap-2 rounded-[18px] border border-line bg-surface-2 px-5 py-6 transition hover:border-accent/30 hover:bg-surface-3"><span class="text-3xl leading-none" aria-hidden="true">⚽</span><h3 class="text-base font-bold">Football &amp; rugby</h3><p class="text-[0.83rem] leading-normal text-muted">Fixtures, results, training times and matchday bar menus in the clubhouse and changing rooms.</p></li>
+      <li class="reveal flex flex-col gap-2 rounded-[18px] border border-line bg-surface-2 px-5 py-6 transition hover:border-accent/30 hover:bg-surface-3"><span class="text-3xl leading-none" aria-hidden="true">🏏</span><h3 class="text-base font-bold">Cricket &amp; bowls</h3><p class="text-[0.83rem] leading-normal text-muted">Season fixtures, league tables, pavilion notices and the teas menu at a glance.</p></li>
+      <li class="reveal flex flex-col gap-2 rounded-[18px] border border-line bg-surface-2 px-5 py-6 transition hover:border-accent/30 hover:bg-surface-3"><span class="text-3xl leading-none" aria-hidden="true">🍺</span><h3 class="text-base font-bold">Social clubs</h3><p class="text-[0.83rem] leading-normal text-muted">Bar menus, entertainment schedules, event notices and guest Wi-Fi splash pages.</p></li>
+      <li class="reveal flex flex-col gap-2 rounded-[18px] border border-line bg-surface-2 px-5 py-6 transition hover:border-accent/30 hover:bg-surface-3"><span class="text-3xl leading-none" aria-hidden="true">⛳</span><h3 class="text-base font-bold">Golf &amp; tennis</h3><p class="text-[0.83rem] leading-normal text-muted">Competition draws, tee-time availability, pro shop offers and member notices.</p></li>
+      <li class="reveal flex flex-col gap-2 rounded-[18px] border border-line bg-surface-2 px-5 py-6 transition hover:border-accent/30 hover:bg-surface-3"><span class="text-3xl leading-none" aria-hidden="true">🏠</span><h3 class="text-base font-bold">Community halls</h3><p class="text-[0.83rem] leading-normal text-muted">Room schedules, local notices, upcoming events and visitor Wi-Fi — one small device.</p></li>
+      <li class="reveal flex flex-col gap-2 rounded-[18px] border border-line bg-surface-2 px-5 py-6 transition hover:border-accent/30 hover:bg-surface-3"><span class="text-3xl leading-none" aria-hidden="true">🏊</span><h3 class="text-base font-bold">Leisure centres</h3><p class="text-[0.83rem] leading-normal text-muted">Class timetables, pool availability, café menus and promotions across multiple screens.</p></li>
+    </ul>
   </div>
 </section>
 
-<!-- ===================== TECH SECTION ===================== -->
-<section id="tech">
-  <div class="container">
-    <div class="tech-layout">
-      <div class="tech-content rev">
-        <div class="s-eye" style="margin-bottom:10px">Built on solid foundations</div>
-        <h2 class="s-title" style="text-align:left; margin-bottom:14px">Raspberry Pi 5.<br>Open source. Self-hosted.</h2>
-        <p class="tech-desc">PitchTribe runs entirely on hardware you own. No cloud subscription, no third-party dependency, and no data leaving your site. The software is MIT-licensed and on GitHub.</p>
-        <div class="spec-list">
-          <div class="spec-row"><span class="spec-k">Hardware</span><span class="spec-v">Raspberry Pi 5 (4 GB or 8 GB)</span></div>
-          <div class="spec-row"><span class="spec-k">OS</span><span class="spec-v">Raspberry Pi OS Lite (bookworm)</span></div>
-          <div class="spec-row"><span class="spec-k">Display output</span><span class="spec-v">HDMI 4K @ 60 Hz · dual-display</span></div>
-          <div class="spec-row"><span class="spec-k">Dashboard</span><span class="spec-v">Node.js + browser (LAN access)</span></div>
-          <div class="spec-row"><span class="spec-k">Kiosk renderer</span><span class="spec-v">Chromium (hardware-accelerated)</span></div>
-          <div class="spec-row"><span class="spec-k">Captive portal</span><span class="spec-v">hostapd + dnsmasq + nftables</span></div>
-          <div class="spec-row"><span class="spec-k">Licence</span><span class="spec-v">MIT — free to fork and modify</span></div>
+<!-- ===================== TECH ===================== -->
+<section id="tech" class="py-20">
+  <div class="mx-auto grid w-full max-w-6xl items-center gap-10 px-4 sm:px-6 md:grid-cols-2 md:gap-16">
+    <div class="reveal min-w-0">
+      <p class="eyebrow">Built on solid foundations</p>
+      <h2 class="section-title mb-3.5">Raspberry Pi 5.<br>Open source. Self-hosted.</h2>
+      <p class="mb-6 text-[1.0625rem] text-muted">PitchTribe runs entirely on hardware you own. No cloud subscription, no third-party dependency and no data leaving your site. The software is MIT-licensed and on GitHub.</p>
+      <dl class="divide-y divide-line text-[0.9rem]">
+        <div class="flex items-baseline justify-between gap-3 py-2.5"><dt class="font-medium text-muted">Hardware</dt><dd class="text-right font-mono text-[0.78rem]">Raspberry Pi 5 (4 GB or 8 GB)</dd></div>
+        <div class="flex items-baseline justify-between gap-3 py-2.5"><dt class="font-medium text-muted">OS</dt><dd class="text-right font-mono text-[0.78rem]">Raspberry Pi OS Lite (Bookworm)</dd></div>
+        <div class="flex items-baseline justify-between gap-3 py-2.5"><dt class="font-medium text-muted">Display output</dt><dd class="text-right font-mono text-[0.78rem]">HDMI 4K @ 60 Hz · dual display</dd></div>
+        <div class="flex items-baseline justify-between gap-3 py-2.5"><dt class="font-medium text-muted">Dashboard</dt><dd class="text-right font-mono text-[0.78rem]">Node.js web app (LAN access)</dd></div>
+        <div class="flex items-baseline justify-between gap-3 py-2.5"><dt class="font-medium text-muted">Kiosk renderer</dt><dd class="text-right font-mono text-[0.78rem]">Chromium (hardware-accelerated)</dd></div>
+        <div class="flex items-baseline justify-between gap-3 py-2.5"><dt class="font-medium text-muted">Captive portal</dt><dd class="text-right font-mono text-[0.78rem]">hostapd + dnsmasq + nftables</dd></div>
+        <div class="flex items-baseline justify-between gap-3 py-2.5"><dt class="font-medium text-muted">Licence</dt><dd class="text-right font-mono text-[0.78rem]">MIT — free to fork and modify</dd></div>
+      </dl>
+    </div>
+
+    <div class="reveal min-w-0" aria-hidden="true">
+      <div class="rounded-xl border-[1.5px] border-led/20 bg-board p-5 text-led shadow-[0_0_60px_-15px_rgb(44_230_168/0.18)] sm:p-6">
+        <div class="mb-4.5 flex items-center justify-between">
+          <span class="font-head text-[0.95rem] font-extrabold tracking-[0.07em]">Raspberry Pi 5</span>
+          <span class="rounded border border-led/20 px-2 py-0.5 font-mono text-[0.65rem] text-led/60">BCM2712 · 4× A76</span>
         </div>
-      </div>
-      <div class="rev">
-        <div class="pi-board">
-          <div class="pi-top">
-            <span class="pi-logo-t">Raspberry Pi 5</span>
-            <span class="pi-model">BCM2712 · 4× A76</span>
-          </div>
-          <div class="pi-chips">
-            <div class="pi-chip"><span class="pi-chip-lbl">CPU</span><span class="pi-chip-val">2.4 GHz</span></div>
-            <div class="pi-chip"><span class="pi-chip-lbl">RAM</span><span class="pi-chip-val">4 / 8 GB</span></div>
-            <div class="pi-chip"><span class="pi-chip-lbl">GPU</span><span class="pi-chip-val">VideoCore</span></div>
-            <div class="pi-chip"><span class="pi-chip-lbl">Storage</span><span class="pi-chip-val">microSD</span></div>
-            <div class="pi-chip"><span class="pi-chip-lbl">Network</span><span class="pi-chip-val">GbE + WiFi</span></div>
-            <div class="pi-chip"><span class="pi-chip-lbl">USB</span><span class="pi-chip-val">USB 3.0 ×2</span></div>
-          </div>
-          <div class="pi-ports">
-            <span class="pi-port">HDMI × 2</span>
-            <span class="pi-port">USB-C Power</span>
-            <span class="pi-port">GPIO 40-pin</span>
-            <span class="pi-port">PCIe M.2</span>
-            <span class="pi-port">Camera / DSI</span>
-          </div>
+        <div class="mb-3.5 grid grid-cols-2 gap-2 sm:grid-cols-3">
+          <div class="rounded-md border border-led/15 bg-led/5 p-2.5"><span class="block text-[0.56rem] font-bold uppercase tracking-[0.11em] text-led/55">CPU</span><span class="font-mono text-[0.72rem] font-semibold">2.4 GHz</span></div>
+          <div class="rounded-md border border-led/15 bg-led/5 p-2.5"><span class="block text-[0.56rem] font-bold uppercase tracking-[0.11em] text-led/55">RAM</span><span class="font-mono text-[0.72rem] font-semibold">4 / 8 GB</span></div>
+          <div class="rounded-md border border-led/15 bg-led/5 p-2.5"><span class="block text-[0.56rem] font-bold uppercase tracking-[0.11em] text-led/55">GPU</span><span class="font-mono text-[0.72rem] font-semibold">VideoCore VII</span></div>
+          <div class="rounded-md border border-led/15 bg-led/5 p-2.5"><span class="block text-[0.56rem] font-bold uppercase tracking-[0.11em] text-led/55">Storage</span><span class="font-mono text-[0.72rem] font-semibold">microSD / NVMe</span></div>
+          <div class="rounded-md border border-led/15 bg-led/5 p-2.5"><span class="block text-[0.56rem] font-bold uppercase tracking-[0.11em] text-led/55">Network</span><span class="font-mono text-[0.72rem] font-semibold">GbE + Wi-Fi</span></div>
+          <div class="rounded-md border border-led/15 bg-led/5 p-2.5"><span class="block text-[0.56rem] font-bold uppercase tracking-[0.11em] text-led/55">USB</span><span class="font-mono text-[0.72rem] font-semibold">USB 3.0 ×2</span></div>
+        </div>
+        <div class="flex flex-wrap gap-2 text-[0.6rem] font-semibold uppercase tracking-[0.08em] text-led/55">
+          <span class="rounded border border-led/15 px-2 py-0.5">Micro-HDMI ×2</span>
+          <span class="rounded border border-led/15 px-2 py-0.5">USB-C power</span>
+          <span class="rounded border border-led/15 px-2 py-0.5">GPIO 40-pin</span>
+          <span class="rounded border border-led/15 px-2 py-0.5">PCIe 2.0</span>
+          <span class="rounded border border-led/15 px-2 py-0.5">Camera / DSI</span>
         </div>
       </div>
     </div>
@@ -1103,161 +426,102 @@
 </section>
 
 <!-- ===================== OSS BAND ===================== -->
-<div class="oss-band">
-  <div class="container">
-    <div class="oss-inner">
-      <div class="oss-text">
-        <div class="oss-h">Free, open source, and community-built</div>
-        <div class="oss-s">MIT licence · contributions welcome · runs on your own hardware forever</div>
-      </div>
-      <div class="oss-badges">
-        <span class="badge"><span class="dot dot-g"></span>MIT Licence</span>
-        <span class="badge"><span class="dot dot-b"></span>Node.js</span>
-        <span class="badge"><span class="dot dot-y"></span>Raspberry Pi OS</span>
-        <span class="badge"><span class="dot dot-g"></span>v2.1.0 stable</span>
-      </div>
+<div class="border-y border-line bg-surface py-9">
+  <div class="mx-auto flex w-full max-w-6xl flex-wrap items-center justify-between gap-5 px-4 sm:px-6">
+    <div class="min-w-0">
+      <p class="font-head text-[1.35rem] font-extrabold">Free, open source and community-built</p>
+      <p class="text-sm text-muted">MIT licence · contributions welcome · runs on your own hardware forever</p>
     </div>
+    <ul class="flex flex-wrap gap-2 text-[0.73rem] font-semibold text-muted">
+      <li class="inline-flex items-center gap-1.5 rounded-md border border-line bg-surface-2 px-3 py-1.5"><span class="size-[7px] rounded-full bg-led"></span>MIT licence</li>
+      <li class="inline-flex items-center gap-1.5 rounded-md border border-line bg-surface-2 px-3 py-1.5"><span class="size-[7px] rounded-full bg-[#58a6ff]"></span>Node.js</li>
+      <li class="inline-flex items-center gap-1.5 rounded-md border border-line bg-surface-2 px-3 py-1.5"><span class="size-[7px] rounded-full bg-gold"></span>Raspberry Pi OS</li>
+      <li class="inline-flex items-center gap-1.5 rounded-md border border-line bg-surface-2 px-3 py-1.5"><span class="size-[7px] rounded-full bg-led"></span>v2.1.0 stable</li>
+    </ul>
   </div>
 </div>
 
+<!-- ===================== FAQ ===================== -->
+<section id="faq" class="py-20">
+  <div class="mx-auto w-full max-w-3xl px-4 sm:px-6">
+    <div class="reveal mb-10 text-center">
+      <p class="eyebrow">Questions</p>
+      <h2 class="section-title">Frequently asked</h2>
+    </div>
+    <div class="reveal divide-y divide-line overflow-hidden rounded-[18px] border border-line bg-surface">
+      <details class="group px-5 py-4 sm:px-6">
+        <summary class="flex cursor-pointer list-none items-center justify-between gap-4 font-semibold [&::-webkit-details-marker]:hidden">
+          What hardware do I need?
+          <span class="text-accent transition group-open:rotate-45" aria-hidden="true">+</span>
+        </summary>
+        <p class="mt-3 text-[0.9375rem] text-muted">A Raspberry Pi 5 (4 GB or 8 GB), the official 27 W USB-C power supply, a 16 GB+ microSD card, a micro-HDMI to HDMI cable and any TV or monitor. A case with a fan is recommended for always-on use.</p>
+      </details>
+      <details class="group px-5 py-4 sm:px-6">
+        <summary class="flex cursor-pointer list-none items-center justify-between gap-4 font-semibold [&::-webkit-details-marker]:hidden">
+          Is it really free?
+          <span class="text-accent transition group-open:rotate-45" aria-hidden="true">+</span>
+        </summary>
+        <p class="mt-3 text-[0.9375rem] text-muted">Yes. PitchTribe is MIT-licensed open source. There are no subscriptions, per-screen licences or hidden fees — you only pay for the hardware.</p>
+      </details>
+      <details class="group px-5 py-4 sm:px-6">
+        <summary class="flex cursor-pointer list-none items-center justify-between gap-4 font-semibold [&::-webkit-details-marker]:hidden">
+          Does it need an internet connection?
+          <span class="text-accent transition group-open:rotate-45" aria-hidden="true">+</span>
+        </summary>
+        <p class="mt-3 text-[0.9375rem] text-muted">No. Displays and the dashboard work entirely over your local network. Internet is only needed for optional features like league fixture imports and software updates.</p>
+      </details>
+      <details class="group px-5 py-4 sm:px-6">
+        <summary class="flex cursor-pointer list-none items-center justify-between gap-4 font-semibold [&::-webkit-details-marker]:hidden">
+          Can I run more than one screen?
+          <span class="text-accent transition group-open:rotate-45" aria-hidden="true">+</span>
+        </summary>
+        <p class="mt-3 text-[0.9375rem] text-muted">Yes. Each Pi 5 drives up to two displays, and you can add as many Pis as you like — manage them all from one dashboard, each showing its own playlist.</p>
+      </details>
+    </div>
+  </div>
+</section>
+
 <!-- ===================== INSTALL CTA ===================== -->
-<section class="install-section" id="install">
-  <div class="container">
-    <div class="install-box rev">
-      <h2 class="install-h">Ready to get started?</h2>
-      <p class="install-s">Flash your Pi 5, plug it in, and your first display is live in minutes. Free forever.</p>
-      <div class="code-wrap">
-        <code id="installCmd">curl -sSL https://get.pitchtribe.club | sudo bash</code>
-        <button class="copy-btn" id="copyBtn" type="button">Copy</button>
+<section id="install" class="pb-20 text-center">
+  <div class="mx-auto w-full max-w-6xl px-4 sm:px-6">
+    <div class="reveal mx-auto max-w-[700px] rounded-3xl border border-line bg-surface px-6 py-10 sm:px-10 sm:py-14">
+      <h2 class="section-title mb-3 text-[clamp(1.7rem,4vw,2.4rem)]">Ready to get started?</h2>
+      <p class="mx-auto mb-8 max-w-[46ch] text-[1.0625rem] text-muted">Flash your Pi 5, plug it in and your first display is live in minutes. Free forever.</p>
+      <div class="mb-6 flex items-center gap-2.5 rounded-[10px] border border-line bg-bg px-4 py-3.5 text-left">
+        <code id="install-cmd" class="min-w-0 flex-1 truncate font-mono text-sm text-accent">curl -sSL https://get.pitchtribe.club | sudo bash</code>
+        <button id="copy-btn" type="button" class="shrink-0 rounded-md border border-line bg-surface-2 px-3 py-1.5 text-[0.78rem] font-semibold text-muted transition hover:border-accent hover:text-accent" aria-describedby="install-cmd">Copy</button>
       </div>
-      <div class="install-btns">
+      <p class="sr-only" role="status" aria-live="polite" id="copy-status"></p>
+      <div class="flex flex-wrap justify-center gap-3">
         <a href="https://docs.pitchtribe.club" class="btn btn-ghost" target="_blank" rel="noopener noreferrer">Read the docs</a>
-        <a href="https://github.com/pitchtribe/pitchtribe-display" class="btn btn-primary" target="_blank" rel="noopener noreferrer">
-          <svg width="17" height="17" viewBox="0 0 17 17" fill="none" aria-hidden="true">
-            <path fill-rule="evenodd" clip-rule="evenodd" d="M8.5 1C4.358 1 1 4.358 1 8.5c0 3.314 2.15 6.127 5.134 7.123.375.069.513-.163.513-.36 0-.18-.007-.654-.01-1.283-2.088.454-2.529-.99-2.529-.99-.34-.866-.831-1.097-.831-1.097-.68-.464.052-.455.052-.455.752.053 1.148.772 1.148.772.668 1.145 1.753.815 2.18.623.068-.484.261-.815.475-1.003-1.666-.19-3.417-.833-3.417-3.708 0-.819.292-1.489.772-2.013-.077-.19-.334-.953.073-1.987 0 0 .63-.202 2.063.77A7.2 7.2 0 018.5 5.53c.638.003 1.28.086 1.88.254 1.43-.972 2.058-.77 2.058-.77.41 1.034.152 1.797.075 1.987.481.524.773 1.194.773 2.013 0 2.882-1.755 3.516-3.427 3.702.27.232.51.69.51 1.39 0 1.003-.009 1.812-.009 2.058 0 .2.135.432.515.36C14.353 14.625 16.5 11.814 16.5 8.5 16.5 4.358 13.142 1 8.5 1z" fill="currentColor"/>
-          </svg>
-          Star on GitHub
-        </a>
+        <a href="https://github.com/pitchtribe/pitchtribe-display" class="btn btn-primary" target="_blank" rel="noopener noreferrer">Star on GitHub</a>
       </div>
     </div>
   </div>
 </section>
+
 </main>
 
 <!-- ===================== FOOTER ===================== -->
-<footer class="site-footer">
-  <div class="container">
-    <div class="footer-top">
-      <div class="footer-brand-t">PITCH<em>TRIBE</em></div>
-      <nav class="footer-links" aria-label="Footer navigation">
-        <a href="https://github.com/pitchtribe/pitchtribe-display" target="_blank" rel="noopener noreferrer">GitHub</a>
-        <a href="https://docs.pitchtribe.club" target="_blank" rel="noopener noreferrer">Docs</a>
-        <a href="#features">Features</a>
-        <a href="#how-it-works">How it works</a>
-        <a href="#tech">Technical</a>
+<footer class="border-t border-line py-9 pb-[max(2.25rem,env(safe-area-inset-bottom))]">
+  <div class="mx-auto w-full max-w-6xl px-4 sm:px-6">
+    <div class="mb-6 flex flex-wrap items-center justify-between gap-6">
+      <span class="font-head text-lg font-extrabold text-muted">PITCH<span class="text-accent">TRIBE</span></span>
+      <nav aria-label="Footer" class="flex flex-wrap gap-x-5 gap-y-2 text-sm text-dim">
+        <a class="transition hover:text-fg" href="https://github.com/pitchtribe/pitchtribe-display" target="_blank" rel="noopener noreferrer">GitHub</a>
+        <a class="transition hover:text-fg" href="https://docs.pitchtribe.club" target="_blank" rel="noopener noreferrer">Docs</a>
+        <a class="transition hover:text-fg" href="#features">Features</a>
+        <a class="transition hover:text-fg" href="#how-it-works">How it works</a>
+        <a class="transition hover:text-fg" href="#tech">Technical</a>
+        <a class="transition hover:text-fg" href="#faq">FAQ</a>
       </nav>
     </div>
-    <div class="footer-legal">
-      <span>© 2026 PitchTribe · MIT Licence · Made for sports and social clubs</span>
+    <div class="flex flex-wrap justify-between gap-4 border-t border-line pt-5 text-[0.78rem] text-dim">
+      <span>© <span data-year>2026</span> PitchTribe · MIT licence · Made for sports and social clubs</span>
       <span>Raspberry Pi is a trademark of Raspberry Pi Ltd. Not affiliated.</span>
     </div>
   </div>
 </footer>
 
-<script>
-(function () {
-  'use strict';
-
-  /* Live clock */
-  function tick() {
-    var el = document.getElementById('liveClock');
-    if (!el) return;
-    var now = new Date();
-    el.textContent = now.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
-  }
-  tick();
-  setInterval(tick, 1000);
-
-  /* Screen switcher */
-  var tabs   = document.querySelectorAll('.scr-tab');
-  var panels = document.querySelectorAll('.scr');
-  var ORDER  = ['noticeboard', 'fixtures', 'menu', 'wifi'];
-  var idx    = 0;
-
-  function show(id) {
-    tabs.forEach(function (t) {
-      var on = t.dataset.scr === id;
-      t.classList.toggle('active', on);
-      t.setAttribute('aria-selected', String(on));
-    });
-    panels.forEach(function (p) { p.classList.remove('active'); });
-    var target = document.getElementById('scr-' + id);
-    if (target) target.classList.add('active');
-    idx = ORDER.indexOf(id);
-    if (idx < 0) idx = 0;
-  }
-
-  /* Auto-rotate */
-  var rotator = setInterval(function () {
-    idx = (idx + 1) % ORDER.length;
-    show(ORDER[idx]);
-  }, 3800);
-
-  tabs.forEach(function (tab) {
-    tab.addEventListener('click', function () {
-      clearInterval(rotator);
-      show(tab.dataset.scr);
-    });
-  });
-
-  /* Copy button */
-  var copyBtn = document.getElementById('copyBtn');
-  var cmdEl   = document.getElementById('installCmd');
-  if (copyBtn && cmdEl) {
-    copyBtn.addEventListener('click', function () {
-      navigator.clipboard.writeText(cmdEl.textContent).then(function () {
-        copyBtn.textContent = 'Copied!';
-        setTimeout(function () { copyBtn.textContent = 'Copy'; }, 2000);
-      }).catch(function () {
-        var r = document.createRange();
-        r.selectNodeContents(cmdEl);
-        var s = window.getSelection();
-        if (s) { s.removeAllRanges(); s.addRange(r); }
-        copyBtn.textContent = 'Selected';
-        setTimeout(function () { copyBtn.textContent = 'Copy'; }, 2000);
-      });
-    });
-  }
-
-  /* Mobile nav */
-  var toggle = document.querySelector('.nav-toggle');
-  var nav    = document.getElementById('primary-nav');
-  if (toggle && nav) {
-    toggle.addEventListener('click', function () {
-      var open = nav.classList.toggle('open');
-      toggle.setAttribute('aria-expanded', String(open));
-    });
-    nav.querySelectorAll('a').forEach(function (a) {
-      a.addEventListener('click', function () {
-        nav.classList.remove('open');
-        toggle.setAttribute('aria-expanded', 'false');
-      });
-    });
-  }
-
-  /* Scroll reveal */
-  if ('IntersectionObserver' in window) {
-    var io = new IntersectionObserver(function (entries) {
-      entries.forEach(function (e) {
-        if (e.isIntersecting) { e.target.classList.add('in'); io.unobserve(e.target); }
-      });
-    }, { threshold: 0.1 });
-    document.querySelectorAll('.rev').forEach(function (el) { io.observe(el); });
-  } else {
-    document.querySelectorAll('.rev').forEach(function (el) { el.classList.add('in'); });
-  }
-
-})();
-</script>
 </body>
 </html>

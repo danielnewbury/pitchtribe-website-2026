@@ -1,0 +1,9 @@
+# Cloudflare Pages configuration for the PitchTribe landing page.
+# Docs: https://developers.cloudflare.com/pages/functions/wrangler-configuration/
+#
+# `npm run build` copies the static root (html/) into dist/ and compiles
+# Tailwind into dist/assets/app.css; Pages serves dist/ as-is.
+
+name = "pitchtribe-website"
+pages_build_output_dir = "./dist"
+compatibility_date = "2026-10-01"
