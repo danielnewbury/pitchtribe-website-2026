@@ -1,0 +1,482 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PitchTribe Clubhouse — Open-source Raspberry Pi 5 signage for clubs</title>
+  <meta name="description" content="Open-source digital signage for sports and social clubs, built on Raspberry Pi 5. Digital noticeboards, fixtures, instant bar and kitchen menus and a guest Wi-Fi captive portal, on any TV you already own.">
+  <meta name="theme-color" content="#050a12">
+  <link rel="canonical" href="https://pitchtribe.media/signage/">
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="PitchTribe Clubhouse — Open-source club signage on Raspberry Pi 5">
+  <meta property="og:description" content="Turn the clubhouse TV into a live noticeboard, fixtures wall, bar menu and Wi-Fi welcome screen. Free, open source and runs on a Raspberry Pi 5.">
+  <meta property="og:url" content="https://pitchtribe.media/signage/">
+  <meta name="twitter:card" content="summary_large_image">
+  <link rel="icon" href="/assets/favicon.svg" type="image/svg+xml">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/assets/styles.css">
+  <link rel="stylesheet" href="/assets/signage.css">
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "SoftwareApplication",
+    "name": "PitchTribe Clubhouse",
+    "applicationCategory": "BusinessApplication",
+    "operatingSystem": "Raspberry Pi OS (Raspberry Pi 5)",
+    "description": "Open-source digital signage for sports and social clubs: noticeboards, fixtures, bar and kitchen menus and guest Wi-Fi captive portal.",
+    "offers": { "@type": "Offer", "price": "0", "priceCurrency": "GBP" },
+    "url": "https://pitchtribe.media/signage/",
+    "publisher": { "@type": "Organization", "name": "PitchTribe", "url": "https://pitchtribe.media" }
+  }
+  </script>
+</head>
+<body class="page-signage">
+  <a class="skip-link" href="#main">Skip to content</a>
+
+  <header class="site-header">
+    <div class="container header-inner">
+      <a class="brand" href="/" aria-label="PitchTribe home">
+        <span class="brand-mark" aria-hidden="true">
+          <svg viewBox="0 0 32 32" focusable="false">
+            <path d="M16 2 29 9v14L16 30 3 23V9z" fill="none" stroke="currentColor" stroke-width="1.6"/>
+            <path d="M16 9.5 22 13v6l-6 3.5L10 19v-6z" fill="currentColor" opacity=".9"/>
+          </svg>
+        </span>
+        <span class="brand-word">PITCH<span>TRIBE</span></span>
+        <span class="brand-tag">Clubhouse</span>
+      </a>
+
+      <button class="nav-toggle" type="button" aria-expanded="false" aria-controls="primary-nav">
+        <span class="nav-toggle-box" aria-hidden="true"><span></span><span></span></span>
+        <span class="sr-only">Toggle navigation</span>
+      </button>
+
+      <nav class="site-nav" id="primary-nav" aria-label="Primary">
+        <a href="#features">Features</a>
+        <a href="#how">How it works</a>
+        <a href="#hardware">Hardware</a>
+        <a href="#faq">FAQ</a>
+        <a class="btn btn-small btn-primary" href="#get-started">Get started free</a>
+      </nav>
+    </div>
+  </header>
+
+  <main id="main">
+    <!-- Hero -->
+    <section class="hero sg-hero">
+      <div class="hero-glow" aria-hidden="true"></div>
+      <div class="container hero-inner">
+        <div class="hero-copy">
+          <p class="eyebrow"><span class="pulse" aria-hidden="true"></span> Open source · Raspberry Pi 5</p>
+          <h1>The clubhouse TV,<br><em>finally earning its keep.</em></h1>
+          <p class="lede">PitchTribe Clubhouse turns any screen in the bar into a live noticeboard, fixtures wall, menu board and Wi-Fi welcome desk. It runs on a Raspberry Pi 5, it's free and open source, and volunteers can update it from their phone.</p>
+          <div class="hero-actions">
+            <a class="btn btn-primary" href="#get-started">Set up your first screen</a>
+            <a class="btn btn-ghost" href="#features">See what it does</a>
+          </div>
+          <dl class="hero-facts">
+            <div><dt>£0 licence</dt><dd>No subscriptions, ever</dd></div>
+            <div><dt>1 Pi per screen</dt><dd>Any HDMI TV</dd></div>
+            <div><dt>Phone-first admin</dt><dd>Built for volunteers</dd></div>
+          </dl>
+        </div>
+
+        <!-- Live screen demo -->
+        <div class="sg-demo">
+          <div class="tv" aria-hidden="true">
+            <div class="tv-screen" data-slides>
+              <!-- Noticeboard -->
+              <div class="slide slide-notice is-active" data-slide="notice">
+                <div class="slide-head">
+                  <span class="slide-crest">RFC</span>
+                  <span class="slide-title">Clubhouse noticeboard</span>
+                  <span class="slide-clock">18:42</span>
+                </div>
+                <div class="notice-grid">
+                  <div class="notice notice-hero">
+                    <b>Quiz night</b>
+                    <span>Thursday · 8pm · £2 a head</span>
+                  </div>
+                  <div class="notice"><b>AGM</b><span>14 Dec · Committee room</span></div>
+                  <div class="notice"><b>Subs due</b><span>Pay at the bar or online</span></div>
+                  <div class="notice notice-wide"><b>Volunteers wanted</b><span>Tea hut rota for the Boxing Day derby</span></div>
+                </div>
+                <div class="slide-ticker"><span>Well done U12s, county cup semi-finalists! · Car park closed Sat AM for resurfacing · New kit on sale behind the bar</span></div>
+              </div>
+
+              <!-- Fixtures -->
+              <div class="slide slide-fixtures" data-slide="fixtures">
+                <div class="slide-head">
+                  <span class="slide-crest">RFC</span>
+                  <span class="slide-title">This weekend</span>
+                  <span class="slide-clock">SAT 8 NOV</span>
+                </div>
+                <ul class="fixtures">
+                  <li><span class="fx-team">1st XV</span><span class="fx-vs">v Old Millers</span><span class="fx-ko">14:30</span><span class="fx-ha is-home">H</span></li>
+                  <li><span class="fx-team">2nd XV</span><span class="fx-vs">v Westbury</span><span class="fx-ko">14:30</span><span class="fx-ha">A</span></li>
+                  <li><span class="fx-team">Vets</span><span class="fx-vs">v Harlow Saints</span><span class="fx-ko">12:00</span><span class="fx-ha is-home">H</span></li>
+                  <li><span class="fx-team">Ladies</span><span class="fx-vs">v Kingsmead</span><span class="fx-ko">SUN 11:00</span><span class="fx-ha is-home">H</span></li>
+                  <li class="fx-result"><span class="fx-team">U16</span><span class="fx-vs">beat Northfield</span><span class="fx-ko">31–12</span><span class="fx-ha">FT</span></li>
+                </ul>
+              </div>
+
+              <!-- Menu -->
+              <div class="slide slide-menu" data-slide="menu">
+                <div class="slide-head">
+                  <span class="slide-crest">RFC</span>
+                  <span class="slide-title">Bar &amp; kitchen</span>
+                  <span class="slide-clock">KITCHEN OPEN</span>
+                </div>
+                <div class="menu-cols">
+                  <ul class="menu">
+                    <li class="menu-h">On tap</li>
+                    <li><span>Club Bitter</span><b>£3.80</b></li>
+                    <li><span>Session IPA</span><b>£4.40</b></li>
+                    <li><span>Lager</span><b>£4.60</b></li>
+                    <li class="is-new"><span>Winter Porter</span><b>£4.50</b></li>
+                  </ul>
+                  <ul class="menu">
+                    <li class="menu-h">Kitchen</li>
+                    <li><span>Bacon roll</span><b>£3.50</b></li>
+                    <li class="is-out"><span>Steak pie &amp; chips</span><b>SOLD OUT</b></li>
+                    <li><span>Chilli &amp; rice</span><b>£6.00</b></li>
+                    <li><span>Chips</span><b>£2.50</b></li>
+                  </ul>
+                </div>
+              </div>
+
+              <!-- Wi-Fi -->
+              <div class="slide slide-wifi" data-slide="wifi">
+                <div class="slide-head">
+                  <span class="slide-crest">RFC</span>
+                  <span class="slide-title">Guest Wi-Fi</span>
+                  <span class="slide-clock">FREE</span>
+                </div>
+                <div class="wifi-body">
+                  <svg class="qr" viewBox="0 0 21 21" shape-rendering="crispEdges">
+                    <path fill="currentColor" d="M0 0h7v7H0zM1 1v5h5V1zM2 2h3v3H2zM14 0h7v7h-7zM15 1v5h5V1zM16 2h3v3h-3zM0 14h7v7H0zM1 15v5h5v-5zM2 16h3v3H2zM8 0h1v1H8zM10 0h2v1h-2zM9 1h1v2H9zM11 2h2v1h-2zM8 3h1v2H8zM10 4h3v1h-3zM12 5h1v2h-1zM8 6h1v1H8zM10 6h1v1h-1zM0 8h2v1H0zM3 8h3v1H3zM8 8h3v1H8zM13 8h2v1h-2zM17 8h4v1h-4zM1 9h1v2H1zM4 9h1v1H4zM6 9h2v1H6zM10 9h1v2h-1zM12 9h1v1h-1zM15 9h2v1h-2zM19 9h1v1h-1zM0 11h1v1H0zM3 11h2v1H3zM7 10h2v2H7zM12 11h3v1h-3zM16 11h1v2h-1zM18 10h3v1h-3zM20 11h1v2h-1zM2 12h1v1H2zM5 12h1v1H5zM9 12h2v1H9zM13 12h1v2h-1zM18 12h1v1h-1zM8 14h2v1H8zM11 14h1v2h-1zM14 14h2v1h-2zM17 14h1v1h-1zM19 14h2v1h-2zM8 16h1v2H8zM10 16h1v1h-1zM13 15h1v2h-1zM15 16h3v1h-3zM19 16h1v2h-1zM9 18h3v1H9zM14 18h2v1h-2zM17 18h1v3h-1zM8 19h1v2H8zM11 20h3v1h-3zM15 19h1v1h-1zM19 19h2v1h-2zM20 20h1v1h-1z"/>
+                  </svg>
+                  <div class="wifi-copy">
+                    <b>Scan to get online</b>
+                    <span>Network: <i>RFC-Guest</i></span>
+                    <span>Join the mailing list for fixtures &amp; socials — optional, one tap.</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="tv-stand"></div>
+            <span class="tv-pi">Raspberry Pi 5</span>
+          </div>
+
+          <div class="sg-tabs" role="group" aria-label="Preview a screen">
+            <button type="button" class="sg-tab is-active" data-target="notice" aria-pressed="true">Noticeboard</button>
+            <button type="button" class="sg-tab" data-target="fixtures" aria-pressed="false">Fixtures</button>
+            <button type="button" class="sg-tab" data-target="menu" aria-pressed="false">Menu</button>
+            <button type="button" class="sg-tab" data-target="wifi" aria-pressed="false">Wi-Fi</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="marquee" aria-label="Who it's for">
+      <div class="marquee-track">
+        <span>Rugby clubs</span><span aria-hidden="true">◆</span>
+        <span>Cricket pavilions</span><span aria-hidden="true">◆</span>
+        <span>Grassroots football</span><span aria-hidden="true">◆</span>
+        <span>Golf &amp; bowls clubs</span><span aria-hidden="true">◆</span>
+        <span>Social clubs</span><span aria-hidden="true">◆</span>
+        <span>Leisure centres</span><span aria-hidden="true">◆</span>
+        <span aria-hidden="true">Rugby clubs</span><span aria-hidden="true">◆</span>
+        <span aria-hidden="true">Cricket pavilions</span><span aria-hidden="true">◆</span>
+        <span aria-hidden="true">Grassroots football</span><span aria-hidden="true">◆</span>
+        <span aria-hidden="true">Golf &amp; bowls clubs</span><span aria-hidden="true">◆</span>
+        <span aria-hidden="true">Social clubs</span><span aria-hidden="true">◆</span>
+        <span aria-hidden="true">Leisure centres</span><span aria-hidden="true">◆</span>
+      </div>
+    </section>
+
+    <!-- Features -->
+    <section class="section" id="features">
+      <div class="container">
+        <header class="section-head">
+          <p class="eyebrow">Features</p>
+          <h2>Everything the cork board did, and much more</h2>
+          <p class="section-lede">Four things every clubhouse needs, all in one open-source package. Run all of them on one screen or give each its own.</p>
+        </header>
+
+        <div class="sg-features">
+          <article class="sg-feature">
+            <span class="card-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24"><rect x="3" y="3.5" width="18" height="17" rx="2" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M7 8h10M7 12h6M7 16h8" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+            </span>
+            <p class="sg-feature-tag">01 · Noticeboards</p>
+            <h3>Dynamic digital noticeboards</h3>
+            <p>Socials, AGMs, subs reminders, sponsor thank-yous and team shout-outs. Post them once and they rotate on every screen, with no more drawing pins or curling paper.</p>
+            <ul class="card-list">
+              <li>Drag-and-drop layouts with your club colours and crest</li>
+              <li>Expiry dates, so last month's quiz poster takes itself down</li>
+              <li>Scrolling ticker for quick news and results</li>
+              <li>Photos and short video clips from the weekend</li>
+            </ul>
+          </article>
+
+          <article class="sg-feature">
+            <span class="card-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="15.5" rx="2" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M3 9.5h18M8 3v4M16 3v4" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><circle cx="12" cy="15" r="2.2" fill="none" stroke="currentColor" stroke-width="1.5"/></svg>
+            </span>
+            <p class="sg-feature-tag">02 · Fixtures</p>
+            <h3>Scheduled events &amp; fixtures</h3>
+            <p>Show this weekend's fixtures, kick-off times, pitch allocations and results across every age group. Schedule the screens too, so the fixtures wall takes over on matchday morning.</p>
+            <ul class="card-list">
+              <li>Import fixtures from CSV or iCal feeds</li>
+              <li>Day-part playlists: matchday, midweek, function night</li>
+              <li>Home/away, kick-off, pitch and changing-room info</li>
+              <li>Results entered on the touchline, live in the bar</li>
+            </ul>
+          </article>
+
+          <article class="sg-feature sg-feature-hot">
+            <span class="card-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24"><path d="M7 3v8M5 3v4a2 2 0 0 0 4 0V3M7 11v10M16.5 21V3c-2.2 0-3.5 2.5-3.5 6v4h3.5" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </span>
+            <p class="sg-feature-tag">03 · Menus</p>
+            <h3>Instant bar &amp; kitchen menus</h3>
+            <p>Changed the guest ale or run out of pies? Tap it on your phone and the menu board updates in seconds. Nobody has to find the laptop or reprint anything.</p>
+            <ul class="card-list">
+              <li>One-tap "sold out" and "back on" toggles</li>
+              <li>Prices, allergens and specials in one place</li>
+              <li>Happy-hour pricing that switches on automatically</li>
+              <li>Separate bar, kitchen and tea-hut boards</li>
+            </ul>
+          </article>
+
+          <article class="sg-feature">
+            <span class="card-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24"><path d="M2.5 9a14 14 0 0 1 19 0M5.5 12.5a9.5 9.5 0 0 1 13 0M8.5 16a5 5 0 0 1 7 0" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><circle cx="12" cy="19.2" r="1.2" fill="currentColor"/></svg>
+            </span>
+            <p class="sg-feature-tag">04 · Guest Wi-Fi</p>
+            <h3>Built-in captive portal</h3>
+            <p>Give visitors a branded Wi-Fi welcome page with your sponsors, fixtures and an optional mailing-list sign-up. A QR code on the TV gets them online without anyone asking for the password.</p>
+            <ul class="card-list">
+              <li>Branded splash page with terms and opt-in consent</li>
+              <li>On-screen QR join codes that rotate with the password</li>
+              <li>Time and bandwidth limits to protect the till and CCTV</li>
+              <li>Sign-ups export to CSV for your mailing tool</li>
+            </ul>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <!-- Phone admin -->
+    <section class="section section-split sg-admin">
+      <div class="container sg-admin-inner">
+        <div class="sg-admin-copy">
+          <p class="eyebrow">Made for volunteers</p>
+          <h2>If you can send a text, you can run the screens</h2>
+          <p class="section-lede">Most clubs are run by volunteers between shifts behind the bar. The Clubhouse dashboard works in any phone browser on the club network. There's no app to install and no training day.</p>
+          <ul class="check-list">
+            <li>Role-based logins for bar staff, coaches and the committee</li>
+            <li>Changes go live in seconds, with a preview first</li>
+            <li>Ready-made templates for every screen type</li>
+            <li>Keeps playing from local cache if the internet drops</li>
+          </ul>
+        </div>
+
+        <div class="phone" aria-hidden="true">
+          <div class="phone-notch"></div>
+          <div class="phone-screen">
+            <p class="phone-title">Kitchen menu</p>
+            <ul class="phone-list">
+              <li><span>Bacon roll</span><i class="toggle is-on"></i></li>
+              <li class="is-off"><span>Steak pie &amp; chips</span><i class="toggle"></i></li>
+              <li><span>Chilli &amp; rice</span><i class="toggle is-on"></i></li>
+              <li><span>Chips</span><i class="toggle is-on"></i></li>
+            </ul>
+            <div class="phone-toast"><span class="pulse"></span> Updated on 3 screens</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- How it works -->
+    <section class="section" id="how">
+      <div class="container">
+        <div class="how">
+          <div class="how-copy">
+            <p class="eyebrow">How it works</p>
+            <h2>From box to bar screen in an afternoon</h2>
+            <p class="section-lede">No installers, no contracts. Flash a card, plug it into the TV, and manage everything from your phone.</p>
+            <a class="btn btn-ghost" href="#get-started">Read the quick-start</a>
+          </div>
+          <ol class="steps">
+            <li>
+              <span class="step-no">01</span>
+              <div><h3>Flash</h3><p>Write the Clubhouse image to a microSD card with Raspberry Pi Imager. It already includes the player, the dashboard and the Wi-Fi portal.</p></div>
+            </li>
+            <li>
+              <span class="step-no">02</span>
+              <div><h3>Plug in</h3><p>Connect the Pi 5 to the TV's HDMI port and to your network. It boots straight into full-screen signage with no keyboard needed.</p></div>
+            </li>
+            <li>
+              <span class="step-no">03</span>
+              <div><h3>Claim</h3><p>Scan the pairing code on the TV with your phone, name the screen ("Bar left", "Tea hut") and choose what it shows.</p></div>
+            </li>
+            <li>
+              <span class="step-no">04</span>
+              <div><h3>Run</h3><p>Add notices, fixtures and menus from the dashboard. Add more Pis and they all appear in the same place.</p></div>
+            </li>
+          </ol>
+        </div>
+      </div>
+    </section>
+
+    <!-- Hardware -->
+    <section class="tech-band" id="hardware" aria-labelledby="hardware-title">
+      <div class="container sg-hw">
+        <div class="sg-hw-copy">
+          <p class="eyebrow">Hardware</p>
+          <h2 id="hardware-title">Built on Raspberry Pi 5</h2>
+          <p>The Pi 5 has enough power for smooth 4K slides, video and the captive portal on one board. It's small enough to tape behind the TV and uses very little electricity. If you need more screens, add another Pi.</p>
+        </div>
+        <div class="sg-hw-spec">
+          <dl class="spec">
+            <div><dt>Board</dt><dd>Raspberry Pi 5 · 4&nbsp;GB or 8&nbsp;GB</dd></div>
+            <div><dt>Storage</dt><dd>32&nbsp;GB+ microSD, or NVMe via M.2 HAT</dd></div>
+            <div><dt>Display</dt><dd>Any HDMI TV · dual 4K outputs</dd></div>
+            <div><dt>Network</dt><dd>Ethernet recommended · Wi-Fi supported</dd></div>
+            <div><dt>Power</dt><dd>Official 27&nbsp;W USB-C supply</dd></div>
+            <div><dt>Extras</dt><dd>Case with active cooler · micro-HDMI cable</dd></div>
+          </dl>
+        </div>
+      </div>
+    </section>
+
+    <!-- Open source -->
+    <section class="section" id="open-source">
+      <div class="container">
+        <header class="section-head">
+          <p class="eyebrow">Open source</p>
+          <h2>Owned by your club, not a vendor</h2>
+          <p class="section-lede">Clubhouse is free, open-source software. Your notices, fixtures and guest sign-ups stay on hardware your club owns. Nothing goes to the cloud unless you choose to send it.</p>
+        </header>
+        <div class="cards">
+          <article class="card">
+            <h3>No subscriptions</h3>
+            <p>Pay once for the hardware and nothing else. There's no per-screen licence and no premium tier holding back the useful features.</p>
+          </article>
+          <article class="card card-featured">
+            <h3>Your data stays home</h3>
+            <p>Runs on your local network. Guest Wi-Fi sign-ups are stored on your Pi and exported only when you want, which keeps GDPR simple.</p>
+          </article>
+          <article class="card">
+            <h3>Community-built</h3>
+            <p>Templates, sport-specific fixture importers and translations come from clubs like yours. Fork it, theme it, contribute back.</p>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <!-- FAQ -->
+    <section class="section section-split" id="faq">
+      <div class="container sg-faq-wrap">
+        <header class="section-head">
+          <p class="eyebrow">FAQ</p>
+          <h2>Questions from the committee</h2>
+        </header>
+        <div class="sg-faq">
+          <details>
+            <summary>Do we need a technical person to set it up?</summary>
+            <p>No. If someone at the club can plug in a TV and use a phone browser, they can set up Clubhouse. The image boots straight into signage and pairing is done by scanning a code.</p>
+          </details>
+          <details>
+            <summary>Will the captive portal work with our existing router?</summary>
+            <p>Yes. The Pi can act as the guest access point itself, or sit alongside your current router on a separate guest network so the till, CCTV and office PCs stay isolated from visitors.</p>
+          </details>
+          <details>
+            <summary>What happens if the internet goes down?</summary>
+            <p>Screens keep playing from local storage. The dashboard runs on your club network too, so you can still update menus and notices while the broadband is out.</p>
+          </details>
+          <details>
+            <summary>Can we run more than one screen?</summary>
+            <p>Yes. Each screen gets its own Pi 5, and they're all managed from the same dashboard. Group screens by room and push different playlists to each.</p>
+          </details>
+          <details>
+            <summary>Can we show sponsor adverts?</summary>
+            <p>Yes. Sponsor slides slot into any playlist, and Clubhouse logs how many times each one played. That's handy evidence when sponsorships come up for renewal.</p>
+          </details>
+          <details>
+            <summary>Is it really free?</summary>
+            <p>The software is free and open source. You only pay for the Raspberry Pi hardware and the TV you probably already have.</p>
+          </details>
+        </div>
+      </div>
+    </section>
+
+    <!-- CTA -->
+    <section class="section contact" id="get-started">
+      <div class="container contact-inner">
+        <div>
+          <p class="eyebrow">Get started</p>
+          <h2>Put your clubhouse on screen this weekend</h2>
+          <p class="section-lede">Grab a Raspberry Pi 5, flash the image and you'll have your first noticeboard running before the second half. If you get stuck, let us know and we'll help.</p>
+        </div>
+        <div class="contact-card">
+          <p class="contact-label">Quick start</p>
+          <pre class="sg-code"><code><span class="c"># on a fresh Raspberry Pi OS (64-bit)</span>
+curl -fsSL https://pitchtribe.media/clubhouse/install.sh | bash</code></pre>
+          <div class="contact-actions">
+            <a class="btn btn-primary" href="mailto:danielnewbury.dev@protonmail.com?subject=PitchTribe%20Clubhouse%20early%20access">Join the early-access list</a>
+            <a class="btn btn-ghost" href="https://github.com/pitchtribe/clubhouse">View on GitHub</a>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="container footer-inner">
+      <div class="footer-brand">
+        <a class="brand" href="/" aria-label="PitchTribe home">
+          <span class="brand-mark" aria-hidden="true">
+            <svg viewBox="0 0 32 32" focusable="false">
+              <path d="M16 2 29 9v14L16 30 3 23V9z" fill="none" stroke="currentColor" stroke-width="1.6"/>
+              <path d="M16 9.5 22 13v6l-6 3.5L10 19v-6z" fill="currentColor" opacity=".9"/>
+            </svg>
+          </span>
+          <span class="brand-word">PITCH<span>TRIBE</span></span>
+        </a>
+        <p>Clubhouse is open-source digital signage for sports and social clubs, built on Raspberry Pi 5.</p>
+      </div>
+      <div class="footer-links">
+        <div>
+          <h4>Clubhouse</h4>
+          <a href="#features">Features</a>
+          <a href="#how">How it works</a>
+          <a href="#hardware">Hardware</a>
+          <a href="#faq">FAQ</a>
+        </div>
+        <div>
+          <h4>PitchTribe</h4>
+          <a href="/">Stadium platform</a>
+          <a href="/#contact">Contact</a>
+        </div>
+        <div>
+          <h4>Community</h4>
+          <a href="https://github.com/pitchtribe/clubhouse">GitHub</a>
+          <a href="mailto:danielnewbury.dev@protonmail.com">Email</a>
+        </div>
+      </div>
+    </div>
+    <div class="container footer-bottom">
+      <p>© <span data-year>2026</span> PitchTribe. Raspberry Pi is a trademark of Raspberry Pi Ltd.</p>
+      <p class="footer-status"><span class="pulse" aria-hidden="true"></span> Open source</p>
+    </div>
+  </footer>
+
+  <script src="/assets/main.js" defer></script>
+  <script src="/assets/signage.js" defer></script>
+</body>
+</html>
