@@ -50,9 +50,11 @@ function authorized(req, token) {
  *   GET  /api/stream         Server-Sent Events: "update" whenever data changes
  *   POST /api/refresh        re-fetch now            (Bearer token if apiToken set)
  *   POST /api/push           push to signage targets (Bearer token if apiToken set)
+ *   GET  /api/widgets        widget list; GET /api/widgets/:kind?scope=&general=&days= for data
+ *   GET  /api/geocode?q=     place search for the weather location
  *   POST /mcp                MCP over Streamable HTTP (Bearer token if apiToken set)
  */
-export function createRequestHandler({ store, config, push, mcp, log = console.error }) {
+export function createRequestHandler({ store, config, push, mcp, widgets, log = console.error }) {
   const clients = new Set();
   store.on('update', () => {
     for (const res of clients) res.write(`event: update\ndata: ${JSON.stringify({ updatedAt: store.updatedAt })}\n\n`);
@@ -72,6 +74,13 @@ export function createRequestHandler({ store, config, push, mcp, log = console.e
       }
       if (req.method === 'POST' && !authorized(req, config.apiToken)) {
         return send(res, 401, { error: 'Unauthorized' }, undefined, { 'www-authenticate': 'Bearer' });
+      }
+
+      if (widgets && req.method === 'GET') {
+        if (url.pathname === '/api/widgets') return send(res, 200, widgets.kinds);
+        const m = /^\/api\/widgets\/([a-z]+)\/?$/.exec(url.pathname);
+        if (m) return send(res, 200, await widgets.get(m[1], Object.fromEntries(url.searchParams)));
+        if (url.pathname === '/api/geocode') return send(res, 200, await widgets.geocode(url.searchParams.get('q')));
       }
 
       switch (route) {

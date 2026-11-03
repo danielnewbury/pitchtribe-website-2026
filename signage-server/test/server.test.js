@@ -145,7 +145,7 @@ test('HTTP API end-to-end', async (t) => {
   assert.equal((await fetch(`${base}/api/refresh`, { method: 'POST', headers: auth })).status, 200);
 
   const rpc = await fetch(`${base}/mcp`, { method: 'POST', headers: auth, body: JSON.stringify({ jsonrpc: '2.0', id: 1, method: 'tools/list' }) });
-  assert.equal((await rpc.json()).result.tools.length, 7);
+  assert.equal((await rpc.json()).result.tools.length, 8);
   const note = await fetch(`${base}/mcp`, { method: 'POST', headers: auth, body: JSON.stringify({ jsonrpc: '2.0', method: 'notifications/initialized' }) });
   assert.equal(note.status, 202);
 

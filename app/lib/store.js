@@ -28,6 +28,7 @@ function emptyData() {
       sessionSecret: crypto.randomBytes(32).toString('hex'),
       defaultPlaylistId: null,
       sports: defaultSports(),
+      widgets: { weather: null, wikipedia: true },
     },
     assets: [],
     playlists: [],
@@ -57,6 +58,7 @@ class Store extends EventEmitter {
     const base = emptyData();
     const settings = { ...base.settings, ...data.settings };
     settings.sports = { ...base.settings.sports, ...(data.settings && data.settings.sports) };
+    settings.widgets = { ...base.settings.widgets, ...(data.settings && data.settings.widgets) };
     return { ...base, ...data, settings };
   }
 

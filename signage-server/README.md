@@ -17,7 +17,7 @@ It has no dependencies and needs Node 20 or later. It runs on a Raspberry Pi 5.
 
 - **Inside the PitchTribe app (recommended).** `app/` depends on this package (`file:../signage-server`).
   It runs the engine in the same process and serves every route below under **`/feeds`**, for example
-  `/feeds/display`, `/feeds/api/snapshot` and `/feeds/mcp`. Leagues are chosen in the dashboard
+  `/feeds/display`, `/feeds/api/snapshot`, `/feeds/api/widgets/weather` and `/feeds/mcp`. Leagues are chosen in the dashboard
   (**Settings → Sports feeds**). Screens show scores as **Live scores** slides in normal playlists.
   POST routes need the dashboard's sports API token, shown on that settings page. `deploy/install.sh`
   installs both packages together.
@@ -26,6 +26,23 @@ It has no dependencies and needs Node 20 or later. It runs on a Raspberry Pi 5.
 
 As a library, `import { createSportsService, resolveConfig } from 'pitchtribe-signage-server'` returns
 the store, the MCP handler and an HTTP `handler(req, res)` you can mount anywhere.
+
+## Widgets
+
+The server also provides content for screen widgets:
+
+| Widget | Source | Notes |
+| --- | --- | --- |
+| `weather` | [Open-Meteo](https://open-meteo.com) (no API key) | Current conditions and a 7-day forecast for `config.weather` (`place`, `latitude`, `longitude`, `windUnit`). Cached for 15 minutes. |
+| `joke`, `phrase`, `trivia`, `quiz` | `data/widgets/*.json` (bundled) | A day-stable random selection of 20. Pass `extra` (your own lines) and `only`. Quiz lines use `Question \| right \| wrong \| wrong \| wrong`. |
+| `history` | `data/widgets/sporting-history.json` + Wikipedia "On this day" | `scope=day\|week\|month`. Widens automatically if the day has no entry. `general=true` adds Wikipedia's selected events (`config.widgets.wikipedia`). |
+| `clock` | — | Drawn by the screen. |
+
+- `GET /api/widgets` lists them, and `GET /api/widgets/:kind?…` returns the data.
+- `GET /api/geocode?q=` searches for places.
+- The MCP tool `get_widget` returns the same data.
+- Live sources fall back to the last good data, or to a clear message, when offline.
+- In code: `createWidgets({ config }).peek(kind, opts)` (sync, cached) or `.get(kind, opts)` (async).
 
 ## Quick start
 

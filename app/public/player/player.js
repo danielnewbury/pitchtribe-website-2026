@@ -152,6 +152,8 @@
       }
     }, 900);
     current = { item, sig, el: slide.el };
+    tickLive();
+    if (slide.onShow) slide.onShow(Math.max(item.duration || 10, 1) * 1000);
 
     if (item.type === 'video') {
       const video = slide.el.querySelector('video');
@@ -185,6 +187,7 @@
   function render(item) {
     const slide = el('div', 'slide');
     let ready = Promise.resolve();
+    let onShow = null;
     const c = item.content || {};
     const club = manifest.clubName;
 
@@ -311,10 +314,17 @@
         slide.append(panel);
         break;
       }
+      case 'widget': {
+        const w = renderWidget(item);
+        slide.append(w.el);
+        if (w.ready) ready = w.ready;
+        onShow = w.onShow || null;
+        break;
+      }
       default:
         throw new Error(`Unknown type ${item.type}`);
     }
-    return { el: slide, ready };
+    return { el: slide, ready, onShow };
   }
 
   function teamCell(t, side) {
@@ -348,6 +358,266 @@
     else badge = el('span', 'tag when', start ? PTFormats.formatWhen({ date: start, hasTime: false }) : '');
     li.append(badge, teamCell(e.home, 'home'), mid, teamCell(e.away, 'away'));
     return li;
+  }
+
+
+  // ---------------------------------------------------------------- widgets
+  const cursors = new Map(); // item id -> how many times shown (cycles jokes, quiz questions…)
+  function nextOf(item, list) {
+    const i = cursors.get(item.id) || 0;
+    cursors.set(item.id, i + 1);
+    return list[i % list.length];
+  }
+
+  const pad2 = (n) => String(n).padStart(2, '0');
+  const svgEl = (tag, attrs) => {
+    const e = document.createElementNS('http://www.w3.org/2000/svg', tag);
+    for (const [k, v] of Object.entries(attrs || {})) e.setAttribute(k, v);
+    return e;
+  };
+
+  /** Updates clocks and countdowns on screen once a second. */
+  function tickLive() {
+    const now = new Date();
+    for (const e of stage.querySelectorAll('[data-live]')) {
+      const kind = e.dataset.live;
+      if (kind === 'time') e.textContent = now.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
+      else if (kind === 'seconds') e.textContent = pad2(now.getSeconds());
+      else if (kind === 'date') e.textContent = now.toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+      else if (kind === 'hand') {
+        const h = now.getHours() % 12;
+        const m = now.getMinutes();
+        const sec = now.getSeconds();
+        const deg = { h: h * 30 + m * 0.5, m: m * 6 + sec * 0.1, s: sec * 6 }[e.dataset.hand];
+        e.setAttribute('transform', `rotate(${deg} 100 100)`);
+      } else if (kind === 'countdown') {
+        const ms = new Date(e.dataset.target).getTime() - now.getTime();
+        const parts = e.querySelectorAll('.cd-num');
+        if (ms <= 0) {
+          e.classList.add('done');
+          parts.forEach((p) => { p.textContent = '00'; });
+          continue;
+        }
+        const total = Math.floor(ms / 1000);
+        const vals = [Math.floor(total / 86400), Math.floor((total % 86400) / 3600), Math.floor((total % 3600) / 60), total % 60];
+        parts.forEach((p, i) => { p.textContent = i === 0 ? String(vals[0]) : pad2(vals[i]); });
+      }
+    }
+  }
+  setInterval(tickLive, 1000);
+
+  function widgetPanel(kind, kicker, title) {
+    const panel = el('section', `panel widget w-${kind}`);
+    panel.append(el('div', 'kicker', kicker));
+    if (title) panel.append(el('h1', '', title));
+    const fit = el('div', 'fit');
+    panel.append(fit);
+    return { panel, fit };
+  }
+
+  function renderWidget(item) {
+    const c = item.content || {};
+    const d = item.data || {};
+    const club = manifest.clubName;
+
+    if (d.error && c.kind !== 'clock') {
+      const { panel, fit } = widgetPanel(c.kind, club, c.title || item.name);
+      fit.append(el('p', 'empty-note', d.error));
+      return { el: panel };
+    }
+
+    switch (c.kind) {
+      case 'clock': {
+        const { panel, fit } = widgetPanel('clock', club, c.title || '');
+        if (c.mode === 'analog') {
+          const svg = svgEl('svg', { viewBox: '0 0 200 200', class: 'analog' });
+          svg.append(svgEl('circle', { cx: 100, cy: 100, r: 96, class: 'face' }));
+          for (let i = 0; i < 60; i++) {
+            const major = i % 5 === 0;
+            svg.append(svgEl('line', { x1: 100, y1: major ? 10 : 8, x2: 100, y2: major ? 24 : 14, class: major ? 'tick major' : 'tick', transform: `rotate(${i * 6} 100 100)` }));
+          }
+          svg.append(svgEl('line', { x1: 100, y1: 108, x2: 100, y2: 52, class: 'hand h', 'data-live': 'hand', 'data-hand': 'h' }));
+          svg.append(svgEl('line', { x1: 100, y1: 112, x2: 100, y2: 30, class: 'hand m', 'data-live': 'hand', 'data-hand': 'm' }));
+          svg.append(svgEl('line', { x1: 100, y1: 118, x2: 100, y2: 22, class: 'hand s', 'data-live': 'hand', 'data-hand': 's' }));
+          svg.append(svgEl('circle', { cx: 100, cy: 100, r: 4, class: 'pin' }));
+          fit.append(svg);
+          if (c.showDate !== false) fit.append(el('div', 'clock-date'));
+        } else if (c.mode === 'countdown') {
+          if (c.label) fit.append(el('div', 'cd-label', c.label));
+          const box = el('div', 'countdown-big');
+          box.dataset.live = 'countdown';
+          box.dataset.target = c.target;
+          for (const unit of ['days', 'hours', 'mins', 'secs']) {
+            const cell = el('div', 'cd-cell');
+            cell.append(el('span', 'cd-num', '--'), el('span', 'cd-unit', unit));
+            box.append(cell);
+          }
+          fit.append(box);
+          const when = new Date(c.target);
+          fit.append(el('div', 'clock-date static', when.toLocaleString('en-GB', { weekday: 'long', day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit' })));
+        } else {
+          const time = el('div', 'clock-time');
+          const hm = el('span', '');
+          hm.dataset.live = 'time';
+          const sec = el('span', 'clock-sec');
+          sec.dataset.live = 'seconds';
+          time.append(hm, sec);
+          fit.append(time);
+        }
+        if (c.mode !== 'countdown' && c.showDate !== false) {
+          const date = fit.querySelector('.clock-date') || el('div', 'clock-date');
+          date.dataset.live = 'date';
+          if (!date.parentNode) fit.append(date);
+        }
+        return { el: panel };
+      }
+
+      case 'weather': {
+        const { panel, fit } = widgetPanel('weather', club, c.title || `Weather${d.place ? ` — ${d.place}` : ''}`);
+        const now = el('div', 'wx-now');
+        now.append(el('div', 'wx-icon', d.current.icon));
+        const info = el('div', 'wx-info');
+        info.append(el('div', 'wx-temp', `${d.current.temp}${d.units.temp}`), el('div', 'wx-text', d.current.text), el('div', 'wx-wind', `Wind ${d.current.wind} ${d.units.wind}`));
+        now.append(info);
+        fit.append(now);
+        const days = el('div', 'wx-days');
+        (d.days || []).forEach((day, i) => {
+          const dt = new Date(`${day.date}T12:00:00`);
+          const label = i === 0 ? 'Today' : i === 1 ? 'Tomorrow' : dt.toLocaleDateString('en-GB', { weekday: 'long' });
+          const card = el('div', 'wx-day');
+          card.append(el('div', 'wx-day-name', label), el('div', 'wx-day-icon', day.icon), el('div', 'wx-day-temp', `${day.max}° / ${day.min}°`));
+          if (day.rain != null) card.append(el('div', 'wx-day-rain', `💧 ${day.rain}%`));
+          days.append(card);
+        });
+        fit.append(days);
+        if (d.stale) fit.append(el('p', 'wx-note', 'Forecast may be out of date (no internet).'));
+        return { el: panel };
+      }
+
+      case 'joke': {
+        const joke = nextOf(item, d.items || []);
+        const { panel, fit } = widgetPanel('joke', c.title || 'Joke time', '');
+        if (!joke) return { el: panel };
+        fit.append(el('p', 'joke-q', joke.q));
+        const a = el('p', 'joke-a', joke.a || '');
+        fit.append(a);
+        return { el: panel, onShow: (ms) => setTimeout(() => a.classList.add('shown'), ms * 0.5) };
+      }
+
+      case 'phrase': {
+        const text = nextOf(item, d.items || []);
+        const { panel, fit } = widgetPanel('phrase', c.title || club, '');
+        fit.append(el('p', 'phrase-text', text || ''));
+        return { el: panel };
+      }
+
+      case 'trivia': {
+        const fact = nextOf(item, d.items || []);
+        const { panel, fit } = widgetPanel('trivia', club, c.title || 'Did you know?');
+        fit.append(el('p', 'trivia-text', fact || ''));
+        return { el: panel };
+      }
+
+      case 'quiz': {
+        const q = nextOf(item, d.items || []);
+        const { panel, fit } = widgetPanel('quiz', c.title || 'Quiz time', '');
+        if (!q) return { el: panel };
+        fit.append(el('p', 'quiz-q', q.q));
+        const grid = el('ol', 'quiz-options');
+        q.options.forEach((opt, i) => {
+          const li = el('li', i === q.answer ? 'right' : 'wrong');
+          li.append(el('span', 'quiz-letter', 'ABCD'[i]), el('span', '', opt));
+          grid.append(li);
+        });
+        fit.append(grid);
+        const bar = el('div', 'quiz-timer');
+        const fill = el('div', '');
+        bar.append(fill);
+        panel.append(bar);
+        return {
+          el: panel,
+          onShow: (ms) => {
+            const revealIn = ms * 0.65;
+            fill.style.transitionDuration = `${revealIn}ms`;
+            requestAnimationFrame(() => { fill.style.width = '0%'; });
+            setTimeout(() => panel.classList.add('revealed'), revealIn);
+          },
+        };
+      }
+
+      case 'history': {
+        const { panel, fit } = widgetPanel('history', club, c.title || d.label);
+        const list = el('ul', 'history-list');
+        for (const it of d.items || []) {
+          const li = el('li', it.sport ? 'sport' : 'general');
+          const [mm, dd] = it.date.split('-').map(Number);
+          const when = new Date(2000, mm - 1, dd).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' });
+          li.append(el('span', 'year', String(it.year)), el('span', 'text', it.text), el('span', 'when', d.scopeUsed === 'day' ? '' : when));
+          list.append(li);
+        }
+        fit.append(list);
+        return { el: panel };
+      }
+
+      case 'spotball': {
+        const wrap = el('section', 'spotball');
+        const frame = el('div', 'sb-frame');
+        const img = el('img', 'sb-img');
+        img.alt = '';
+        img.src = d.src;
+        frame.append(img);
+        if (d.patch) {
+          const patch = el('div', 'sb-patch');
+          patch.style.left = `${d.patch.x}%`;
+          patch.style.top = `${d.patch.y}%`;
+          patch.style.width = `${d.patch.r * 2}%`;
+          frame.append(patch);
+        }
+        if (d.grid) {
+          const grid = el('div', 'sb-grid');
+          grid.style.backgroundSize = `${100 / d.grid.cols}% ${100 / d.grid.rows}%`;
+          for (let i = 0; i < d.grid.cols; i++) {
+            const lab = el('span', 'sb-col', 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'[i]);
+            lab.style.left = `${(i + 0.5) * (100 / d.grid.cols)}%`;
+            grid.append(lab);
+          }
+          for (let j = 0; j < d.grid.rows; j++) {
+            const lab = el('span', 'sb-row', String(j + 1));
+            lab.style.top = `${(j + 0.5) * (100 / d.grid.rows)}%`;
+            grid.append(lab);
+          }
+          frame.append(grid);
+        }
+        if (d.answer) {
+          const mark = el('div', 'sb-answer');
+          mark.style.left = `${d.answer.x}%`;
+          mark.style.top = `${d.answer.y}%`;
+          frame.append(mark);
+        }
+        const caption = el('div', 'sb-caption');
+        caption.append(el('strong', '', c.title || 'Spot the ball'));
+        if (d.answer) {
+          caption.append(el('span', 'sb-result', `Answer: ${d.answer.cell}`));
+        } else {
+          const parts = ['Where is the ball?', d.grid ? 'Pick a square' : ''];
+          if (d.revealAt) parts.push(`Answer revealed ${new Date(d.revealAt).toLocaleString('en-GB', { weekday: 'short', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}`);
+          caption.append(el('span', '', parts.filter(Boolean).join(' · ')));
+        }
+        if (d.prize) caption.append(el('span', 'sb-prize', `🏆 ${d.prize}`));
+        wrap.append(frame, caption);
+        const ready = withTimeout(img.decode(), 8000).then(() => {
+          if (!img.naturalWidth || !img.naturalHeight) return;
+          // Largest box with the photo's own proportions, so grid and blur line up with the picture.
+          const ratio = img.naturalWidth / img.naturalHeight;
+          frame.style.aspectRatio = `${img.naturalWidth} / ${img.naturalHeight}`;
+          frame.style.width = `min(94cqw, calc((100cqh - 15cqmin) * ${ratio.toFixed(4)}))`;
+        });
+        return { el: wrap, ready };
+      }
+
+      default:
+        throw new Error(`Unknown widget ${c.kind}`);
+    }
   }
 
   /** Shrink a text slide's font until its content fits on screen. */

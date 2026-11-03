@@ -39,6 +39,14 @@
     notice: 'M4 10v4h3l6 4V6L7 10z M16 9a4 4 0 0 1 0 6 M18.5 6.5a7.5 7.5 0 0 1 0 11',
     menu: 'M5 4h14v16H5z M8 8h8 M8 12h8 M8 16h5',
     fixtures: 'M4 6h16v14H4z M4 10h16 M8 3v5 M16 3v5 M8 14h3',
+    weather: 'M7 18h10a4 4 0 0 0 .5-7.97A6 6 0 0 0 6.1 11 3.5 3.5 0 0 0 7 18z',
+    smile: 'M12 3a9 9 0 1 0 0 18a9 9 0 1 0 0-18 M8 14s1.5 2 4 2 4-2 4-2 M9 9h.01 M15 9h.01',
+    quote: 'M7 7h4v5c0 3-2 5-4 5 M14 7h4v5c0 3-2 5-4 5',
+    bulb: 'M9 18h6 M10 21h4 M12 3a6 6 0 0 0-4 10.5c.8.8 1 1.5 1 2.5h6c0-1 .2-1.7 1-2.5A6 6 0 0 0 12 3z',
+    quiz: 'M12 3a9 9 0 1 0 0 18a9 9 0 1 0 0-18 M9.5 9.5a2.5 2.5 0 1 1 3.5 2.3c-.6.3-1 .9-1 1.7v.5 M12 17h.01',
+    history: 'M4 5a2 2 0 0 1 2-2h13v16H6a2 2 0 0 0-2 2z M4 19V5 M9 7h6',
+    ball: 'M12 3a9 9 0 1 0 0 18a9 9 0 1 0 0-18 M12 7l3.5 2.5-1.3 4h-4.4l-1.3-4z M12 3v4 M15.5 9.5l4.5-1.5 M14.2 13.5l2.8 3.5 M9.8 13.5L7 17 M8.5 9.5L4 8',
+    widget: 'M4 4h7v7H4z M13 4h7v7h-7z M4 13h7v7H4z M16.5 13v7 M13 16.5h7',
     scores: 'M8 21h8 M12 17v4 M7 4h10v5a5 5 0 0 1-10 0z M7 6H4v1a3 3 0 0 0 3 3 M17 6h3v1a3 3 0 0 1-3 3',
     content: 'M4 4h7v7H4z M13 4h7v7h-7z M4 13h7v7H4z M13 13h7v7h-7z',
     playlist: 'M4 6h12 M4 12h12 M4 18h8 M17 15l4 2.5-4 2.5z',
@@ -85,7 +93,18 @@
     return svg;
   }
 
-  const TYPE_LABEL = { image: 'Image', video: 'Video', url: 'Web page', notice: 'Notice', menu: 'Menu board', fixtures: 'Fixtures', scores: 'Live scores' };
+  const TYPE_LABEL = { image: 'Image', video: 'Video', url: 'Web page', notice: 'Notice', menu: 'Menu board', fixtures: 'Fixtures', scores: 'Live scores', widget: 'Widget' };
+  const WIDGETS = {
+    clock: { name: 'Clock', icon: 'clock', blurb: 'Big digital or analogue clock, or a countdown to kick-off.' },
+    weather: { name: 'Weather', icon: 'weather', blurb: 'Current conditions and forecast for your ground.' },
+    joke: { name: 'Joke', icon: 'smile', blurb: 'Family-friendly sports jokes — punchline revealed halfway.' },
+    phrase: { name: 'Phrase', icon: 'quote', blurb: 'Club-spirit phrases in big type, or your own.' },
+    trivia: { name: 'Did you know?', icon: 'bulb', blurb: 'Sporting trivia facts.' },
+    quiz: { name: 'Quiz', icon: 'quiz', blurb: 'Multiple-choice sports questions with an answer reveal.' },
+    history: { name: 'Sporting history', icon: 'history', blurb: 'This day, week or month in sporting history.' },
+    spotball: { name: 'Spot the ball', icon: 'ball', blurb: 'Your photo, a grid and a blurred ball — answer revealed when you choose.' },
+  };
+  const typeLabel = (a) => (a && a.type === 'widget' ? WIDGETS[a.content?.kind]?.name || 'Widget' : TYPE_LABEL[a?.type] || '');
   const STATUS_LABEL = { live: 'Live now', scheduled: 'Scheduled', expired: 'Expired', 'off-hours': 'Off-hours', disabled: 'Off' };
   const NOTICE_STYLES = [
     ['default', 'Navy', '#0e1e30'],
@@ -247,9 +266,9 @@
       t.classList.add('text', `style-${asset.content?.style || 'default'}`);
       t.append(h('strong', {}, asset.content?.title || asset.name), h('span', {}, asset.content?.body || ''));
     } else {
-      t.append(icon(asset.type));
+      t.append(icon(asset.type === 'widget' ? WIDGETS[asset.content?.kind]?.icon || 'widget' : asset.type));
     }
-    if (tag && asset.type !== 'notice') t.append(h('span', { class: 'badge type-tag' }, TYPE_LABEL[asset.type]));
+    if (tag && asset.type !== 'notice') t.append(h('span', { class: 'badge type-tag' }, typeLabel(asset)));
     return t;
   }
 
@@ -331,7 +350,7 @@
   function viewContent() {
     const fileInput = h('input', { type: 'file', multiple: true, accept: 'image/*,video/mp4,video/webm,video/quicktime', hidden: true, onchange: () => { startUploads([...fileInput.files]); fileInput.value = ''; } });
 
-    const filters = [['all', 'All'], ['image', 'Images'], ['video', 'Videos'], ['notice', 'Notices'], ['menu', 'Menus'], ['fixtures', 'Fixtures'], ['scores', 'Scores'], ['url', 'Web pages']];
+    const filters = [['all', 'All'], ['image', 'Images'], ['video', 'Videos'], ['notice', 'Notices'], ['menu', 'Menus'], ['fixtures', 'Fixtures'], ['scores', 'Scores'], ['widget', 'Widgets'], ['url', 'Web pages']];
     const list = state.assets
       .filter((a) => contentFilter === 'all' || a.type === contentFilter)
       .filter((a) => !contentSearch || a.name.toLowerCase().includes(contentSearch.toLowerCase()))
@@ -345,7 +364,7 @@
             thumb(a),
             h('div', { class: 'asset-body' },
               h('strong', {}, a.name),
-              h('span', {}, `${TYPE_LABEL[a.type]} · ${fmtDuration(a.duration)}${n ? ` · in ${n} playlist${n > 1 ? 's' : ''}` : ' · not in a playlist'}`)));
+              h('span', {}, `${typeLabel(a)} · ${fmtDuration(a.duration)}${n ? ` · in ${n} playlist${n > 1 ? 's' : ''}` : ' · not in a playlist'}`)));
         }))
       : h('div', { class: 'card empty' },
           h('h2', {}, state.assets.length ? 'Nothing matches' : 'No content yet'),
@@ -359,6 +378,7 @@
           h('button', { class: 'btn', type: 'button', onclick: () => editAsset({ type: 'notice' }) }, icon('notice'), 'Notice'),
           h('button', { class: 'btn', type: 'button', onclick: () => editAsset({ type: 'menu' }) }, icon('menu'), 'Menu'),
           h('button', { class: 'btn', type: 'button', onclick: () => editAsset({ type: 'fixtures' }) }, icon('fixtures'), 'Fixtures'),
+          h('button', { class: 'btn', type: 'button', onclick: pickWidget }, icon('widget'), 'Widgets'),
           h('button', { class: 'btn', type: 'button', onclick: () => editAsset({ type: 'scores' }) }, icon('scores'), 'Live scores'),
           h('button', { class: 'btn', type: 'button', onclick: () => editAsset({ type: 'url' }) }, icon('url'), 'Web page'),
           fileInput)),
@@ -433,14 +453,14 @@
     const isNew = !asset.id;
     const type = asset.type;
     const c = asset.content || {};
-    const defaults = { url: 30, notice: 12, menu: 20, fixtures: 15, scores: 15 };
+    const defaults = { url: 30, notice: 12, menu: 20, fixtures: 15, scores: 15, widget: { clock: 15, weather: 15, joke: 14, phrase: 10, trivia: 12, quiz: 20, history: 18, spotball: 20 }[c.kind] };
     const f = {}; // field elements
     const body = h('form', { class: 'form-grid', onsubmit: (e) => { e.preventDefault(); save(); } });
 
     if (type === 'image') body.append(h('img', { class: 'preview-media', src: asset.src, alt: '' }));
     if (type === 'video') body.append(h('video', { class: 'preview-media', src: asset.src, controls: true, muted: true, preload: 'metadata' }));
 
-    f.name = h('input', { type: 'text', value: asset.name || '', maxlength: 120, required: true, placeholder: { notice: 'e.g. AGM notice', menu: 'e.g. Bar menu', fixtures: 'e.g. First team fixtures', scores: 'e.g. Premier League scores', url: 'e.g. League table' }[type] });
+    f.name = h('input', { type: 'text', value: asset.name || (type === 'widget' ? WIDGETS[c.kind]?.name : '') || '', maxlength: 120, required: true, placeholder: { notice: 'e.g. AGM notice', menu: 'e.g. Bar menu', fixtures: 'e.g. First team fixtures', scores: 'e.g. Premier League scores', url: 'e.g. League table' }[type] });
     f.duration = h('input', { type: 'number', min: type === 'video' ? 0 : 1, max: 86400, value: asset.duration ?? defaults[type] ?? 10, required: true });
     body.append(h('div', { class: 'row-2' },
       h('label', { class: 'field' }, 'Name', f.name),
@@ -516,6 +536,7 @@
       body.append(h('div', { class: 'row-2' }, h('label', { class: 'field' }, 'Show', f.show), h('label', { class: 'field' }, 'At most (matches)', f.limit)));
       body.append(h('p', { class: 'small muted' }, 'Scores update on screen by themselves: every minute during live matches, every 10 minutes otherwise.'));
     }
+    if (type === 'widget') widgetFields(c, body, f, () => m);
     if (isNew && state.playlists.length) {
       f.addTo = h('select', {}, h('option', { value: '' }, 'Don’t add yet'),
         state.playlists.map((p, i) => h('option', { value: p.id, selected: i === 0 }, p.name)));
@@ -528,7 +549,7 @@
 
     const saveBtn = h('button', { class: 'btn primary', type: 'button', onclick: () => save() }, isNew ? 'Create' : 'Save');
     const m = modal({
-      title: isNew ? `New ${TYPE_LABEL[type].toLowerCase()}` : `Edit ${TYPE_LABEL[type].toLowerCase()}`,
+      title: type === 'widget' ? `${isNew ? 'New' : 'Edit'} ${typeLabel(asset).toLowerCase()} widget` : isNew ? `New ${TYPE_LABEL[type].toLowerCase()}` : `Edit ${TYPE_LABEL[type].toLowerCase()}`,
       body,
       wide: type === 'menu' || type === 'fixtures',
       footer: (close) => [
@@ -550,6 +571,7 @@
       if (type === 'menu') payload.content = { title: f.title.value, text: f.text.value };
       if (type === 'fixtures') payload.content = { title: f.title.value, text: f.text.value, limit: Number(f.limit.value) };
       if (type === 'scores') payload.content = { title: f.title.value, leagues: f.leagues.value, show: f.show.value, limit: Number(f.limit.value) };
+      if (type === 'widget') payload.content = f.widget();
       saveBtn.disabled = true;
       try {
         if (isNew) await api('POST', '/assets', { type, ...payload, addToPlaylist: f.addTo?.value || undefined });
@@ -614,6 +636,171 @@ ${d(18, '14:00')} | Riverside FC v Northdale Athletic | County Cup | Home`;
     const next = upcoming.find((f) => f.date);
     const past = all.length - upcoming.length;
     return `${upcoming.length} upcoming${past ? `, ${past} past (hidden)` : ''}${next ? ` · next: ${next.title} — ${PTFormats.formatWhen(next)}` : ''}`;
+  }
+
+
+  // --------------------------------------------------------------- widgets
+  function pickWidget() {
+    const m = modal({
+      title: 'Add a widget',
+      wide: true,
+      body: h('div', { class: 'widget-grid' }, Object.entries(WIDGETS).map(([kind, w]) =>
+        h('button', { class: 'card widget-card', type: 'button', onclick: () => { m.close(); editAsset({ type: 'widget', content: { kind } }); } },
+          icon(w.icon), h('strong', {}, w.name), h('span', {}, w.blurb)))),
+      footer: (close) => [h('button', { class: 'btn', type: 'button', onclick: close }, 'Cancel')],
+    });
+  }
+
+  /** Kind-specific fields for the widget editor. Sets f.widget() to collect the content. */
+  function widgetFields(c, body, f, getModal) {
+    const kind = c.kind;
+    const title = h('input', { type: 'text', value: c.title || '', maxlength: 200, placeholder: { clock: 'Optional heading', weather: 'Weather at the ground', joke: 'Joke time', phrase: 'Optional heading', trivia: 'Did you know?', quiz: 'Quiz time', history: 'Automatic (e.g. “On this day — 3 November”)', spotball: 'Spot the ball' }[kind] });
+    body.append(h('p', { class: 'small muted' }, WIDGETS[kind].blurb));
+    body.append(h('label', { class: 'field' }, 'Heading on screen', title));
+    const collect = { kind, title: () => title.value };
+
+    if (kind === 'clock') {
+      const mode = h('select', {}, [['digital', 'Digital'], ['analog', 'Analogue'], ['countdown', 'Countdown']].map(([v, l]) => h('option', { value: v, selected: (c.mode || 'digital') === v }, l)));
+      const showDate = h('input', { type: 'checkbox', checked: c.showDate !== false });
+      const target = h('input', { type: 'datetime-local', value: c.target || '' });
+      const label = h('input', { type: 'text', value: c.label || '', maxlength: 120, placeholder: 'Kick-off: Riverside FC v Rovers United' });
+      const cd = h('div', { class: 'form-grid' }, h('div', { class: 'row-2' }, h('label', { class: 'field' }, 'Count down to', target), h('label', { class: 'field' }, 'Label', label)));
+      const sync = () => { cd.hidden = mode.value !== 'countdown'; };
+      mode.addEventListener('change', sync);
+      sync();
+      body.append(h('label', { class: 'field' }, 'Style', mode), cd, h('label', { class: 'switch' }, showDate, 'Show the date'));
+      Object.assign(collect, { mode: () => mode.value, showDate: () => showDate.checked, target: () => target.value, label: () => label.value });
+    }
+    if (kind === 'weather') {
+      const days = h('select', {}, [0, 1, 2, 3, 4, 5, 6].map((n) => h('option', { value: n, selected: (c.days ?? 3) === n }, n === 0 ? 'Today only' : `Today + ${n} day${n > 1 ? 's' : ''}`)));
+      body.append(h('label', { class: 'field' }, 'Forecast', days));
+      const w = state.widgets.weather;
+      body.append(w
+        ? h('p', { class: 'small muted' }, `Location: ${w.place || `${w.latitude}, ${w.longitude}`}. `, h('a', { href: '#/settings', onclick: () => getModal().close() }, 'Change in Settings'))
+        : h('p', { class: 'help' }, 'No location set yet. ', h('a', { href: '#/settings', onclick: () => getModal().close() }, 'Choose your ground in Settings'), ' — needs an internet connection.'));
+      collect.days = () => Number(days.value);
+    }
+    if (['joke', 'phrase', 'trivia', 'quiz'].includes(kind)) {
+      const hint = {
+        joke: 'One per line: Question | Punchline',
+        phrase: 'One phrase per line',
+        trivia: 'One fact per line',
+        quiz: 'One per line: Question | right answer | wrong | wrong | wrong (answers are shuffled)',
+      }[kind];
+      const extra = h('textarea', { class: 'code', spellcheck: kind !== 'quiz', maxlength: 20000, placeholder: { joke: 'Why did the treasurer smile? | Subs are in!', phrase: 'Up the Riversiders!', trivia: 'Riverside FC was founded in 1889.', quiz: 'When was the club founded? | 1889 | 1901 | 1923 | 1950' }[kind] }, c.extra || '');
+      extra.style.minHeight = '120px';
+      const only = h('input', { type: 'checkbox', checked: Boolean(c.only) });
+      body.append(h('label', { class: 'field' }, 'Add your own (optional)', extra, h('span', { class: 'hint' }, `${hint}. Mixed in with ${{ joke: '30 jokes', phrase: '25 phrases', trivia: '25 facts', quiz: '40 questions' }[kind]} that come built in — a new selection every day.`)));
+      body.append(h('label', { class: 'switch' }, only, 'Only show mine'));
+      Object.assign(collect, { extra: () => extra.value, only: () => only.checked });
+    }
+    if (kind === 'history') {
+      const scope = h('select', {}, [['day', 'This day'], ['week', 'This week'], ['month', 'This month']].map(([v, l]) => h('option', { value: v, selected: (c.scope || 'day') === v }, l)));
+      const limit = h('input', { type: 'number', min: 1, max: 12, value: c.limit || 5 });
+      const general = h('input', { type: 'checkbox', checked: Boolean(c.general) });
+      body.append(h('div', { class: 'row-2' }, h('label', { class: 'field' }, 'Show', scope), h('label', { class: 'field' }, 'At most (events)', limit)));
+      body.append(h('label', { class: 'switch' }, general, 'Also include general history from Wikipedia'));
+      body.append(h('p', { class: 'small muted' }, 'Sporting moments are built in. If nothing happened on the day, the slide shows the week or month instead. Wikipedia needs an internet connection.'));
+      Object.assign(collect, { scope: () => scope.value, limit: () => Number(limit.value), general: () => general.checked });
+    }
+    if (kind === 'spotball') {
+      const images = state.assets.filter((a) => a.type === 'image');
+      let pos = c.x != null ? { x: c.x, y: c.y } : null;
+      const photo = h('select', {}, h('option', { value: '' }, images.length ? '— Choose a photo —' : 'Upload a photo first'),
+        images.slice().reverse().map((a) => h('option', { value: a.id, selected: a.id === c.imageId }, a.name)));
+      const radius = h('input', { type: 'range', min: 2, max: 20, step: 0.5, value: c.radius || 6 });
+      const cover = h('input', { type: 'checkbox', checked: c.cover !== false });
+      const grid = h('input', { type: 'checkbox', checked: c.grid !== false });
+      const revealAt = h('input', { type: 'datetime-local', value: c.revealAt || '' });
+      const prize = h('input', { type: 'text', value: c.prize || '', maxlength: 200, placeholder: '£20 bar tab — entries at the bar' });
+      const stageBox = h('div', { class: 'sb-editor' });
+      const marker = h('div', { class: 'sb-marker' });
+      const img = h('img', { alt: '' });
+      const status = h('p', { class: 'small muted' });
+      const draw = () => {
+        const a = images.find((x) => x.id === photo.value);
+        stageBox.hidden = !a;
+        if (a && img.getAttribute('src') !== a.src) img.src = a.src;
+        marker.hidden = !pos;
+        if (pos) {
+          marker.style.left = `${pos.x}%`;
+          marker.style.top = `${pos.y}%`;
+          marker.style.width = `${Number(radius.value) * 2}%`;
+          const cell = `${'ABCDEFGHIJ'[Math.min(9, Math.floor(pos.x / 10))]}${Math.min(7, Math.floor(pos.y / 12.5)) + 1}`;
+          status.textContent = `Ball marked at ${cell} — tap the photo again to move it.`;
+        } else {
+          status.textContent = a ? 'Tap the photo where the ball is.' : '';
+        }
+      };
+      stageBox.append(img, marker);
+      stageBox.addEventListener('click', (e) => {
+        const r = img.getBoundingClientRect();
+        pos = { x: Math.round(((e.clientX - r.left) / r.width) * 10000) / 100, y: Math.round(((e.clientY - r.top) / r.height) * 10000) / 100 };
+        draw();
+      });
+      photo.addEventListener('change', () => { pos = null; draw(); });
+      radius.addEventListener('input', draw);
+      body.append(
+        h('label', { class: 'field' }, 'Photo', photo, h('span', { class: 'hint' }, 'Best with a match photo where the ball has already been edited out. Otherwise the screen blurs a patch around it.')),
+        stageBox, status,
+        h('label', { class: 'field' }, 'Ball size', radius),
+        h('div', { class: 'row-2' }, h('label', { class: 'switch' }, cover, 'Blur the area around the ball'), h('label', { class: 'switch' }, grid, 'Show a lettered grid')),
+        h('div', { class: 'row-2' }, h('label', { class: 'field' }, 'Reveal the answer at', revealAt, h('span', { class: 'hint' }, 'Leave empty to keep it hidden.')), h('label', { class: 'field' }, 'Prize / how to enter', prize)));
+      draw();
+      Object.assign(collect, {
+        imageId: () => photo.value, x: () => pos?.x, y: () => pos?.y, radius: () => Number(radius.value),
+        cover: () => cover.checked, grid: () => grid.checked, revealAt: () => revealAt.value, prize: () => prize.value,
+      });
+    }
+    f.title = title;
+    f.widget = () => Object.fromEntries(Object.entries(collect).map(([k, v]) => [k, typeof v === 'function' ? v() : v]));
+  }
+
+  function widgetsCard() {
+    const w = state.widgets;
+    let place = w.weather;
+    const q = h('input', { type: 'search', placeholder: 'Town or postcode area, e.g. Leeds', value: '' });
+    const results = h('div', { class: 'chips' });
+    const chosen = h('p', { class: 'small' });
+    const wind = h('select', {}, [['mph', 'mph'], ['kmh', 'km/h']].map(([v, l]) => h('option', { value: v, selected: (w.weather?.windUnit || 'mph') === v }, l)));
+    const wiki = h('input', { type: 'checkbox', checked: w.wikipedia !== false });
+    const showChosen = () => { chosen.textContent = place ? `Weather for: ${place.place || 'custom location'} (${place.latitude}, ${place.longitude})` : 'No weather location set.'; };
+    showChosen();
+    const search = async () => {
+      results.replaceChildren(h('span', { class: 'small muted' }, 'Searching…'));
+      try {
+        const list = await api('GET', `/geocode?q=${encodeURIComponent(q.value)}`);
+        results.replaceChildren(...(list.length ? list.map((r) => h('button', { class: 'chip', type: 'button', onclick: () => {
+          place = { place: r.name, latitude: r.latitude, longitude: r.longitude };
+          showChosen();
+          results.replaceChildren();
+        } }, `${r.name}${r.region ? `, ${r.region}` : ''}`)) : [h('span', { class: 'small muted' }, 'No places found.')]));
+      } catch (err) {
+        results.replaceChildren(h('span', { class: 'small error-text' }, err.message));
+      }
+    };
+    q.addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); search(); } });
+    return h('form', {
+      class: 'card panel-box form-grid',
+      onsubmit: async (e) => {
+        e.preventDefault();
+        try {
+          state.widgets = await api('PUT', '/settings/widgets', { weather: place ? { ...place, windUnit: wind.value } : null, wikipedia: wiki.checked });
+          render();
+          toast('Widget settings saved');
+        } catch (err) { toast(err.message, 'error'); }
+      },
+    },
+      h('h2', {}, 'Widgets'),
+      h('p', { class: 'small muted' }, 'Settings for the weather and history widgets. Jokes, phrases, trivia, quizzes and sporting history work without the internet.'),
+      h('div', { class: 'field' }, 'Weather location',
+        h('div', { class: 'copy-row' }, q, h('button', { class: 'btn', type: 'button', onclick: search }, 'Find')),
+        results, chosen),
+      h('div', { class: 'row-2' },
+        h('label', { class: 'field' }, 'Wind speed in', wind),
+        h('div', { class: 'field' }, ' ', place && h('button', { class: 'btn sm ghost', type: 'button', onclick: () => { place = null; showChosen(); } }, 'Clear location'))),
+      h('label', { class: 'switch' }, wiki, 'Allow general history from Wikipedia'),
+      h('div', {}, h('button', { class: 'btn primary', type: 'submit' }, 'Save')));
   }
 
   // ============================================================ playlists
@@ -771,7 +958,7 @@ ${d(18, '14:00')} | Riverside FC v Northdale Athletic | County Cup | Home`;
             h('strong', {}, a?.name || 'Missing content'),
             h('div', { class: 'meta' },
               h('span', { class: `badge ${st}` }, STATUS_LABEL[st]),
-              h('span', {}, TYPE_LABEL[a?.type] || ''),
+              h('span', {}, typeLabel(a)),
               h('span', {}, '·'),
               h('span', {}, PTSchedule.describe(it.schedule)))),
           h('div', { class: 'item-controls' },
@@ -824,7 +1011,7 @@ ${d(18, '14:00')} | Riverside FC v Northdale Athletic | County Cup | Home`;
           return h('label', { class: 'picker-row' },
             h('input', { type: 'checkbox', checked: chosen.has(a.id), onchange: (e) => { e.target.checked ? chosen.add(a.id) : chosen.delete(a.id); syncBtn(); } }),
             thumb(a, { tag: false }),
-            h('div', {}, h('strong', {}, a.name), h('div', { class: 'small muted' }, `${TYPE_LABEL[a.type]} · ${fmtDuration(a.duration)}${inPl ? ' · already in this playlist' : ''}`)));
+            h('div', {}, h('strong', {}, a.name), h('div', { class: 'small muted' }, `${typeLabel(a)} · ${fmtDuration(a.duration)}${inPl ? ' · already in this playlist' : ''}`)));
         }) : [h('p', { class: 'muted' }, state.assets.length ? 'Nothing matches.' : 'Your library is empty — upload or create content first.')]));
       };
       const syncBtn = () => { addBtn.disabled = !chosen.size; addBtn.textContent = chosen.size ? `Add ${chosen.size}` : 'Add'; };
@@ -999,6 +1186,7 @@ ${d(18, '14:00')} | Riverside FC v Northdale Athletic | County Cup | Home`;
       h('div', {}, h('button', { class: 'btn', type: 'submit' }, 'Change password')));
 
     const sports = sportsCard();
+    const widgetSettings = widgetsCard();
 
     const about = h('div', { class: 'card panel-box stack', style: 'gap:10px' },
       h('h2', {}, 'About'),
@@ -1010,7 +1198,7 @@ ${d(18, '14:00')} | Riverside FC v Northdale Athletic | County Cup | Home`;
 
     return shell('settings',
       h('div', { class: 'page-head' }, h('div', {}, h('h1', {}, 'Settings'))),
-      h('div', { class: 'stack', style: 'max-width:640px' }, general, sports, pw, about));
+      h('div', { class: 'stack', style: 'max-width:640px' }, general, sports, widgetSettings, pw, about));
   }
 
   function sportsCard() {

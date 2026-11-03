@@ -9,7 +9,7 @@ const express = require('express');
 
 const { Store, newId } = require('./store');
 const { Hub } = require('./hub');
-const { Sports, LEAGUE_KEY_RE, SHOW_OPTIONS } = require('./sports');
+const { Feeds, LEAGUE_KEY_RE, SHOW_OPTIONS } = require('./feeds');
 const auth = require('./auth');
 const v = require('./validate');
 const pkg = require('../package.json');
@@ -29,9 +29,13 @@ const MEDIA_TYPES = {
   'video/quicktime': ['video', '.mov'],
 };
 
-const ASSET_TYPES = ['image', 'video', 'url', 'notice', 'menu', 'fixtures', 'scores'];
-const TEXT_TYPES = ['url', 'notice', 'menu', 'fixtures', 'scores'];
-const DEFAULT_DURATION = { image: 10, video: 0, url: 30, notice: 12, menu: 20, fixtures: 15, scores: 15 };
+const ASSET_TYPES = ['image', 'video', 'url', 'notice', 'menu', 'fixtures', 'scores', 'widget'];
+const TEXT_TYPES = ['url', 'notice', 'menu', 'fixtures', 'scores', 'widget'];
+const WIDGET_KINDS = ['clock', 'weather', 'joke', 'phrase', 'trivia', 'quiz', 'history', 'spotball'];
+const WIDGET_DURATION = { clock: 15, weather: 15, joke: 14, phrase: 10, trivia: 12, quiz: 20, history: 18, spotball: 20 };
+const DATETIME_RE = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/;
+const GRID = { cols: 10, rows: 8 };
+const DEFAULT_DURATION = { image: 10, video: 0, url: 30, notice: 12, menu: 20, fixtures: 15, scores: 15, widget: 15 };
 const NOTICE_STYLES = ['default', 'accent', 'amber', 'alert', 'light'];
 const ROTATIONS = [0, 90, 180, 270];
 const MAX_SCREENS = 200;
@@ -59,16 +63,22 @@ function createApp(opts = {}) {
   const limiter = new auth.LoginLimiter();
   store.on('change', (revision) => hub.broadcast('changed', { revision }));
 
-  // Sports engine (../signage-server), configured from dashboard settings.
-  const sports = new Sports({
-    fetchImpl: opts.sportsFetch,
+  // signage-server engine (sports + widgets), configured from dashboard settings.
+  const feeds = new Feeds({
+    fetchImpl: opts.feedsFetch || opts.sportsFetch,
     log: opts.log || console.error,
     publicUrl: `${(lanUrls(port)[0] || `http://localhost:${port}/`).replace(/\/$/, '')}/feeds`,
   });
-  const configureSports = () => sports.configure(store.data.settings.sports, { title: store.data.settings.clubName || 'Sports' });
-  configureSports();
+  const configureFeeds = () =>
+    feeds.configure({
+      sports: store.data.settings.sports,
+      widgets: store.data.settings.widgets,
+      title: store.data.settings.clubName || 'PitchTribe',
+    });
+  configureFeeds();
   // New scores: screens refetch their manifest (live-score slides carry the data).
-  sports.on('update', () => hub.broadcast('changed', { revision: store.data.revision, sports: true }));
+  // New scores / weather: screens refetch their manifest (those slides carry the data).
+  feeds.on('update', (source) => hub.broadcast('changed', { revision: store.data.revision, feeds: source }));
 
   const app = express();
   app.disable('x-powered-by');
@@ -87,7 +97,7 @@ function createApp(opts = {}) {
         "default-src 'self'; img-src 'self' data: https:; media-src 'self'; frame-src 'self' http: https:; object-src 'none'; base-uri 'none'"
       );
     } else if (req.path.startsWith('/feeds')) {
-      // The sports display page uses inline styles/script and remote team logos.
+      // The engine's display page uses inline styles/script and remote team logos.
       res.set(
         'Content-Security-Policy',
         "default-src 'self'; img-src 'self' https: data:; style-src 'self' 'unsafe-inline'; script-src 'self' 'unsafe-inline'; connect-src 'self'; object-src 'none'; base-uri 'none'; frame-ancestors 'self'"
@@ -117,7 +127,7 @@ function createApp(opts = {}) {
         return;
       }
     }
-    sports.handle(req, res);
+    feeds.handle(req, res);
   });
 
   app.use(express.json({ limit: '1mb' }));
@@ -165,10 +175,15 @@ function createApp(opts = {}) {
       leagues: s.leagues,
       timezone: s.timezone,
       apiToken: s.apiToken,
-      running: sports.enabled,
-      catalog: sports.catalog.map(({ key, name }) => ({ key, name })),
-      status: sports.status(),
+      running: feeds.sportsOn,
+      catalog: feeds.catalog.map(({ key, name }) => ({ key, name })),
+      status: feeds.status(),
     };
+  }
+
+  function widgetsView() {
+    const w = data().settings.widgets;
+    return { weather: w.weather, wikipedia: w.wikipedia, kinds: feeds.widgetKinds };
   }
 
   const screenView = (s) => ({
@@ -183,7 +198,10 @@ function createApp(opts = {}) {
       duration: v.int(body.duration ?? existing.duration, {
         min: type === 'video' ? 0 : 1,
         max: 86400,
-        fallback: DEFAULT_DURATION[type],
+        fallback:
+          type === 'widget'
+            ? WIDGET_DURATION[(body.content && body.content.kind) || (existing.content && existing.content.kind)] || 15
+            : DEFAULT_DURATION[type],
       }),
     };
     if (type === 'image' || type === 'video') {
@@ -214,6 +232,7 @@ function createApp(opts = {}) {
         limit: v.int(c.limit, { min: 1, max: 20, fallback: 8 }),
       };
     }
+    if (type === 'widget') a.content = sanitizeWidget(c);
     if (type === 'scores') {
       const leagues = Array.isArray(c.leagues) ? c.leagues.filter((k) => typeof k === 'string' && LEAGUE_KEY_RE.test(k)) : [];
       a.content = {
@@ -224,6 +243,88 @@ function createApp(opts = {}) {
       };
     }
     return a;
+  }
+
+  function num(value, min, max, fallback) {
+    const n = Number(value);
+    if (value === '' || value == null || !Number.isFinite(n)) return fallback;
+    return Math.round(Math.min(max, Math.max(min, n)) * 100) / 100;
+  }
+
+  function sanitizeWidget(c) {
+    const kind = v.oneOf(c.kind, WIDGET_KINDS, null);
+    if (!kind) throw v.bad('Choose a widget');
+    const w = { kind, title: v.str(c.title, { max: 200, field: 'Title' }) };
+    if (kind === 'clock') {
+      w.mode = v.oneOf(c.mode, ['digital', 'analog', 'countdown'], 'digital');
+      w.showDate = v.bool(c.showDate, true);
+      w.target = DATETIME_RE.test(c.target || '') ? c.target : '';
+      w.label = v.str(c.label, { max: 120, field: 'Countdown label' });
+      if (w.mode === 'countdown' && !w.target) throw v.bad('Set the date and time to count down to');
+    }
+    if (kind === 'weather') w.days = v.int(c.days, { min: 0, max: 6, fallback: 3 });
+    if (['joke', 'phrase', 'trivia', 'quiz'].includes(kind)) {
+      w.extra = v.str(c.extra, { max: 20000, field: 'Your own lines' });
+      w.only = v.bool(c.only, false);
+      if (w.only && !w.extra) throw v.bad('Add some lines of your own, or untick “Only show mine”');
+    }
+    if (kind === 'history') {
+      w.scope = v.oneOf(c.scope, ['day', 'week', 'month'], 'day');
+      w.general = v.bool(c.general, false);
+      w.limit = v.int(c.limit, { min: 1, max: 12, fallback: 5 });
+    }
+    if (kind === 'spotball') {
+      const img = data().assets.find((x) => x.id === c.imageId);
+      if (!img || img.type !== 'image') throw v.bad('Choose a photo for the game');
+      w.imageId = img.id;
+      w.x = num(c.x, 0, 100, null);
+      w.y = num(c.y, 0, 100, null);
+      if (w.x === null || w.y === null) throw v.bad('Tap the photo to mark where the ball is');
+      w.radius = num(c.radius, 2, 20, 6);
+      w.cover = v.bool(c.cover, true);
+      w.grid = v.bool(c.grid, true);
+      w.revealAt = DATETIME_RE.test(c.revealAt || '') ? c.revealAt : '';
+      w.prize = v.str(c.prize, { max: 200, field: 'Prize' });
+    }
+    return w;
+  }
+
+  const gridCell = (x, y) =>
+    `${'ABCDEFGHIJKLMNOPQRSTUVWXYZ'[Math.min(GRID.cols - 1, Math.floor((x / 100) * GRID.cols))]}${Math.min(GRID.rows - 1, Math.floor((y / 100) * GRID.rows)) + 1}`;
+
+  /** Spot the ball: the answer only leaves the server once it's revealed. */
+  function spotballData(asset, assets) {
+    const c = asset.content;
+    const img = assets.get(c.imageId);
+    if (!img || img.type !== 'image') return { error: 'The photo for this game has been deleted.' };
+    const revealed = Boolean(c.revealAt) && Date.now() >= new Date(c.revealAt).getTime();
+    let patch = null;
+    if (c.cover) {
+      // Blur a patch that contains the ball without being centred on it.
+      const h = crypto.createHash('sha256').update(asset.id).digest();
+      const off = (b) => ((b / 255) - 0.5) * 0.8 * c.radius;
+      const clamp = (n) => Math.min(100, Math.max(0, Math.round(n * 100) / 100));
+      patch = { x: clamp(c.x + off(h[0])), y: clamp(c.y + off(h[1])), r: Math.round(c.radius * 1.6 * 100) / 100 };
+    }
+    return {
+      src: mediaUrl(img),
+      grid: c.grid ? GRID : null,
+      patch,
+      prize: c.prize,
+      revealAt: c.revealAt,
+      revealed,
+      answer: revealed ? { x: c.x, y: c.y, cell: gridCell(c.x, c.y) } : null,
+    };
+  }
+
+  /** Live data inlined into a slide (scores, widgets). */
+  function slideData(asset, assets) {
+    if (asset.type === 'scores') return feeds.events(asset.content);
+    if (asset.type !== 'widget') return undefined;
+    const c = asset.content;
+    if (c.kind === 'spotball') return spotballData(asset, assets);
+    if (c.kind === 'clock') return undefined;
+    return feeds.widget(c.kind, { days: c.days, extra: c.extra, only: c.only, scope: c.scope, general: c.general, limit: c.limit });
   }
 
   function sanitizePlaylist(body, existing) {
@@ -269,7 +370,7 @@ function createApp(opts = {}) {
         fit: a.fit,
         muted: a.muted,
         content: a.content,
-        data: a.type === 'scores' ? sports.events(a.content) : undefined,
+        data: slideData(a, assets),
         updatedAt: a.updatedAt,
       });
     }
@@ -423,6 +524,7 @@ function createApp(opts = {}) {
       dashboardUrls: lanUrls(port),
       maxUploadMb: Math.round(maxUploadBytes / 1024 / 1024),
       sports: sportsView(),
+      widgets: widgetsView(),
     });
   });
 
@@ -436,7 +538,7 @@ function createApp(opts = {}) {
         d.settings.clubName = clubName;
         d.settings.defaultPlaylistId = defaultPlaylistId;
       });
-      configureSports();
+      configureFeeds();
       res.json(publicSettings());
     })
   );
@@ -461,7 +563,7 @@ function createApp(opts = {}) {
   api.put(
     '/settings/sports',
     route((req, res) => {
-      const known = new Set(sports.catalog.map((l) => l.key));
+      const known = new Set(feeds.catalog.map((l) => l.key));
       const leagues = Array.isArray(req.body.leagues) ? [...new Set(req.body.leagues.filter((k) => known.has(k)))] : [];
       const timezone = v.str(req.body.timezone || 'Europe/London', { max: 60, field: 'Timezone' });
       try {
@@ -472,8 +574,43 @@ function createApp(opts = {}) {
       store.mutate((d) => {
         Object.assign(d.settings.sports, { enabled: v.bool(req.body.enabled, false), leagues, timezone });
       });
-      configureSports();
+      configureFeeds();
       res.json(sportsView());
+    })
+  );
+
+  api.put(
+    '/settings/widgets',
+    route((req, res) => {
+      let weather = null;
+      const wb = req.body.weather;
+      if (wb && typeof wb === 'object') {
+        const latitude = num(wb.latitude, -90, 90, null);
+        const longitude = num(wb.longitude, -180, 180, null);
+        if (latitude === null || longitude === null) throw v.bad('Choose a place for the weather');
+        weather = {
+          place: v.str(wb.place, { max: 120, field: 'Place' }),
+          latitude,
+          longitude,
+          windUnit: v.oneOf(wb.windUnit, ['mph', 'kmh'], 'mph'),
+        };
+      }
+      store.mutate((d) => {
+        d.settings.widgets = { weather, wikipedia: v.bool(req.body.wikipedia, true) };
+      });
+      configureFeeds();
+      res.json(widgetsView());
+    })
+  );
+
+  api.get(
+    '/geocode',
+    route(async (req, res) => {
+      try {
+        res.json(await feeds.geocode(v.str(req.query.q, { max: 100 })));
+      } catch {
+        throw new v.HttpError(502, 'Place search needs an internet connection');
+      }
     })
   );
 
@@ -488,7 +625,7 @@ function createApp(opts = {}) {
   api.post(
     '/sports/refresh',
     route(async (req, res) => {
-      await sports.refresh();
+      await feeds.refresh();
       res.json(sportsView());
     })
   );
@@ -713,12 +850,12 @@ function createApp(opts = {}) {
   });
 
   const close = () => {
-    sports.close();
+    feeds.close();
     hub.close();
     store.flush();
   };
 
-  return { app, store, hub, sports, close, dataDir };
+  return { app, store, hub, feeds, sports: feeds, close, dataDir };
 }
 
 module.exports = { createApp, MEDIA_TYPES, ASSET_TYPES };

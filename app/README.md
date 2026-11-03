@@ -17,6 +17,7 @@ One Node.js server runs on a Raspberry Pi. It has two parts:
 | **Timings** | Per-item start/end dates, days of the week and a daily time window, including windows that run past midnight (e.g. 18:00–01:00). Presets cover Weekdays, Weekends, Lunch, Evenings and Today only. Each item shows a status badge: *Live now*, *Scheduled*, *Off-hours* or *Expired*. |
 | **Screens** | Screens register themselves on first connect. From the dashboard you can rename a screen, assign its playlist, rotate it for portrait mounting, see whether it's online and its resolution, flash its name with **Identify**, or **Reload** it remotely. |
 | **Live scores** | Fixtures, live scores and results from the built-in [`signage-server`](../signage-server/README.md) sports engine (Premier League, Championship, SPFL, Champions League, NFL, NBA). Choose leagues in **Settings → Sports feeds**, then add **Live scores** slides to any playlist. Scores refresh every minute while matches are live and are pushed straight to screens. The engine's display page, JSON API and MCP endpoint are served at `/feeds`. |
+| **Widgets** | From the same engine: **clock** (digital, analogue or countdown to kick-off), **weather** for your ground (Open-Meteo, no API key), **jokes** with a punchline reveal, club-spirit **phrases**, **Did you know?** trivia, a multiple-choice **quiz** with an answer reveal, **this day / week / month in sporting history** (optionally with general history from Wikipedia), and **spot the ball**. For spot the ball you mark the ball on your own photo; screens show a grid and a blurred patch, and reveal the answer at the time you choose. The answer isn't sent to screens before then. Jokes, phrases, trivia, quizzes and history are bundled, so they work offline. You can add your own lines, and a fresh selection is picked each day. |
 | **Live updates** | Changes reach screens within about a second over Server-Sent Events, with a 60 s heartbeat poll as a fallback. |
 | **Resilience** | Screens evaluate schedules locally and cache the last playlist, so they keep playing if the server restarts or the network drops. |
 | **Security** | One admin password (scrypt), signed HttpOnly SameSite=Strict session cookies, a CSRF header check, login rate limiting and strict CSP. Uploaded files are served sandboxed. |
@@ -71,8 +72,8 @@ app/
   public/admin/           dashboard SPA (vanilla JS, no build step)
   public/player/          kiosk player
   public/shared/          schedule + text-format parsers, shared by server, dashboard and player
-  lib/sports.js           embeds ../signage-server (sports engine) and mounts it at /feeds
-signage-server/           the sports engine: a dependency of app/ (file:../signage-server), also runs standalone
+  lib/feeds.js            embeds ../signage-server (sports + widgets) and mounts it at /feeds
+signage-server/           the engine (sports + widgets): a dependency of app/ (file:../signage-server), also runs standalone
 deploy/                   Raspberry Pi installer, systemd units, kiosk launcher
 ```
 
@@ -92,6 +93,7 @@ To back up, copy `DATA_DIR`.
 | `POST/PUT/DELETE /api/playlists[/:id]` | Playlists with items and timings |
 | `PATCH/DELETE /api/screens/:id`, `POST /api/screens/:id/command` | Screen settings, identify and reload |
 | `PUT /api/settings/sports`, `POST /api/sports/refresh` | Sports feed settings and manual refresh |
-| `GET /feeds/display`, `/feeds/api/*` · `POST /feeds/mcp` | The sports engine's routes (POST needs its bearer token or a dashboard session) |
+| `PUT /api/settings/widgets`, `GET /api/geocode?q=` | Weather location, Wikipedia on/off, place search |
+| `GET /feeds/display`, `/feeds/api/*`, `/feeds/api/widgets/:kind` · `POST /feeds/mcp` | The engine's routes (POST needs its bearer token or a dashboard session) |
 
 All dashboard calls need the session cookie, and every mutation also needs the `X-PitchTribe: 1` header.

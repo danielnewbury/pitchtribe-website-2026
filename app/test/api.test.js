@@ -9,7 +9,15 @@ const { createApp } = require('../lib/app');
 const espnFixture = JSON.parse(
   fs.readFileSync(path.join(__dirname, '..', '..', 'signage-server', 'test', 'fixtures', 'espn-eng1.json'), 'utf8')
 );
-const fakeEspn = async () => ({ ok: true, status: 200, json: async () => espnFixture });
+const fakeEspn = async (url) => {
+  if (String(url).startsWith('https://api.open-meteo.com')) {
+    return { ok: true, status: 200, json: async () => ({
+      current: { temperature_2m: 8.4, weather_code: 2, wind_speed_10m: 12, is_day: 1 },
+      daily: { time: ['2026-11-03', '2026-11-04'], weather_code: [2, 61], temperature_2m_max: [10, 9], temperature_2m_min: [4, 5], precipitation_probability_max: [10, 70] },
+    }) };
+  }
+  return { ok: true, status: 200, json: async () => espnFixture };
+};
 
 async function startServer() {
   const dataDir = fs.mkdtempSync(path.join(os.tmpdir(), 'pitchtribe-test-'));
@@ -215,7 +223,7 @@ test('screens receive a push when content changes', async (t) => {
   assert.equal(r.status, 400);
 });
 
-test('sports engine runs inside the app: settings, /sports routes, MCP auth, live-score slides', async (t) => {
+test('sports engine runs inside the app: settings, /feeds routes, MCP auth, live-score slides', async (t) => {
   const s = await startServer();
   t.after(s.stop);
   await s.call('POST', '/api/auth/setup', { clubName: 'Riverside FC', password: 'correct horse' });
@@ -228,8 +236,8 @@ test('sports engine runs inside the app: settings, /sports routes, MCP auth, liv
   const token = r.body.sports.apiToken;
   assert.ok(token.length >= 24);
 
-  r = await s.call('GET', '/feeds/api/health');
-  assert.equal(r.status, 404, 'off until enabled');
+  r = await s.call('GET', '/feeds/api/leagues');
+  assert.deepEqual(r.body, [], 'no leagues until sports are switched on');
 
   r = await s.call('PUT', '/api/settings/sports', { enabled: true, leagues: ['eng.1', 'not-a-league'], timezone: 'Europe/London' });
   assert.equal(r.status, 200);
@@ -275,14 +283,89 @@ test('sports engine runs inside the app: settings, /sports routes, MCP auth, liv
   // Score changes are pushed to screens.
   let pushed = 0;
   const orig = s.ctx.hub.broadcast.bind(s.ctx.hub);
-  s.ctx.hub.broadcast = (event, data) => { if (data && data.sports) pushed += 1; return orig(event, data); };
-  s.ctx.sports.emit('update');
+  s.ctx.hub.broadcast = (event, data) => { if (data && data.feeds) pushed += 1; return orig(event, data); };
+  s.ctx.feeds.emit('update', 'sports');
   assert.equal(pushed, 1);
 
   // Switching off removes the data and the routes.
   await s.call('PUT', '/api/settings/sports', { enabled: false, leagues: ['eng.1'] });
   r = await s.call('GET', '/api/player/bar-tv/manifest');
   assert.equal(r.body.items.find((i) => i.type === 'scores').data, null);
-  r = await s.call('GET', '/feeds/api/health');
-  assert.equal(r.status, 404);
+  r = await s.call('GET', '/feeds/api/leagues');
+  assert.deepEqual(r.body, []);
+});
+
+test('widgets: settings, every kind in manifests, spot-the-ball answer stays secret until reveal', async (t) => {
+  const s = await startServer();
+  t.after(s.stop);
+  await s.call('POST', '/api/auth/setup', { clubName: 'Riverside FC', password: 'correct horse' });
+  await s.ctx.feeds.ready;
+  const playlistId = (await s.call('GET', '/api/state')).body.playlists[0].id;
+
+  let r = await s.call('GET', '/api/state');
+  assert.ok(r.body.widgets.kinds.some((k) => k.kind === 'quiz'));
+  assert.equal(r.body.widgets.weather, null);
+
+  r = await s.call('PUT', '/api/settings/widgets', { weather: { place: 'Leeds', latitude: 53.8, longitude: 'x' } });
+  assert.equal(r.status, 400);
+  r = await s.call('PUT', '/api/settings/widgets', { weather: { place: 'Leeds', latitude: 53.8, longitude: -1.55 }, wikipedia: false });
+  assert.equal(r.status, 200);
+  assert.equal(r.body.weather.windUnit, 'mph');
+
+  const add = (content, extra = {}) => s.call('POST', '/api/assets', { type: 'widget', name: content.kind, content, addToPlaylist: playlistId, ...extra });
+  for (const content of [
+    { kind: 'clock', mode: 'analog' },
+    { kind: 'weather', days: 2 },
+    { kind: 'joke' },
+    { kind: 'phrase', extra: 'Up the Riversiders!', only: true },
+    { kind: 'trivia' },
+    { kind: 'quiz' },
+    { kind: 'history', scope: 'week' },
+  ]) {
+    r = await add(content);
+    assert.equal(r.status, 201, `${content.kind}: ${JSON.stringify(r.body)}`);
+  }
+  assert.equal((await add({ kind: 'clock', mode: 'countdown' })).status, 400, 'countdown needs a target');
+  assert.equal((await add({ kind: 'phrase', only: true })).status, 400);
+  assert.equal((await add({ kind: 'lottery' })).status, 400);
+  r = await add({ kind: 'quiz' });
+  assert.equal(r.body.duration, 20, 'per-widget default duration');
+
+  // Spot the ball needs a photo from the library.
+  const png = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==', 'base64');
+  const photo = (await s.call('POST', '/api/assets/upload', png, { raw: true, headers: { 'content-type': 'image/png' } })).body;
+  assert.equal((await add({ kind: 'spotball', imageId: photo.id })).status, 400, 'ball position required');
+  const later = (await add({ kind: 'spotball', imageId: photo.id, x: 42.5, y: 61, revealAt: '2099-01-01T12:00', prize: '£20 bar tab' })).body;
+  const past = (await add({ kind: 'spotball', imageId: photo.id, x: 95, y: 99, revealAt: '2020-01-01T12:00', cover: false })).body;
+
+  // Manifest: every widget carries its data.
+  await s.ctx.feeds.service.widgets.get('weather', { days: 2 });
+  r = await s.call('GET', '/api/player/bar-tv/manifest');
+  const byName = (n) => r.body.items.filter((i) => i.type === 'widget' && i.content.kind === n);
+  assert.equal(byName('clock')[0].data, undefined);
+  assert.equal(byName('weather')[0].data.place, 'Leeds');
+  assert.equal(byName('weather')[0].data.days.length, 2, 'as many days as the forecast returned');
+  assert.ok(byName('joke')[0].data.items[0].a);
+  assert.deepEqual(byName('phrase')[0].data.items, ['Up the Riversiders!']);
+  assert.ok(byName('quiz')[0].data.items.length >= 20);
+  assert.ok(byName('history')[0].data.items.length > 0);
+
+  const hidden = r.body.items.find((i) => i.assetId === later.id).data;
+  assert.equal(hidden.revealed, false);
+  assert.equal(hidden.answer, null);
+  assert.ok(!JSON.stringify(hidden).includes('42.5'), 'exact answer not sent before reveal');
+  assert.ok(hidden.patch && Math.abs(hidden.patch.x - 42.5) <= 6 * 0.4 && hidden.patch.r > 6, 'blur patch covers the ball area');
+  assert.equal(hidden.src, photo.src);
+  const shown = r.body.items.find((i) => i.assetId === past.id).data;
+  assert.deepEqual(shown.answer, { x: 95, y: 99, cell: 'J8' });
+  assert.equal(shown.patch, null);
+
+  // Deleting the photo leaves a clear message instead of a broken slide.
+  await s.call('DELETE', `/api/assets/${photo.id}`);
+  r = await s.call('GET', '/api/player/bar-tv/manifest');
+  assert.match(r.body.items.find((i) => i.assetId === later.id).data.error, /deleted/);
+
+  // Widget data is also on the engine's public API.
+  r = await s.call('GET', '/feeds/api/widgets/trivia');
+  assert.equal(r.body.items.length, 20);
 });

@@ -19,6 +19,8 @@ const DEFAULTS = {
   rowsPerPage: 10,
   leagues: [],
   pushTargets: [],
+  weather: null, // { place, latitude, longitude, windUnit: 'mph' | 'kmh' }
+  widgets: { wikipedia: true },
 };
 
 /**
