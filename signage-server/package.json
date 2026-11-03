@@ -1,0 +1,16 @@
+{
+  "name": "pitchtribe-signage-server",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Collects sports fixtures, live scores and results and serves them to PitchTribe signage screens via HTTP API, live display page, webhooks and MCP.",
+  "license": "MIT",
+  "type": "module",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "start": "node src/index.js",
+    "mcp": "node src/mcp-stdio.js",
+    "test": "node --test test/*.test.js"
+  }
+}
