@@ -40,8 +40,21 @@ jobs:
       - name: Verify build output
         run: |
           test -s dist/index.html
-          test -s dist/assets/app.css
           test -s dist/_headers
+          # Asset filenames are content-hashed, so assert by pattern and then
+          # check that every asset the HTML actually references exists. That
+          # catches a fingerprint/rewrite mismatch, which would otherwise ship
+          # a page whose stylesheet 404s.
+          ls dist/assets/app.*.css >/dev/null
+          ls dist/assets/main.*.js >/dev/null
+          missing=0
+          for ref in $(grep -ohE '/assets/[A-Za-z0-9._-]+' dist/*.html | sort -u); do
+            if [ ! -s "dist$ref" ]; then
+              echo "::error::HTML references $ref but dist$ref is missing or empty"
+              missing=1
+            fi
+          done
+          test "$missing" -eq 0
           ls -lR dist
 
       - name: Upload build artifact

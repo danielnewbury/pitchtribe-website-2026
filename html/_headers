@@ -7,8 +7,11 @@
   Cross-Origin-Opener-Policy: same-origin
   Content-Security-Policy: default-src 'self'; base-uri 'self'; object-src 'none'; frame-ancestors 'none'; form-action 'self'; script-src 'self' 'sha256-Du+OJKJSbdUgz5nrHeWWINvez6XKDDU/tyj/5c2uvwo='; style-src 'self' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data:; connect-src 'self'; upgrade-insecure-requests
 
+# Asset filenames are content-hashed by scripts/fingerprint.mjs, so a given
+# URL never changes content and can be cached hard. A new build produces new
+# URLs, which is what makes CSS changes land immediately.
 /assets/*
-  Cache-Control: public, max-age=604800, stale-while-revalidate=86400
+  Cache-Control: public, max-age=31536000, immutable
 
 /*.html
   Cache-Control: public, max-age=0, must-revalidate

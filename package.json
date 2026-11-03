@@ -11,8 +11,9 @@
     "clean": "node -e \"require('fs').rmSync('dist',{recursive:true,force:true})\"",
     "copy": "node -e \"require('fs').cpSync('html','dist',{recursive:true})\"",
     "build:css": "tailwindcss -i ./src/styles.css -o ./dist/assets/app.css --minify",
-    "build": "npm run clean && npm run copy && npm run build:css",
-    "dev": "npm run build && tailwindcss -i ./src/styles.css -o ./dist/assets/app.css --watch",
+    "fingerprint": "node scripts/fingerprint.mjs",
+    "build": "npm run clean && npm run copy && npm run build:css && npm run fingerprint",
+    "dev": "npm run clean && npm run copy && tailwindcss -i ./src/styles.css -o ./dist/assets/app.css --watch",
     "preview": "npm run build && wrangler pages dev dist",
     "deploy": "npm run build && wrangler pages deploy dist --project-name=pitchtribe-website --branch=main"
   },
