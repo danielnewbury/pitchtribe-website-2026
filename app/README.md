@@ -21,6 +21,7 @@ One Node.js server runs on a Raspberry Pi. It has two parts:
 | **Transport hub** | One slide with any mix of: a **live bus tracker** for chosen routes near the ground (anywhere in England, via the Bus Open Data Service with a free key), **train departures** (National Rail Darwin via a Huxley2 proxy), London **bus arrivals**, **tube & rail line status** and **main roads** (TfL), and **planes overhead** (adsb.lol). |
 | **More live data** | Sunrise, sunset & moon (calculated), UK bank holidays (GOV.UK), flood warnings (Environment Agency), grid carbon intensity (NESO), earthquakes (USGS), exchange rates (ECB), Wikimedia picture of the day, born on this day (Wikipedia), Open Trivia DB questions, plus **news headlines** from any RSS/Atom feed and **events** from any iCal calendar. Licences and attribution are covered in [`signage-server/DATA_SOURCES.md`](../signage-server/DATA_SOURCES.md). |
 | **Languages** | Screens can show built-in labels, dates and times in English, French, Spanish, German, Italian, Portuguese, Polish, Russian, Chinese or Japanese. Set a club default, then override it per screen if needed. Your own content isn't translated. Built-in quiz and joke packs are English. |
+| **Guest Wi-Fi** | A captive portal on the Pi's built-in Wi-Fi, with the Pi plugged into the club router by cable. Guests see your branded sign-in page: logo, colour, message, terms of use, and optionally an email box with a separate, unticked consent box. They then get internet for a set session with per-device speed limits. Guests can never reach the club network or the dashboard. Manage it under **Wi-Fi** in the dashboard: live preview, connection counts, CSV export of consented emails. |
 | **Live updates** | Changes reach screens within about a second over Server-Sent Events, with a 60 s heartbeat poll as a fallback. |
 | **Resilience** | Screens evaluate schedules locally and cache the last playlist, so they keep playing if the server restarts or the network drops. |
 | **Security** | One admin password (scrypt), signed HttpOnly SameSite=Strict session cookies, a CSRF header check, login rate limiting and strict CSP. Uploaded files are served sandboxed. |
@@ -53,6 +54,11 @@ and `pitchtribe-kiosk.service`, which is Chromium inside the `cage` Wayland kios
 It also sets up mDNS so the dashboard is at `http://<hostname>.local`. Each Pi's screen id is
 its hostname.
 
+Guest Wi-Fi is opt-in: `sudo PITCHTRIBE_PORTAL=1 pitchtribe/deploy/install.sh`. It installs hostapd, dnsmasq and nftables, plus
+`pitchtribe-portal.service` (the guest-facing portal on 10.42.0.1:8082, its only privilege `CAP_NET_ADMIN`).
+It also installs `pitchtribe-portal-apply`, a root helper that rewrites the access-point and firewall configuration whenever the dashboard saves
+Wi-Fi settings. The Pi needs its network cable for the internet; its Wi-Fi becomes the guest network.
+
 Running several screens? Install the full stack on one Pi (the hub). On every other Pi, install
 only the kiosk and point it at the hub:
 
@@ -76,6 +82,8 @@ app/
   public/player/          kiosk player
   public/shared/          schedule + text-format parsers, shared by server, dashboard and player
   lib/feeds.js            embeds ../signage-server (sports + widgets) and mounts it at /feeds
+  lib/portal.js           guest Wi-Fi captive portal (run by portal-server.js as its own service)
+  lib/portal-page.js      splash / connected pages (server-rendered, no JavaScript)
 signage-server/           the engine (sports + widgets): a dependency of app/ (file:../signage-server), also runs standalone
 deploy/                   Raspberry Pi installer, systemd units, kiosk launcher
 ```
@@ -97,6 +105,7 @@ To back up, copy `DATA_DIR`.
 | `PATCH/DELETE /api/screens/:id`, `POST /api/screens/:id/command` | Screen settings, identify and reload |
 | `PUT /api/settings/sports`, `POST /api/sports/refresh` | Sports feed settings and manual refresh |
 | `PUT /api/settings/widgets`, `GET /api/geocode?q=` | Weather location, Wikipedia on/off, place search |
+| `GET/PUT /api/portal`, `GET /api/portal/preview`, `GET /api/portal/guests.csv`, `DELETE /api/portal/guests` | Guest Wi-Fi settings, stats, splash preview, email export |
 | `GET /feeds/display`, `/feeds/api/*`, `/feeds/api/widgets/:kind` · `POST /feeds/mcp` | The engine's routes (POST needs its bearer token or a dashboard session) |
 
 All dashboard calls need the session cookie, and every mutation also needs the `X-PitchTribe: 1` header.

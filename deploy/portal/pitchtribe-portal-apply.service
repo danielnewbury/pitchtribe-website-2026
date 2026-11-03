@@ -1,0 +1,11 @@
+[Unit]
+Description=Apply PitchTribe guest Wi-Fi settings (hostapd, dnsmasq, nftables)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/bin/pitchtribe-portal-apply
+
+[Install]
+WantedBy=multi-user.target

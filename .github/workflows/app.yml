@@ -42,4 +42,4 @@ jobs:
 
       - name: Check deploy scripts
         working-directory: deploy
-        run: bash -n install.sh && bash -n kiosk.sh
+        run: bash -n install.sh && bash -n kiosk.sh && bash -n portal/portal-apply.sh
