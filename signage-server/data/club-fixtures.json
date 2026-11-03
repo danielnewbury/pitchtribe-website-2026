@@ -1,0 +1,22 @@
+{
+  "events": [
+    {
+      "id": "club-1",
+      "start": "2026-11-07T15:00:00Z",
+      "status": "scheduled",
+      "home": "Our Club 1st XI",
+      "away": "Riverside FC",
+      "venue": "Home Ground"
+    },
+    {
+      "id": "club-2",
+      "start": "2026-10-31T15:00:00Z",
+      "status": "final",
+      "home": "Hilltop Town",
+      "away": "Our Club 1st XI",
+      "homeScore": 1,
+      "awayScore": 3,
+      "venue": "Hilltop Park"
+    }
+  ]
+}

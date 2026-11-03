@@ -1,0 +1,22 @@
+# systemd unit for running the signage server on a Raspberry Pi.
+# Install:  sudo cp pitchtribe-signage.service /etc/systemd/system/
+#           sudo systemctl daemon-reload && sudo systemctl enable --now pitchtribe-signage
+[Unit]
+Description=PitchTribe sports signage server
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=pi
+WorkingDirectory=/opt/pitchtribe/signage-server
+ExecStart=/usr/bin/node src/index.js
+Restart=always
+RestartSec=5
+# Environment=API_TOKEN=change-me
+NoNewPrivileges=true
+ProtectSystem=strict
+ReadWritePaths=/opt/pitchtribe/signage-server/data
+
+[Install]
+WantedBy=multi-user.target

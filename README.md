@@ -9,7 +9,8 @@ from any device on the club's own network.
 
 **Live at [pitchtribe.media](https://pitchtribe.media).**
 
-This repository contains the **website only** — no signage application code lives here.
+This repository contains the website, plus `signage-server/`: a small server that collects sports
+fixtures, live scores and results for club screens (see [`signage-server/README.md`](signage-server/README.md)).
 
 ## Hosting
 
@@ -37,6 +38,7 @@ its own apex record and its email routing (MX/SPF/DKIM) untouched.
 | `scripts/fingerprint.mjs` | Content-hashes built assets and rewrites HTML references |
 | `wrangler.toml` | Pages project config (`pages_build_output_dir = "./dist"`) |
 | `.github/workflows/deploy.yml` | CI: build on pull requests, build and deploy on push to `main` |
+| `signage-server/` | Sports fixtures/scores server: display page, JSON API, webhook push, MCP. Not part of the site build |
 | `dist/` | Build output (git-ignored) |
 
 ## Local development

@@ -1,0 +1,52 @@
+{
+  "leagues": [{ "name": "English Premier League", "abbreviation": "EPL" }],
+  "events": [
+    {
+      "id": "1001",
+      "date": "2026-11-01T16:30Z",
+      "name": "Chelsea at Arsenal",
+      "status": { "type": { "name": "STATUS_FULL_TIME", "state": "post", "completed": true, "shortDetail": "FT" } },
+      "competitions": [{
+        "venue": { "fullName": "Emirates Stadium" },
+        "competitors": [
+          { "homeAway": "home", "score": "2", "team": { "displayName": "Arsenal", "shortDisplayName": "Arsenal", "abbreviation": "ARS", "logo": "https://a.espncdn.com/i/teamlogos/soccer/500/359.png" } },
+          { "homeAway": "away", "score": "1", "team": { "displayName": "Chelsea", "shortDisplayName": "Chelsea", "abbreviation": "CHE", "logo": "https://a.espncdn.com/i/teamlogos/soccer/500/363.png" } }
+        ]
+      }]
+    },
+    {
+      "id": "1002",
+      "date": "2026-11-03T20:00Z",
+      "status": { "type": { "name": "STATUS_SECOND_HALF", "state": "in", "completed": false, "shortDetail": "67'" } },
+      "competitions": [{
+        "venue": { "fullName": "Anfield" },
+        "competitors": [
+          { "homeAway": "away", "score": "0", "team": { "displayName": "Manchester City", "shortDisplayName": "Man City", "abbreviation": "MNC" } },
+          { "homeAway": "home", "score": "1", "team": { "displayName": "Liverpool", "shortDisplayName": "Liverpool", "abbreviation": "LIV" } }
+        ]
+      }]
+    },
+    {
+      "id": "1003",
+      "date": "2026-11-08T15:00Z",
+      "status": { "type": { "name": "STATUS_SCHEDULED", "state": "pre", "completed": false, "shortDetail": "Sat, November 8th at 3:00 PM GMT" } },
+      "competitions": [{
+        "competitors": [
+          { "homeAway": "home", "score": "0", "team": { "displayName": "Tottenham Hotspur", "shortDisplayName": "Spurs", "abbreviation": "TOT" } },
+          { "homeAway": "away", "score": "0", "team": { "displayName": "Newcastle <United>", "shortDisplayName": "Newcastle <b>", "abbreviation": "NEW" } }
+        ]
+      }]
+    },
+    {
+      "id": "1004",
+      "date": "2026-11-02T14:00Z",
+      "status": { "type": { "name": "STATUS_POSTPONED", "state": "post", "completed": false, "shortDetail": "Postponed" } },
+      "competitions": [{
+        "competitors": [
+          { "homeAway": "home", "team": { "displayName": "Everton", "shortDisplayName": "Everton" } },
+          { "homeAway": "away", "team": { "displayName": "Fulham", "shortDisplayName": "Fulham" } }
+        ]
+      }]
+    }
+  ]
+}
