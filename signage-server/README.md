@@ -34,9 +34,12 @@ The server also provides content for screen widgets:
 | Widget | Source | Notes |
 | --- | --- | --- |
 | `weather` | [Open-Meteo](https://open-meteo.com) (no API key) | Current conditions and a 7-day forecast for `config.weather` (`place`, `latitude`, `longitude`, `windUnit`). Cached for 15 minutes. |
-| `joke`, `phrase`, `trivia`, `quiz` | `data/widgets/*.json` (bundled) | A day-stable random selection of 20. Pass `extra` (your own lines) and `only`. Quiz lines use `Question \| right \| wrong \| wrong \| wrong`. |
-| `history` | `data/widgets/sporting-history.json` + Wikipedia "On this day" | `scope=day\|week\|month`. Widens automatically if the day has no entry. `general=true` adds Wikipedia's selected events (`config.widgets.wikipedia`). |
-| `clock` | — | Drawn by the screen. |
+| `joke`, `phrase`, `trivia`, `quiz` | `data/widgets/*.json` (bundled) | A day-stable random selection of 20. Pass `extra` (your own lines) and `only`. Quiz lines use `Question \| right \| wrong \| wrong \| wrong`. `trivia` and `quiz` take `topic=sport\|film-tv\|music\|geography\|culture\|mixed`. |
+| `emoji` | `data/widgets/emoji.json` | Guess the film, TV show or song. `category=Film\|TV\|Song`. Extra lines use `emojis \| answer \| category`. |
+| `geoquiz` | `data/widgets/countries.json` | Generated flag and capital-city questions. `mode=flags\|capitals\|mixed`. |
+| `country` | `data/widgets/countries.json` | Flag, capital, continent and currency. |
+| `history` | `data/widgets/sporting-history.json`, `entertainment-history.json` + Wikipedia "On this day" | `scope=day\|week\|month`, `topic=sport\|entertainment\|all`. Widens automatically if the day has no entry. `general=true` adds Wikipedia's selected events (`config.widgets.wikipedia`). |
+| `clock`, `worldclock` | — | Drawn by the screen. |
 
 - `GET /api/widgets` lists them, and `GET /api/widgets/:kind?…` returns the data.
 - `GET /api/geocode?q=` searches for places.

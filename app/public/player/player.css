@@ -401,6 +401,27 @@ html, body {
 .sb-result { font-weight: 800; color: #ff6b6b; }
 .sb-prize { color: var(--amber); font-weight: 700; }
 
+/* Quiz flags, emoji quiz, country, world clocks */
+.quiz-flag { font-size: 5.5em; line-height: 1; margin-bottom: 0.25em; }
+.widget.w-emoji { text-align: center; }
+.widget.w-emoji .kicker { justify-content: center; }
+.emoji-prompt { font-size: 1.3em; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: 0.12em; }
+.emoji-clue { font-size: 6em; line-height: 1.15; margin: 0.25em 0; letter-spacing: 0.08em; }
+.emoji-answer { font-size: 2.2em; font-weight: 800; color: var(--accent); opacity: 0; transform: scale(0.92); transition: opacity 500ms ease, transform 500ms ease; }
+.revealed .emoji-answer { opacity: 1; transform: none; }
+.country-card { display: flex; align-items: center; gap: 1.4em; }
+.country-flag { font-size: 9em; line-height: 1; }
+.country-name { font-size: 3em; font-weight: 800; letter-spacing: -0.02em; line-height: 1.05; margin-bottom: 0.4em; }
+.country-facts { display: grid; grid-template-columns: auto 1fr; gap: 0.35em 1em; font-size: 1.25em; }
+.country-facts dt { color: var(--muted); font-weight: 600; }
+.country-facts dd { margin: 0; font-weight: 700; }
+.world-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(8.5em, 1fr)); gap: 0.7em; }
+.world-card { padding: 0.8em 0.6em; border-radius: 0.6em; background: rgb(14 30 48 / 0.8); border: 1px solid var(--line); text-align: center; }
+.world-city { font-size: 0.75em; font-weight: 800; letter-spacing: 0.12em; text-transform: uppercase; color: var(--accent); }
+.world-time { font-size: 2.6em; font-weight: 800; font-variant-numeric: tabular-nums; line-height: 1.1; margin: 0.1em 0; }
+.world-day { font-size: 0.7em; color: var(--muted); }
+.history-list li.entertainment .year { color: var(--violet, #bc64ff); }
+
 [hidden] { display: none !important; }
 
 @media (prefers-reduced-motion: reduce) {

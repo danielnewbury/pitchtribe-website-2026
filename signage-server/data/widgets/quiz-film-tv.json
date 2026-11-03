@@ -1,0 +1,225 @@
+{
+  "about": "Film & TV multiple-choice quiz.",
+  "items": [
+    {
+      "q": "Which film series features the line “May the Force be with you”?",
+      "options": [
+        "Star Trek",
+        "Star Wars",
+        "Dune",
+        "Alien"
+      ],
+      "answer": 1
+    },
+    {
+      "q": "Who directed Jaws (1975)?",
+      "options": [
+        "George Lucas",
+        "Ridley Scott",
+        "Steven Spielberg",
+        "James Cameron"
+      ],
+      "answer": 2
+    },
+    {
+      "q": "What is the name of the coffee shop in Friends?",
+      "options": [
+        "Central Perk",
+        "Monica's",
+        "The Grind",
+        "Java Joe's"
+      ],
+      "answer": 0
+    },
+    {
+      "q": "In which fictional town do the Simpsons live?",
+      "options": [
+        "Shelbyville",
+        "Springfield",
+        "Quahog",
+        "Riverdale"
+      ],
+      "answer": 1
+    },
+    {
+      "q": "Which secret agent has the code number 007?",
+      "options": [
+        "Jason Bourne",
+        "Ethan Hunt",
+        "James Bond",
+        "Harry Palmer"
+      ],
+      "answer": 2
+    },
+    {
+      "q": "Who played Jack Dawson in Titanic (1997)?",
+      "options": [
+        "Brad Pitt",
+        "Leonardo DiCaprio",
+        "Matt Damon",
+        "Johnny Depp"
+      ],
+      "answer": 1
+    },
+    {
+      "q": "What is the name of the Doctor's time machine in Doctor Who?",
+      "options": [
+        "The Tardis",
+        "The Delorean",
+        "The Nautilus",
+        "The Enterprise"
+      ],
+      "answer": 0
+    },
+    {
+      "q": "Which animated film stars a cowboy doll called Woody?",
+      "options": [
+        "Cars",
+        "Toy Story",
+        "Shrek",
+        "Up"
+      ],
+      "answer": 1
+    },
+    {
+      "q": "What is the name of the pub in EastEnders?",
+      "options": [
+        "The Rovers Return",
+        "The Woolpack",
+        "The Queen Vic",
+        "The Bull"
+      ],
+      "answer": 2
+    },
+    {
+      "q": "Which film won Best Picture at the very first Academy Awards?",
+      "options": [
+        "Wings",
+        "Sunrise",
+        "The Jazz Singer",
+        "Metropolis"
+      ],
+      "answer": 0
+    },
+    {
+      "q": "What colour are Dorothy's slippers in the 1939 film The Wizard of Oz?",
+      "options": [
+        "Silver",
+        "Ruby red",
+        "Gold",
+        "Emerald green"
+      ],
+      "answer": 1
+    },
+    {
+      "q": "What is the name of Harry Potter's owl?",
+      "options": [
+        "Hedwig",
+        "Errol",
+        "Pigwidgeon",
+        "Fawkes"
+      ],
+      "answer": 0
+    },
+    {
+      "q": "Which sitcom follows the Trotter brothers of Peckham?",
+      "options": [
+        "Only Fools and Horses",
+        "Steptoe and Son",
+        "Porridge",
+        "Minder"
+      ],
+      "answer": 0
+    },
+    {
+      "q": "Who played the Joker in The Dark Knight (2008)?",
+      "options": [
+        "Jack Nicholson",
+        "Joaquin Phoenix",
+        "Heath Ledger",
+        "Jared Leto"
+      ],
+      "answer": 2
+    },
+    {
+      "q": "Which 1994 film features the line “Life is like a box of chocolates”?",
+      "options": [
+        "Forrest Gump",
+        "Pulp Fiction",
+        "The Lion King",
+        "Speed"
+      ],
+      "answer": 0
+    },
+    {
+      "q": "What kind of creature is Shrek?",
+      "options": [
+        "A troll",
+        "An ogre",
+        "A giant",
+        "A goblin"
+      ],
+      "answer": 1
+    },
+    {
+      "q": "What is Indiana Jones's profession?",
+      "options": [
+        "Detective",
+        "Pilot",
+        "Archaeologist",
+        "Journalist"
+      ],
+      "answer": 2
+    },
+    {
+      "q": "In The Lion King, what is the name of Simba's father?",
+      "options": [
+        "Scar",
+        "Mufasa",
+        "Rafiki",
+        "Zazu"
+      ],
+      "answer": 1
+    },
+    {
+      "q": "In Game of Thrones, which continent is most of the story set on?",
+      "options": [
+        "Essos",
+        "Westeros",
+        "Narnia",
+        "Middle-earth"
+      ],
+      "answer": 1
+    },
+    {
+      "q": "Which Pixar film is set inside a girl's mind, with characters called Joy and Sadness?",
+      "options": [
+        "Inside Out",
+        "Coco",
+        "Soul",
+        "Brave"
+      ],
+      "answer": 0
+    },
+    {
+      "q": "Which long-running soap is set on a street in the fictional town of Weatherfield?",
+      "options": [
+        "Emmerdale",
+        "Coronation Street",
+        "Hollyoaks",
+        "Brookside"
+      ],
+      "answer": 1
+    },
+    {
+      "q": "Which Aardman duo are a cheese-loving inventor and his dog?",
+      "options": [
+        "Wallace and Gromit",
+        "Bill and Ben",
+        "Morph and Chas",
+        "Pinky and Perky"
+      ],
+      "answer": 0
+    }
+  ]
+}

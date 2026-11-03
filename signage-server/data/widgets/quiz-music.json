@@ -1,0 +1,215 @@
+{
+  "about": "Music multiple-choice quiz.",
+  "items": [
+    {
+      "q": "Which band released the album Abbey Road?",
+      "options": [
+        "The Rolling Stones",
+        "The Beatles",
+        "The Who",
+        "The Kinks"
+      ],
+      "answer": 1
+    },
+    {
+      "q": "Freddie Mercury was the lead singer of which band?",
+      "options": [
+        "Queen",
+        "Genesis",
+        "Duran Duran",
+        "The Police"
+      ],
+      "answer": 0
+    },
+    {
+      "q": "Which Swedish group won Eurovision in 1974 with “Waterloo”?",
+      "options": [
+        "Roxette",
+        "Europe",
+        "ABBA",
+        "Ace of Base"
+      ],
+      "answer": 2
+    },
+    {
+      "q": "Which singer was known as the “King of Pop”?",
+      "options": [
+        "Elvis Presley",
+        "Prince",
+        "Michael Jackson",
+        "Stevie Wonder"
+      ],
+      "answer": 2
+    },
+    {
+      "q": "How many strings does a standard guitar have?",
+      "options": [
+        "4",
+        "5",
+        "6",
+        "8"
+      ],
+      "answer": 2
+    },
+    {
+      "q": "Which instrument usually has 88 keys?",
+      "options": [
+        "Organ",
+        "Piano",
+        "Accordion",
+        "Harpsichord"
+      ],
+      "answer": 1
+    },
+    {
+      "q": "Who composed the “Moonlight Sonata”?",
+      "options": [
+        "Mozart",
+        "Bach",
+        "Beethoven",
+        "Chopin"
+      ],
+      "answer": 2
+    },
+    {
+      "q": "Which Manchester band released “Wonderwall”?",
+      "options": [
+        "Blur",
+        "Oasis",
+        "The Stone Roses",
+        "Pulp"
+      ],
+      "answer": 1
+    },
+    {
+      "q": "Which singer is often called the “Queen of Pop”?",
+      "options": [
+        "Madonna",
+        "Kylie Minogue",
+        "Cher",
+        "Whitney Houston"
+      ],
+      "answer": 0
+    },
+    {
+      "q": "In music, what does “forte” mean?",
+      "options": [
+        "Slowly",
+        "Quietly",
+        "Loudly",
+        "Quickly"
+      ],
+      "answer": 2
+    },
+    {
+      "q": "How many musicians play in a quartet?",
+      "options": [
+        "3",
+        "4",
+        "5",
+        "6"
+      ],
+      "answer": 1
+    },
+    {
+      "q": "Which Spice Girl was known as “Posh Spice”?",
+      "options": [
+        "Geri Halliwell",
+        "Emma Bunton",
+        "Victoria Beckham",
+        "Mel C"
+      ],
+      "answer": 2
+    },
+    {
+      "q": "Elvis Presley's home, Graceland, is in which US city?",
+      "options": [
+        "Nashville",
+        "Memphis",
+        "New Orleans",
+        "Las Vegas"
+      ],
+      "answer": 1
+    },
+    {
+      "q": "Which Welsh singer is famous for “It's Not Unusual”?",
+      "options": [
+        "Tom Jones",
+        "Shirley Bassey",
+        "Bonnie Tyler",
+        "Shakin' Stevens"
+      ],
+      "answer": 0
+    },
+    {
+      "q": "What is the highest standard female singing voice?",
+      "options": [
+        "Alto",
+        "Mezzo-soprano",
+        "Soprano",
+        "Contralto"
+      ],
+      "answer": 2
+    },
+    {
+      "q": "Which festival is held at Worthy Farm in Somerset?",
+      "options": [
+        "Reading",
+        "Glastonbury",
+        "Isle of Wight",
+        "Download"
+      ],
+      "answer": 1
+    },
+    {
+      "q": "Which family of instruments does the trumpet belong to?",
+      "options": [
+        "Woodwind",
+        "Brass",
+        "Strings",
+        "Percussion"
+      ],
+      "answer": 1
+    },
+    {
+      "q": "Which Italian composer wrote The Four Seasons?",
+      "options": [
+        "Verdi",
+        "Puccini",
+        "Vivaldi",
+        "Rossini"
+      ],
+      "answer": 2
+    },
+    {
+      "q": "Which Liverpool club is famous for The Beatles' early gigs?",
+      "options": [
+        "The Cavern Club",
+        "The Hacienda",
+        "The Marquee",
+        "The 100 Club"
+      ],
+      "answer": 0
+    },
+    {
+      "q": "How many lines are there on a musical stave?",
+      "options": [
+        "4",
+        "5",
+        "6",
+        "7"
+      ],
+      "answer": 1
+    },
+    {
+      "q": "Which instrument does an orchestra usually tune to?",
+      "options": [
+        "Violin",
+        "Oboe",
+        "Flute",
+        "Trumpet"
+      ],
+      "answer": 1
+    }
+  ]
+}

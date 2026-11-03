@@ -382,6 +382,8 @@
     for (const e of stage.querySelectorAll('[data-live]')) {
       const kind = e.dataset.live;
       if (kind === 'time') e.textContent = now.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
+      else if (kind === 'tztime') e.textContent = now.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', timeZone: e.dataset.tz });
+      else if (kind === 'tzday') e.textContent = now.toLocaleDateString('en-GB', { weekday: 'long', timeZone: e.dataset.tz });
       else if (kind === 'seconds') e.textContent = pad2(now.getSeconds());
       else if (kind === 'date') e.textContent = now.toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
       else if (kind === 'hand') {
@@ -413,6 +415,42 @@
     const fit = el('div', 'fit');
     panel.append(fit);
     return { panel, fit };
+  }
+
+  const QUIZ_TITLES = { sport: 'Sports quiz', 'film-tv': 'Film & TV quiz', music: 'Music quiz', geography: 'Geography quiz', culture: 'Culture quiz', mixed: 'General knowledge quiz' };
+  const TRIVIA_TITLES = { sport: 'Did you know?', 'film-tv': 'Film & TV: did you know?', music: 'Music: did you know?', geography: 'Geography: did you know?', culture: 'Culture: did you know?', mixed: 'Did you know?' };
+
+  /** Question, four options, timer bar, answer revealed at 65% of the slide. */
+  function renderQuiz(item, q, kicker) {
+    const { panel, fit } = widgetPanel('quiz', kicker, '');
+    if (!q) return { el: panel };
+    if (q.flag) fit.append(el('div', 'quiz-flag', q.flag));
+    fit.append(el('p', 'quiz-q', q.q));
+    const grid = el('ol', 'quiz-options');
+    q.options.forEach((opt, i) => {
+      const li = el('li', i === q.answer ? 'right' : 'wrong');
+      li.append(el('span', 'quiz-letter', 'ABCD'[i]), el('span', '', opt));
+      grid.append(li);
+    });
+    fit.append(grid);
+    return withReveal(panel, 0.65);
+  }
+
+  /** Timer bar, then the slide gets .revealed at `at` × its duration. */
+  function withReveal(panel, at) {
+    const bar = el('div', 'quiz-timer');
+    const fill = el('div', '');
+    bar.append(fill);
+    panel.append(bar);
+    return {
+      el: panel,
+      onShow: (ms) => {
+        const revealIn = ms * at;
+        fill.style.transitionDuration = `${revealIn}ms`;
+        requestAnimationFrame(() => { fill.style.width = '0%'; });
+        setTimeout(() => panel.classList.add('revealed'), revealIn);
+      },
+    };
   }
 
   function renderWidget(item) {
@@ -513,43 +551,68 @@
 
       case 'trivia': {
         const fact = nextOf(item, d.items || []);
-        const { panel, fit } = widgetPanel('trivia', club, c.title || 'Did you know?');
+        const { panel, fit } = widgetPanel('trivia', club, c.title || TRIVIA_TITLES[d.topic] || 'Did you know?');
         fit.append(el('p', 'trivia-text', fact || ''));
         return { el: panel };
       }
 
       case 'quiz': {
         const q = nextOf(item, d.items || []);
-        const { panel, fit } = widgetPanel('quiz', c.title || 'Quiz time', '');
-        if (!q) return { el: panel };
-        fit.append(el('p', 'quiz-q', q.q));
-        const grid = el('ol', 'quiz-options');
-        q.options.forEach((opt, i) => {
-          const li = el('li', i === q.answer ? 'right' : 'wrong');
-          li.append(el('span', 'quiz-letter', 'ABCD'[i]), el('span', '', opt));
-          grid.append(li);
-        });
+        return renderQuiz(item, q, c.title || QUIZ_TITLES[d.topic] || 'Quiz time');
+      }
+
+      case 'geoquiz': {
+        const q = nextOf(item, d.items || []);
+        return renderQuiz(item, q, c.title || { flags: 'Name that flag', capitals: 'Capital cities', mixed: 'Flags & capitals' }[d.mode] || 'Geography quiz');
+      }
+
+      case 'emoji': {
+        const e = nextOf(item, d.items || []);
+        const what = { Film: 'film', TV: 'TV show', Song: 'song' }[e && e.category] || 'answer';
+        const { panel, fit } = widgetPanel('emoji', c.title || 'Emoji quiz', '');
+        if (!e) return { el: panel };
+        fit.append(el('p', 'emoji-prompt', `Guess the ${what}`), el('div', 'emoji-clue', e.emoji));
+        fit.append(el('p', 'emoji-answer', e.answer));
+        return withReveal(panel, 0.6);
+      }
+
+      case 'country': {
+        const ct = nextOf(item, d.items || []);
+        const { panel, fit } = widgetPanel('country', club, c.title || 'Country of the day');
+        if (!ct) return { el: panel };
+        const card = el('div', 'country-card');
+        const facts = el('dl', 'country-facts');
+        for (const [k, val] of [['Capital', ct.capital], ['Continent', ct.continent], ['Currency', ct.currency]]) facts.append(el('dt', '', k), el('dd', '', val));
+        const text = el('div', '');
+        text.append(el('div', 'country-name', ct.name), facts);
+        card.append(el('div', 'country-flag', ct.flag), text);
+        fit.append(card);
+        return { el: panel };
+      }
+
+      case 'worldclock': {
+        const { panel, fit } = widgetPanel('worldclock', club, c.title || 'World clocks');
+        const grid = el('div', 'world-grid');
+        for (const z of c.zones || []) {
+          const card = el('div', 'world-card');
+          const time = el('div', 'world-time');
+          time.dataset.live = 'tztime';
+          time.dataset.tz = z.tz;
+          const day = el('div', 'world-day');
+          day.dataset.live = 'tzday';
+          day.dataset.tz = z.tz;
+          card.append(el('div', 'world-city', z.label), time, day);
+          grid.append(card);
+        }
         fit.append(grid);
-        const bar = el('div', 'quiz-timer');
-        const fill = el('div', '');
-        bar.append(fill);
-        panel.append(bar);
-        return {
-          el: panel,
-          onShow: (ms) => {
-            const revealIn = ms * 0.65;
-            fill.style.transitionDuration = `${revealIn}ms`;
-            requestAnimationFrame(() => { fill.style.width = '0%'; });
-            setTimeout(() => panel.classList.add('revealed'), revealIn);
-          },
-        };
+        return { el: panel };
       }
 
       case 'history': {
         const { panel, fit } = widgetPanel('history', club, c.title || d.label);
         const list = el('ul', 'history-list');
         for (const it of d.items || []) {
-          const li = el('li', it.sport ? 'sport' : 'general');
+          const li = el('li', it.tag || (it.sport ? 'sport' : 'general'));
           const [mm, dd] = it.date.split('-').map(Number);
           const when = new Date(2000, mm - 1, dd).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' });
           li.append(el('span', 'year', String(it.year)), el('span', 'text', it.text), el('span', 'when', d.scopeUsed === 'day' ? '' : when));

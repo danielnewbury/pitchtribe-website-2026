@@ -369,3 +369,37 @@ test('widgets: settings, every kind in manifests, spot-the-ball answer stays sec
   r = await s.call('GET', '/feeds/api/widgets/trivia');
   assert.equal(r.body.items.length, 20);
 });
+
+test('culture widgets: topics, emoji quiz, flags & capitals, country of the day, world clocks', async (t) => {
+  const s = await startServer();
+  t.after(s.stop);
+  await s.call('POST', '/api/auth/setup', { clubName: 'Riverside FC', password: 'correct horse' });
+  await s.ctx.feeds.ready;
+  const playlistId = (await s.call('GET', '/api/state')).body.playlists[0].id;
+  const add = (content) => s.call('POST', '/api/assets', { type: 'widget', name: content.kind, content, addToPlaylist: playlistId });
+
+  let r = await add({ kind: 'quiz', topic: 'music' });
+  assert.equal(r.body.content.topic, 'music');
+  r = await add({ kind: 'trivia', topic: 'nonsense' });
+  assert.equal(r.body.content.topic, 'sport', 'unknown topic falls back');
+  r = await add({ kind: 'history', scope: 'month', topic: 'entertainment' });
+  assert.equal(r.body.content.topic, 'entertainment');
+  assert.equal((await add({ kind: 'emoji', category: 'Film' })).status, 201);
+  assert.equal((await add({ kind: 'geoquiz', mode: 'flags' })).status, 201);
+  assert.equal((await add({ kind: 'country' })).status, 201);
+  r = await add({ kind: 'worldclock', zones: [{ label: 'Tokyo', tz: 'Asia/Tokyo' }, { label: 'New York', tz: 'America/New_York' }] });
+  assert.equal(r.status, 201);
+  assert.equal((await add({ kind: 'worldclock', zones: [{ label: 'Nowhere', tz: 'Mars/Base' }] })).status, 400);
+  assert.equal((await add({ kind: 'worldclock', zones: [] })).status, 400);
+
+  r = await s.call('GET', '/api/player/bar-tv/manifest');
+  const w = (kind) => r.body.items.find((i) => i.type === 'widget' && i.content.kind === kind);
+  assert.equal(w('quiz').data.topic, 'music');
+  assert.ok(w('quiz').data.items.every((q) => q.topic === 'music'));
+  assert.ok(w('history').data.items.every((i) => i.tag === 'entertainment'));
+  assert.ok(w('emoji').data.items.every((e) => e.category === 'Film'));
+  assert.ok(w('geoquiz').data.items.every((q) => q.flag && q.q.includes('flag')));
+  assert.ok(w('country').data.items[0].capital);
+  assert.equal(w('worldclock').data, undefined, 'world clocks are drawn by the screen');
+  assert.deepEqual(w('worldclock').content.zones.map((z) => z.tz), ['Asia/Tokyo', 'America/New_York']);
+});

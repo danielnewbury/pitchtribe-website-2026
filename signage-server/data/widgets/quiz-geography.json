@@ -1,0 +1,205 @@
+{
+  "about": "General geography quiz (flags and capitals are generated from countries.json).",
+  "items": [
+    {
+      "q": "What is the longest river in the UK?",
+      "options": [
+        "Thames",
+        "Severn",
+        "Trent",
+        "Tay"
+      ],
+      "answer": 1
+    },
+    {
+      "q": "What is the highest mountain in the UK?",
+      "options": [
+        "Snowdon",
+        "Scafell Pike",
+        "Ben Nevis",
+        "Ben Macdui"
+      ],
+      "answer": 2
+    },
+    {
+      "q": "Which is the largest ocean?",
+      "options": [
+        "Atlantic",
+        "Indian",
+        "Pacific",
+        "Southern"
+      ],
+      "answer": 2
+    },
+    {
+      "q": "On which continent is the Sahara Desert?",
+      "options": [
+        "Asia",
+        "Africa",
+        "Australia",
+        "South America"
+      ],
+      "answer": 1
+    },
+    {
+      "q": "What is the highest mountain in the world above sea level?",
+      "options": [
+        "K2",
+        "Kangchenjunga",
+        "Mount Everest",
+        "Lhotse"
+      ],
+      "answer": 2
+    },
+    {
+      "q": "Which is the largest country by area?",
+      "options": [
+        "Canada",
+        "China",
+        "USA",
+        "Russia"
+      ],
+      "answer": 3
+    },
+    {
+      "q": "Which river flows through Paris?",
+      "options": [
+        "Loire",
+        "Rhône",
+        "Seine",
+        "Rhine"
+      ],
+      "answer": 2
+    },
+    {
+      "q": "Which country is home to the Great Barrier Reef?",
+      "options": [
+        "Indonesia",
+        "Australia",
+        "New Zealand",
+        "Fiji"
+      ],
+      "answer": 1
+    },
+    {
+      "q": "Which is the smallest country in the world?",
+      "options": [
+        "Monaco",
+        "San Marino",
+        "Vatican City",
+        "Liechtenstein"
+      ],
+      "answer": 2
+    },
+    {
+      "q": "What is the line of latitude at 0° called?",
+      "options": [
+        "Prime Meridian",
+        "Equator",
+        "Tropic of Cancer",
+        "Arctic Circle"
+      ],
+      "answer": 1
+    },
+    {
+      "q": "Which is the largest US state by area?",
+      "options": [
+        "Texas",
+        "California",
+        "Alaska",
+        "Montana"
+      ],
+      "answer": 2
+    },
+    {
+      "q": "Which of these capital cities stands on the River Danube?",
+      "options": [
+        "Prague",
+        "Vienna",
+        "Warsaw",
+        "Lisbon"
+      ],
+      "answer": 1
+    },
+    {
+      "q": "In which country is Mount Kilimanjaro?",
+      "options": [
+        "Kenya",
+        "Tanzania",
+        "Uganda",
+        "Ethiopia"
+      ],
+      "answer": 1
+    },
+    {
+      "q": "Which sea lies between Europe and Africa?",
+      "options": [
+        "Red Sea",
+        "Black Sea",
+        "Mediterranean Sea",
+        "Caspian Sea"
+      ],
+      "answer": 2
+    },
+    {
+      "q": "Which is the deepest lake in the world?",
+      "options": [
+        "Lake Superior",
+        "Lake Baikal",
+        "Lake Tanganyika",
+        "Loch Ness"
+      ],
+      "answer": 1
+    },
+    {
+      "q": "What is the highest mountain in Wales?",
+      "options": [
+        "Snowdon (Yr Wyddfa)",
+        "Cadair Idris",
+        "Pen y Fan",
+        "Tryfan"
+      ],
+      "answer": 0
+    },
+    {
+      "q": "Which is the world's largest island that is not a continent?",
+      "options": [
+        "Borneo",
+        "Madagascar",
+        "Greenland",
+        "New Guinea"
+      ],
+      "answer": 2
+    },
+    {
+      "q": "Which country has the longest coastline in the world?",
+      "options": [
+        "Australia",
+        "Russia",
+        "Canada",
+        "Norway"
+      ],
+      "answer": 2
+    },
+    {
+      "q": "Which river runs through the Grand Canyon?",
+      "options": [
+        "Mississippi",
+        "Colorado",
+        "Rio Grande",
+        "Missouri"
+      ],
+      "answer": 1
+    },
+    {
+      "q": "Which strait separates England from France at its narrowest point?",
+      "options": [
+        "Strait of Dover",
+        "Strait of Gibraltar",
+        "Bering Strait",
+        "Menai Strait"
+      ],
+      "answer": 0
+    }
+  ]
+}

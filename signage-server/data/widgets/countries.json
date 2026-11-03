@@ -1,0 +1,422 @@
+{
+  "about": "Countries for the flag quiz, capitals quiz and country of the day. skipCapital marks countries whose capital question would be unfair or ambiguous.",
+  "items": [
+    {
+      "name": "United Kingdom",
+      "code": "GB",
+      "capital": "London",
+      "continent": "Europe",
+      "currency": "Pound sterling"
+    },
+    {
+      "name": "Ireland",
+      "code": "IE",
+      "capital": "Dublin",
+      "continent": "Europe",
+      "currency": "Euro"
+    },
+    {
+      "name": "France",
+      "code": "FR",
+      "capital": "Paris",
+      "continent": "Europe",
+      "currency": "Euro"
+    },
+    {
+      "name": "Germany",
+      "code": "DE",
+      "capital": "Berlin",
+      "continent": "Europe",
+      "currency": "Euro"
+    },
+    {
+      "name": "Spain",
+      "code": "ES",
+      "capital": "Madrid",
+      "continent": "Europe",
+      "currency": "Euro"
+    },
+    {
+      "name": "Portugal",
+      "code": "PT",
+      "capital": "Lisbon",
+      "continent": "Europe",
+      "currency": "Euro"
+    },
+    {
+      "name": "Italy",
+      "code": "IT",
+      "capital": "Rome",
+      "continent": "Europe",
+      "currency": "Euro"
+    },
+    {
+      "name": "Netherlands",
+      "code": "NL",
+      "capital": "Amsterdam",
+      "continent": "Europe",
+      "currency": "Euro"
+    },
+    {
+      "name": "Belgium",
+      "code": "BE",
+      "capital": "Brussels",
+      "continent": "Europe",
+      "currency": "Euro"
+    },
+    {
+      "name": "Switzerland",
+      "code": "CH",
+      "capital": "Bern",
+      "continent": "Europe",
+      "currency": "Swiss franc"
+    },
+    {
+      "name": "Austria",
+      "code": "AT",
+      "capital": "Vienna",
+      "continent": "Europe",
+      "currency": "Euro"
+    },
+    {
+      "name": "Poland",
+      "code": "PL",
+      "capital": "Warsaw",
+      "continent": "Europe",
+      "currency": "Złoty"
+    },
+    {
+      "name": "Czechia",
+      "code": "CZ",
+      "capital": "Prague",
+      "continent": "Europe",
+      "currency": "Czech koruna"
+    },
+    {
+      "name": "Hungary",
+      "code": "HU",
+      "capital": "Budapest",
+      "continent": "Europe",
+      "currency": "Forint"
+    },
+    {
+      "name": "Greece",
+      "code": "GR",
+      "capital": "Athens",
+      "continent": "Europe",
+      "currency": "Euro"
+    },
+    {
+      "name": "Sweden",
+      "code": "SE",
+      "capital": "Stockholm",
+      "continent": "Europe",
+      "currency": "Swedish krona"
+    },
+    {
+      "name": "Norway",
+      "code": "NO",
+      "capital": "Oslo",
+      "continent": "Europe",
+      "currency": "Norwegian krone"
+    },
+    {
+      "name": "Denmark",
+      "code": "DK",
+      "capital": "Copenhagen",
+      "continent": "Europe",
+      "currency": "Danish krone"
+    },
+    {
+      "name": "Finland",
+      "code": "FI",
+      "capital": "Helsinki",
+      "continent": "Europe",
+      "currency": "Euro"
+    },
+    {
+      "name": "Iceland",
+      "code": "IS",
+      "capital": "Reykjavík",
+      "continent": "Europe",
+      "currency": "Icelandic króna"
+    },
+    {
+      "name": "Croatia",
+      "code": "HR",
+      "capital": "Zagreb",
+      "continent": "Europe",
+      "currency": "Euro"
+    },
+    {
+      "name": "Ukraine",
+      "code": "UA",
+      "capital": "Kyiv",
+      "continent": "Europe",
+      "currency": "Hryvnia"
+    },
+    {
+      "name": "Romania",
+      "code": "RO",
+      "capital": "Bucharest",
+      "continent": "Europe",
+      "currency": "Romanian leu"
+    },
+    {
+      "name": "United States",
+      "code": "US",
+      "capital": "Washington, D.C.",
+      "continent": "North America",
+      "currency": "US dollar"
+    },
+    {
+      "name": "Canada",
+      "code": "CA",
+      "capital": "Ottawa",
+      "continent": "North America",
+      "currency": "Canadian dollar"
+    },
+    {
+      "name": "Mexico",
+      "code": "MX",
+      "capital": "Mexico City",
+      "continent": "North America",
+      "currency": "Mexican peso",
+      "skipCapital": true
+    },
+    {
+      "name": "Jamaica",
+      "code": "JM",
+      "capital": "Kingston",
+      "continent": "North America",
+      "currency": "Jamaican dollar"
+    },
+    {
+      "name": "Cuba",
+      "code": "CU",
+      "capital": "Havana",
+      "continent": "North America",
+      "currency": "Cuban peso"
+    },
+    {
+      "name": "Brazil",
+      "code": "BR",
+      "capital": "Brasília",
+      "continent": "South America",
+      "currency": "Brazilian real"
+    },
+    {
+      "name": "Argentina",
+      "code": "AR",
+      "capital": "Buenos Aires",
+      "continent": "South America",
+      "currency": "Argentine peso"
+    },
+    {
+      "name": "Chile",
+      "code": "CL",
+      "capital": "Santiago",
+      "continent": "South America",
+      "currency": "Chilean peso"
+    },
+    {
+      "name": "Peru",
+      "code": "PE",
+      "capital": "Lima",
+      "continent": "South America",
+      "currency": "Sol"
+    },
+    {
+      "name": "Colombia",
+      "code": "CO",
+      "capital": "Bogotá",
+      "continent": "South America",
+      "currency": "Colombian peso"
+    },
+    {
+      "name": "Uruguay",
+      "code": "UY",
+      "capital": "Montevideo",
+      "continent": "South America",
+      "currency": "Uruguayan peso"
+    },
+    {
+      "name": "Egypt",
+      "code": "EG",
+      "capital": "Cairo",
+      "continent": "Africa",
+      "currency": "Egyptian pound"
+    },
+    {
+      "name": "South Africa",
+      "code": "ZA",
+      "capital": "Pretoria",
+      "continent": "Africa",
+      "currency": "Rand",
+      "skipCapital": true
+    },
+    {
+      "name": "Nigeria",
+      "code": "NG",
+      "capital": "Abuja",
+      "continent": "Africa",
+      "currency": "Naira"
+    },
+    {
+      "name": "Kenya",
+      "code": "KE",
+      "capital": "Nairobi",
+      "continent": "Africa",
+      "currency": "Kenyan shilling"
+    },
+    {
+      "name": "Morocco",
+      "code": "MA",
+      "capital": "Rabat",
+      "continent": "Africa",
+      "currency": "Moroccan dirham"
+    },
+    {
+      "name": "Ghana",
+      "code": "GH",
+      "capital": "Accra",
+      "continent": "Africa",
+      "currency": "Ghanaian cedi"
+    },
+    {
+      "name": "Ethiopia",
+      "code": "ET",
+      "capital": "Addis Ababa",
+      "continent": "Africa",
+      "currency": "Birr"
+    },
+    {
+      "name": "Turkey",
+      "code": "TR",
+      "capital": "Ankara",
+      "continent": "Asia",
+      "currency": "Turkish lira"
+    },
+    {
+      "name": "China",
+      "code": "CN",
+      "capital": "Beijing",
+      "continent": "Asia",
+      "currency": "Renminbi (yuan)"
+    },
+    {
+      "name": "Japan",
+      "code": "JP",
+      "capital": "Tokyo",
+      "continent": "Asia",
+      "currency": "Yen"
+    },
+    {
+      "name": "South Korea",
+      "code": "KR",
+      "capital": "Seoul",
+      "continent": "Asia",
+      "currency": "South Korean won"
+    },
+    {
+      "name": "India",
+      "code": "IN",
+      "capital": "New Delhi",
+      "continent": "Asia",
+      "currency": "Indian rupee"
+    },
+    {
+      "name": "Pakistan",
+      "code": "PK",
+      "capital": "Islamabad",
+      "continent": "Asia",
+      "currency": "Pakistani rupee"
+    },
+    {
+      "name": "Thailand",
+      "code": "TH",
+      "capital": "Bangkok",
+      "continent": "Asia",
+      "currency": "Baht"
+    },
+    {
+      "name": "Vietnam",
+      "code": "VN",
+      "capital": "Hanoi",
+      "continent": "Asia",
+      "currency": "Đồng"
+    },
+    {
+      "name": "Indonesia",
+      "code": "ID",
+      "capital": "Jakarta",
+      "continent": "Asia",
+      "currency": "Rupiah",
+      "skipCapital": true
+    },
+    {
+      "name": "Philippines",
+      "code": "PH",
+      "capital": "Manila",
+      "continent": "Asia",
+      "currency": "Philippine peso"
+    },
+    {
+      "name": "Malaysia",
+      "code": "MY",
+      "capital": "Kuala Lumpur",
+      "continent": "Asia",
+      "currency": "Ringgit"
+    },
+    {
+      "name": "Singapore",
+      "code": "SG",
+      "capital": "Singapore",
+      "continent": "Asia",
+      "currency": "Singapore dollar",
+      "skipCapital": true
+    },
+    {
+      "name": "Nepal",
+      "code": "NP",
+      "capital": "Kathmandu",
+      "continent": "Asia",
+      "currency": "Nepalese rupee"
+    },
+    {
+      "name": "Saudi Arabia",
+      "code": "SA",
+      "capital": "Riyadh",
+      "continent": "Asia",
+      "currency": "Saudi riyal"
+    },
+    {
+      "name": "United Arab Emirates",
+      "code": "AE",
+      "capital": "Abu Dhabi",
+      "continent": "Asia",
+      "currency": "UAE dirham"
+    },
+    {
+      "name": "Australia",
+      "code": "AU",
+      "capital": "Canberra",
+      "continent": "Oceania",
+      "currency": "Australian dollar"
+    },
+    {
+      "name": "New Zealand",
+      "code": "NZ",
+      "capital": "Wellington",
+      "continent": "Oceania",
+      "currency": "New Zealand dollar"
+    },
+    {
+      "name": "Fiji",
+      "code": "FJ",
+      "capital": "Suva",
+      "continent": "Oceania",
+      "currency": "Fijian dollar"
+    }
+  ]
+}

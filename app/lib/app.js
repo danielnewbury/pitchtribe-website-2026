@@ -31,8 +31,9 @@ const MEDIA_TYPES = {
 
 const ASSET_TYPES = ['image', 'video', 'url', 'notice', 'menu', 'fixtures', 'scores', 'widget'];
 const TEXT_TYPES = ['url', 'notice', 'menu', 'fixtures', 'scores', 'widget'];
-const WIDGET_KINDS = ['clock', 'weather', 'joke', 'phrase', 'trivia', 'quiz', 'history', 'spotball'];
-const WIDGET_DURATION = { clock: 15, weather: 15, joke: 14, phrase: 10, trivia: 12, quiz: 20, history: 18, spotball: 20 };
+const WIDGET_KINDS = ['clock', 'worldclock', 'weather', 'joke', 'phrase', 'trivia', 'quiz', 'history', 'emoji', 'geoquiz', 'country', 'spotball'];
+const TOPICS = ['sport', 'film-tv', 'music', 'geography', 'culture', 'mixed'];
+const WIDGET_DURATION = { clock: 15, worldclock: 15, weather: 15, joke: 14, phrase: 10, trivia: 12, quiz: 20, history: 18, emoji: 16, geoquiz: 16, country: 14, spotball: 20 };
 const DATETIME_RE = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/;
 const GRID = { cols: 10, rows: 8 };
 const DEFAULT_DURATION = { image: 10, video: 0, url: 30, notice: 12, menu: 20, fixtures: 15, scores: 15, widget: 15 };
@@ -263,13 +264,30 @@ function createApp(opts = {}) {
       if (w.mode === 'countdown' && !w.target) throw v.bad('Set the date and time to count down to');
     }
     if (kind === 'weather') w.days = v.int(c.days, { min: 0, max: 6, fallback: 3 });
-    if (['joke', 'phrase', 'trivia', 'quiz'].includes(kind)) {
+    if (kind === 'quiz' || kind === 'trivia') w.topic = v.oneOf(c.topic, TOPICS, 'sport');
+    if (kind === 'emoji') w.category = v.oneOf(c.category, ['all', 'Film', 'TV', 'Song'], 'all');
+    if (kind === 'geoquiz') w.mode = v.oneOf(c.mode, ['flags', 'capitals', 'mixed'], 'mixed');
+    if (kind === 'worldclock') {
+      const zones = (Array.isArray(c.zones) ? c.zones : []).slice(0, 8).map((z) => {
+        const tz = v.str(z && z.tz, { max: 60, field: 'Time zone' });
+        try {
+          new Intl.DateTimeFormat('en-GB', { timeZone: tz });
+        } catch {
+          throw v.bad(`Unknown time zone: ${tz}`);
+        }
+        return { label: v.str(z.label, { max: 40, required: true, field: 'City name' }), tz };
+      });
+      if (!zones.length) throw v.bad('Choose at least one city');
+      w.zones = zones;
+    }
+    if (['joke', 'phrase', 'trivia', 'quiz', 'emoji'].includes(kind)) {
       w.extra = v.str(c.extra, { max: 20000, field: 'Your own lines' });
       w.only = v.bool(c.only, false);
       if (w.only && !w.extra) throw v.bad('Add some lines of your own, or untick “Only show mine”');
     }
     if (kind === 'history') {
       w.scope = v.oneOf(c.scope, ['day', 'week', 'month'], 'day');
+      w.topic = v.oneOf(c.topic, ['sport', 'entertainment', 'all'], 'sport');
       w.general = v.bool(c.general, false);
       w.limit = v.int(c.limit, { min: 1, max: 12, fallback: 5 });
     }
@@ -323,8 +341,11 @@ function createApp(opts = {}) {
     if (asset.type !== 'widget') return undefined;
     const c = asset.content;
     if (c.kind === 'spotball') return spotballData(asset, assets);
-    if (c.kind === 'clock') return undefined;
-    return feeds.widget(c.kind, { days: c.days, extra: c.extra, only: c.only, scope: c.scope, general: c.general, limit: c.limit });
+    if (c.kind === 'clock' || c.kind === 'worldclock') return undefined;
+    return feeds.widget(c.kind, {
+      days: c.days, extra: c.extra, only: c.only, scope: c.scope, general: c.general, limit: c.limit,
+      topic: c.topic, mode: c.mode, category: c.category,
+    });
   }
 
   function sanitizePlaylist(body, existing) {

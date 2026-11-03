@@ -46,6 +46,9 @@
     quiz: 'M12 3a9 9 0 1 0 0 18a9 9 0 1 0 0-18 M9.5 9.5a2.5 2.5 0 1 1 3.5 2.3c-.6.3-1 .9-1 1.7v.5 M12 17h.01',
     history: 'M4 5a2 2 0 0 1 2-2h13v16H6a2 2 0 0 0-2 2z M4 19V5 M9 7h6',
     ball: 'M12 3a9 9 0 1 0 0 18a9 9 0 1 0 0-18 M12 7l3.5 2.5-1.3 4h-4.4l-1.3-4z M12 3v4 M15.5 9.5l4.5-1.5 M14.2 13.5l2.8 3.5 M9.8 13.5L7 17 M8.5 9.5L4 8',
+    film: 'M4 4h16v16H4z M8 4v16 M16 4v16 M4 9h4 M4 15h4 M16 9h4 M16 15h4',
+    flag: 'M5 21V4 M5 4h11l-2 4 2 4H5',
+    globe: 'M12 3a9 9 0 1 0 0 18a9 9 0 1 0 0-18 M3 12h18 M12 3c3 3 3 15 0 18 M12 3c-3 3-3 15 0 18',
     widget: 'M4 4h7v7H4z M13 4h7v7h-7z M4 13h7v7H4z M16.5 13v7 M13 16.5h7',
     scores: 'M8 21h8 M12 17v4 M7 4h10v5a5 5 0 0 1-10 0z M7 6H4v1a3 3 0 0 0 3 3 M17 6h3v1a3 3 0 0 1-3 3',
     content: 'M4 4h7v7H4z M13 4h7v7h-7z M4 13h7v7H4z M13 13h7v7h-7z',
@@ -96,12 +99,16 @@
   const TYPE_LABEL = { image: 'Image', video: 'Video', url: 'Web page', notice: 'Notice', menu: 'Menu board', fixtures: 'Fixtures', scores: 'Live scores', widget: 'Widget' };
   const WIDGETS = {
     clock: { name: 'Clock', icon: 'clock', blurb: 'Big digital or analogue clock, or a countdown to kick-off.' },
+    worldclock: { name: 'World clocks', icon: 'globe', blurb: 'The time in up to eight cities around the world.' },
     weather: { name: 'Weather', icon: 'weather', blurb: 'Current conditions and forecast for your ground.' },
     joke: { name: 'Joke', icon: 'smile', blurb: 'Family-friendly sports jokes — punchline revealed halfway.' },
     phrase: { name: 'Phrase', icon: 'quote', blurb: 'Club-spirit phrases in big type, or your own.' },
-    trivia: { name: 'Did you know?', icon: 'bulb', blurb: 'Sporting trivia facts.' },
-    quiz: { name: 'Quiz', icon: 'quiz', blurb: 'Multiple-choice sports questions with an answer reveal.' },
-    history: { name: 'Sporting history', icon: 'history', blurb: 'This day, week or month in sporting history.' },
+    trivia: { name: 'Did you know?', icon: 'bulb', blurb: 'Trivia facts: sport, film & TV, music, geography or culture.' },
+    quiz: { name: 'Quiz', icon: 'quiz', blurb: 'Multiple-choice questions with an answer reveal: sport, film & TV, music, geography, culture or a mix.' },
+    emoji: { name: 'Emoji quiz', icon: 'film', blurb: 'Guess the film, TV show or song from emojis.' },
+    geoquiz: { name: 'Flags & capitals', icon: 'flag', blurb: 'Name the country from its flag, or its capital city.' },
+    country: { name: 'Country of the day', icon: 'globe', blurb: 'A country’s flag, capital, continent and currency.' },
+    history: { name: 'On this day', icon: 'history', blurb: 'This day, week or month in sporting or TV, film & music history.' },
     spotball: { name: 'Spot the ball', icon: 'ball', blurb: 'Your photo, a grid and a blurred ball — answer revealed when you choose.' },
   };
   const typeLabel = (a) => (a && a.type === 'widget' ? WIDGETS[a.content?.kind]?.name || 'Widget' : TYPE_LABEL[a?.type] || '');
@@ -453,7 +460,7 @@
     const isNew = !asset.id;
     const type = asset.type;
     const c = asset.content || {};
-    const defaults = { url: 30, notice: 12, menu: 20, fixtures: 15, scores: 15, widget: { clock: 15, weather: 15, joke: 14, phrase: 10, trivia: 12, quiz: 20, history: 18, spotball: 20 }[c.kind] };
+    const defaults = { url: 30, notice: 12, menu: 20, fixtures: 15, scores: 15, widget: { clock: 15, worldclock: 15, weather: 15, joke: 14, phrase: 10, trivia: 12, quiz: 20, history: 18, emoji: 16, geoquiz: 16, country: 14, spotball: 20 }[c.kind] };
     const f = {}; // field elements
     const body = h('form', { class: 'form-grid', onsubmit: (e) => { e.preventDefault(); save(); } });
 
@@ -640,6 +647,16 @@ ${d(18, '14:00')} | Riverside FC v Northdale Athletic | County Cup | Home`;
 
 
   // --------------------------------------------------------------- widgets
+  const WORLD_CITIES = [
+    ['London', 'Europe/London'], ['Dublin', 'Europe/Dublin'], ['Paris', 'Europe/Paris'], ['Madrid', 'Europe/Madrid'],
+    ['Berlin', 'Europe/Berlin'], ['Athens', 'Europe/Athens'], ['Moscow', 'Europe/Moscow'], ['Dubai', 'Asia/Dubai'],
+    ['Delhi', 'Asia/Kolkata'], ['Singapore', 'Asia/Singapore'], ['Hong Kong', 'Asia/Hong_Kong'], ['Beijing', 'Asia/Shanghai'],
+    ['Tokyo', 'Asia/Tokyo'], ['Sydney', 'Australia/Sydney'], ['Auckland', 'Pacific/Auckland'], ['Cairo', 'Africa/Cairo'],
+    ['Lagos', 'Africa/Lagos'], ['Nairobi', 'Africa/Nairobi'], ['Johannesburg', 'Africa/Johannesburg'], ['Rio de Janeiro', 'America/Sao_Paulo'],
+    ['Buenos Aires', 'America/Argentina/Buenos_Aires'], ['Mexico City', 'America/Mexico_City'], ['New York', 'America/New_York'],
+    ['Toronto', 'America/Toronto'], ['Chicago', 'America/Chicago'], ['Denver', 'America/Denver'], ['Los Angeles', 'America/Los_Angeles'], ['Honolulu', 'Pacific/Honolulu'],
+  ];
+
   function pickWidget() {
     const m = modal({
       title: 'Add a widget',
@@ -654,7 +671,7 @@ ${d(18, '14:00')} | Riverside FC v Northdale Athletic | County Cup | Home`;
   /** Kind-specific fields for the widget editor. Sets f.widget() to collect the content. */
   function widgetFields(c, body, f, getModal) {
     const kind = c.kind;
-    const title = h('input', { type: 'text', value: c.title || '', maxlength: 200, placeholder: { clock: 'Optional heading', weather: 'Weather at the ground', joke: 'Joke time', phrase: 'Optional heading', trivia: 'Did you know?', quiz: 'Quiz time', history: 'Automatic (e.g. “On this day — 3 November”)', spotball: 'Spot the ball' }[kind] });
+    const title = h('input', { type: 'text', value: c.title || '', maxlength: 200, placeholder: { clock: 'Optional heading', worldclock: 'World clocks', weather: 'Weather at the ground', joke: 'Joke time', phrase: 'Optional heading', trivia: 'Automatic (e.g. “Music: did you know?”)', quiz: 'Automatic (e.g. “Music quiz”)', emoji: 'Emoji quiz', geoquiz: 'Flags & capitals', country: 'Country of the day', history: 'Automatic (e.g. “On this day — 3 November”)', spotball: 'Spot the ball' }[kind] });
     body.append(h('p', { class: 'small muted' }, WIDGETS[kind].blurb));
     body.append(h('label', { class: 'field' }, 'Heading on screen', title));
     const collect = { kind, title: () => title.value };
@@ -680,27 +697,72 @@ ${d(18, '14:00')} | Riverside FC v Northdale Athletic | County Cup | Home`;
         : h('p', { class: 'help' }, 'No location set yet. ', h('a', { href: '#/settings', onclick: () => getModal().close() }, 'Choose your ground in Settings'), ' — needs an internet connection.'));
       collect.days = () => Number(days.value);
     }
-    if (['joke', 'phrase', 'trivia', 'quiz'].includes(kind)) {
+    if (kind === 'quiz' || kind === 'trivia') {
+      const topic = h('select', {}, [['sport', 'Sport'], ['film-tv', 'Film & TV'], ['music', 'Music'], ['geography', 'Geography'], ['culture', 'Culture (art, books, food, traditions)'], ['mixed', 'A mix of everything']]
+        .map(([v, l]) => h('option', { value: v, selected: (c.topic || 'sport') === v }, l)));
+      body.append(h('label', { class: 'field' }, 'Topic', topic));
+      collect.topic = () => topic.value;
+    }
+    if (kind === 'emoji') {
+      const category = h('select', {}, [['all', 'Films, TV shows and songs'], ['Film', 'Films only'], ['TV', 'TV shows only'], ['Song', 'Songs only']]
+        .map(([v, l]) => h('option', { value: v, selected: (c.category || 'all') === v }, l)));
+      body.append(h('label', { class: 'field' }, 'Include', category));
+      collect.category = () => category.value;
+    }
+    if (kind === 'geoquiz') {
+      const mode = h('select', {}, [['mixed', 'Flags and capitals'], ['flags', 'Flags only'], ['capitals', 'Capital cities only']]
+        .map(([v, l]) => h('option', { value: v, selected: (c.mode || 'mixed') === v }, l)));
+      body.append(h('label', { class: 'field' }, 'Questions', mode), h('p', { class: 'small muted' }, 'Generated from 59 countries; a fresh set every day. The answer is revealed partway through the slide.'));
+      collect.mode = () => mode.value;
+    }
+    if (kind === 'country') {
+      body.append(h('p', { class: 'small muted' }, 'Shows a different country each time it comes round, with its flag, capital, continent and currency.'));
+    }
+    if (kind === 'worldclock') {
+      const chosen = new Map((c.zones || [{ label: 'London', tz: 'Europe/London' }, { label: 'New York', tz: 'America/New_York' }, { label: 'Tokyo', tz: 'Asia/Tokyo' }, { label: 'Sydney', tz: 'Australia/Sydney' }]).map((z) => [z.tz, z.label]));
+      const chips = h('div', { class: 'chips' });
+      const note = h('span', { class: 'hint' });
+      const draw = () => {
+        chips.replaceChildren(...WORLD_CITIES.map(([label, tz]) => h('button', {
+          class: 'chip', type: 'button', 'aria-pressed': String(chosen.has(tz)),
+          onclick: () => {
+            if (chosen.has(tz)) chosen.delete(tz);
+            else if (chosen.size < 8) chosen.set(tz, label);
+            else toast('Up to eight cities', 'error');
+            draw();
+          },
+        }, label)));
+        note.textContent = `${chosen.size} of 8 chosen. Shown in the order picked.`;
+      };
+      draw();
+      body.append(h('div', { class: 'field' }, 'Cities', chips, note));
+      collect.zones = () => [...chosen].map(([tz, label]) => ({ tz, label }));
+    }
+    if (['joke', 'phrase', 'trivia', 'quiz', 'emoji'].includes(kind)) {
       const hint = {
         joke: 'One per line: Question | Punchline',
         phrase: 'One phrase per line',
         trivia: 'One fact per line',
         quiz: 'One per line: Question | right answer | wrong | wrong | wrong (answers are shuffled)',
+        emoji: 'One per line: emojis | answer | Film, TV or Song',
       }[kind];
-      const extra = h('textarea', { class: 'code', spellcheck: kind !== 'quiz', maxlength: 20000, placeholder: { joke: 'Why did the treasurer smile? | Subs are in!', phrase: 'Up the Riversiders!', trivia: 'Riverside FC was founded in 1889.', quiz: 'When was the club founded? | 1889 | 1901 | 1923 | 1950' }[kind] }, c.extra || '');
+      const extra = h('textarea', { class: 'code', spellcheck: kind !== 'quiz', maxlength: 20000, placeholder: { joke: 'Why did the treasurer smile? | Subs are in!', phrase: 'Up the Riversiders!', trivia: 'Riverside FC was founded in 1889.', quiz: 'When was the club founded? | 1889 | 1901 | 1923 | 1950', emoji: '🏉🏆 | Rugby World Cup | Sport' }[kind] }, c.extra || '');
       extra.style.minHeight = '120px';
       const only = h('input', { type: 'checkbox', checked: Boolean(c.only) });
-      body.append(h('label', { class: 'field' }, 'Add your own (optional)', extra, h('span', { class: 'hint' }, `${hint}. Mixed in with ${{ joke: '30 jokes', phrase: '25 phrases', trivia: '25 facts', quiz: '40 questions' }[kind]} that come built in — a new selection every day.`)));
+      body.append(h('label', { class: 'field' }, 'Add your own (optional)', extra, h('span', { class: 'hint' }, `${hint}. Mixed in with ${{ joke: '30 jokes', phrase: '25 phrases', trivia: 'the built-in facts', quiz: 'the built-in questions', emoji: '32 puzzles' }[kind]} that come built in — a new selection every day.`)));
       body.append(h('label', { class: 'switch' }, only, 'Only show mine'));
       Object.assign(collect, { extra: () => extra.value, only: () => only.checked });
     }
     if (kind === 'history') {
       const scope = h('select', {}, [['day', 'This day'], ['week', 'This week'], ['month', 'This month']].map(([v, l]) => h('option', { value: v, selected: (c.scope || 'day') === v }, l)));
+      const htopic = h('select', {}, [['sport', 'Sport'], ['entertainment', 'TV, film & music'], ['all', 'Both']].map(([v, l]) => h('option', { value: v, selected: (c.topic || 'sport') === v }, l)));
+      body.append(h('label', { class: 'field' }, 'Topic', htopic));
+      collect.topic = () => htopic.value;
       const limit = h('input', { type: 'number', min: 1, max: 12, value: c.limit || 5 });
       const general = h('input', { type: 'checkbox', checked: Boolean(c.general) });
       body.append(h('div', { class: 'row-2' }, h('label', { class: 'field' }, 'Show', scope), h('label', { class: 'field' }, 'At most (events)', limit)));
       body.append(h('label', { class: 'switch' }, general, 'Also include general history from Wikipedia'));
-      body.append(h('p', { class: 'small muted' }, 'Sporting moments are built in. If nothing happened on the day, the slide shows the week or month instead. Wikipedia needs an internet connection.'));
+      body.append(h('p', { class: 'small muted' }, 'Sporting and TV, film & music moments are built in. If nothing happened on the day, the slide shows the week or month instead. Wikipedia needs an internet connection.'));
       Object.assign(collect, { scope: () => scope.value, limit: () => Number(limit.value), general: () => general.checked });
     }
     if (kind === 'spotball') {

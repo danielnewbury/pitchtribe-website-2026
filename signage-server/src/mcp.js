@@ -43,11 +43,13 @@ const TOOLS = [
   },
   {
     name: 'get_widget',
-    description: 'Get content for a screen widget: weather, joke, phrase, trivia, quiz or history (this day/week/month in sporting history).',
+    description: 'Get content for a screen widget: weather, joke, phrase, trivia, quiz, history (this day/week/month), emoji quiz, flags & capitals quiz, or country of the day.',
     inputSchema: {
       type: 'object',
       properties: {
-        kind: { type: 'string', enum: ['weather', 'joke', 'phrase', 'trivia', 'quiz', 'history'] },
+        kind: { type: 'string', enum: ['weather', 'joke', 'phrase', 'trivia', 'quiz', 'history', 'emoji', 'geoquiz', 'country'] },
+        topic: { type: 'string', enum: ['sport', 'film-tv', 'music', 'geography', 'culture', 'mixed', 'entertainment', 'all'], description: 'For quiz/trivia: sport, film-tv, music, geography, culture or mixed. For history: sport, entertainment or all.' },
+        mode: { type: 'string', enum: ['flags', 'capitals', 'mixed'], description: 'For geoquiz.' },
         scope: { type: 'string', enum: ['day', 'week', 'month'], description: 'For history.' },
         general: { type: 'boolean', description: 'For history: include general (non-sport) events from Wikipedia.' },
       },
@@ -123,7 +125,9 @@ export function createMcpHandler({ store, config, push, widgets }) {
       else if (a.kind === 'weather') text = `${data.place}: ${data.current.temp}${data.units.temp}, ${data.current.text}, wind ${data.current.wind} ${data.units.wind}`;
       else if (a.kind === 'history') text = `${data.label}\n${data.items.map((i) => `${i.year}: ${i.text}`).join('\n')}`;
       else if (a.kind === 'joke') text = data.items.slice(0, 5).map((j) => `${j.q} — ${j.a}`).join('\n');
-      else if (a.kind === 'quiz') text = data.items.slice(0, 5).map((q) => `${q.q} (${q.options[q.answer]})`).join('\n');
+      else if (a.kind === 'quiz' || a.kind === 'geoquiz') text = data.items.slice(0, 5).map((q) => `${q.flag && a.kind === 'geoquiz' ? `${q.flag} ` : ''}${q.q} (${q.options[q.answer]})`).join('\n');
+      else if (a.kind === 'emoji') text = data.items.slice(0, 5).map((e) => `${e.emoji} — ${e.answer}${e.category ? ` (${e.category})` : ''}`).join('\n');
+      else if (a.kind === 'country') text = data.items.slice(0, 3).map((c) => `${c.flag} ${c.name}: capital ${c.capital}, ${c.continent}, ${c.currency}`).join('\n');
       else text = (data.items || []).slice(0, 5).join('\n');
       return { content: [{ type: 'text', text }], structuredContent: data };
     },

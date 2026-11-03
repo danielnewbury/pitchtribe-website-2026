@@ -18,10 +18,22 @@ export const WIDGET_KINDS = [
   { kind: 'weather', name: 'Weather', description: 'Current conditions and a short forecast (Open-Meteo, no API key)', source: 'live' },
   { kind: 'joke', name: 'Joke', description: 'Family-friendly sports jokes with a punchline reveal', source: 'bundled' },
   { kind: 'phrase', name: 'Phrase', description: 'Club-spirit phrases in big type', source: 'bundled' },
-  { kind: 'trivia', name: 'Did you know?', description: 'Sporting trivia facts', source: 'bundled' },
-  { kind: 'quiz', name: 'Quiz', description: 'Multiple-choice sports questions with an answer reveal', source: 'bundled' },
-  { kind: 'history', name: 'Sporting history', description: 'This day, week or month in sporting history (plus general history from Wikipedia)', source: 'bundled+live' },
+  { kind: 'trivia', name: 'Did you know?', description: 'Trivia facts: sport, film & TV, music, geography or culture', source: 'bundled' },
+  { kind: 'quiz', name: 'Quiz', description: 'Multiple-choice questions with an answer reveal: sport, film & TV, music, geography or culture', source: 'bundled' },
+  { kind: 'history', name: 'On this day', description: 'This day, week or month in sporting or TV/film/music history (plus general history from Wikipedia)', source: 'bundled+live' },
+  { kind: 'emoji', name: 'Emoji quiz', description: 'Guess the film, TV show or song from emojis', source: 'bundled' },
+  { kind: 'geoquiz', name: 'Flags & capitals', description: 'Geography quiz: name the country from its flag, or its capital city', source: 'bundled' },
+  { kind: 'country', name: 'Country of the day', description: 'A country’s flag, capital, continent and currency', source: 'bundled' },
+  { kind: 'worldclock', name: 'World clocks', description: 'The time in cities around the world', source: 'screen' },
 ];
+
+export const TOPICS = ['sport', 'film-tv', 'music', 'geography', 'culture', 'mixed'];
+export const HISTORY_TOPICS = ['sport', 'entertainment', 'all'];
+const TOPIC_PACKS = {
+  quiz: { sport: 'quiz', 'film-tv': 'quiz-film-tv', music: 'quiz-music', geography: 'quiz-geography', culture: 'quiz-culture' },
+  trivia: { sport: 'trivia', 'film-tv': 'trivia-film-tv', music: 'trivia-music', geography: 'trivia-geography', culture: 'trivia-culture' },
+};
+export const TOPIC_LABELS = { sport: 'Sport', 'film-tv': 'Film & TV', music: 'Music', geography: 'Geography', culture: 'Culture', mixed: 'General knowledge' };
 const KINDS = new Set(WIDGET_KINDS.map((k) => k.kind));
 
 const PACK_DIR = resolve(ROOT, 'data', 'widgets');
@@ -62,6 +74,8 @@ function partsIn(now, tz) {
   return { y: Number(p.year), m: Number(p.month), d: Number(p.day), dow: ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].indexOf(p.weekday) };
 }
 const pad = (n) => String(n).padStart(2, '0');
+/** "GB" -> 🇬🇧 (regional indicator symbols). */
+export const flagEmoji = (code) => String.fromCodePoint(...[...String(code).toUpperCase()].map((c) => 0x1f1e6 + c.charCodeAt(0) - 65));
 const mmdd = (m, d) => `${pad(m)}-${pad(d)}`;
 const MONTHS = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
 
@@ -165,7 +179,7 @@ export function createWidgets({ config = {}, fetchImpl = fetch, log = console.er
       const j = await getJson(`https://api.wikimedia.org/feed/v1/wikipedia/en/onthisday/selected/${pad(m)}/${pad(d)}`);
       return (j.selected ?? [])
         .filter((ev) => ev.text && Number.isFinite(Number(ev.year)))
-        .map((ev) => ({ date: mmdd(m, d), year: Number(ev.year), text: String(ev.text).trim(), sport: false }));
+        .map((ev) => ({ date: mmdd(m, d), year: Number(ev.year), text: String(ev.text).trim(), sport: false, tag: 'general' }));
     });
   }
 
@@ -185,7 +199,11 @@ export function createWidgets({ config = {}, fetchImpl = fetch, log = console.er
     const inWindow = (scope, item) => (scope === 'month' ? Number(item.date.slice(0, 2)) === m : windows[scope].includes(item.date));
     const order = ['day', 'week', 'month'];
     const wanted = order.includes(opts.scope) ? opts.scope : 'day';
-    const all = pack('sporting-history');
+    const topic = HISTORY_TOPICS.includes(opts.topic) ? opts.topic : 'sport';
+    const all = [
+      ...(topic !== 'entertainment' ? pack('sporting-history').map((it) => ({ ...it, tag: 'sport' })) : []),
+      ...(topic !== 'sport' ? pack('entertainment-history').map((it) => ({ ...it, tag: 'entertainment' })) : []),
+    ];
     let scopeUsed = wanted;
     let items = all.filter((it) => inWindow(wanted, it));
     // Nothing on this exact day? Widen to the week, then the month.
@@ -200,7 +218,7 @@ export function createWidgets({ config = {}, fetchImpl = fetch, log = console.er
       return Math.abs(Date.UTC(y, im - 1, id) - today.getTime());
     };
     items = items
-      .map((it) => ({ ...it, sport: true }))
+      .map((it) => ({ ...it, sport: it.tag === 'sport' }))
       .sort((a, b) => dist(a) - dist(b) || a.year - b.year)
       .slice(0, limit);
 
@@ -211,12 +229,14 @@ export function createWidgets({ config = {}, fetchImpl = fetch, log = console.er
       if (e.data) general = sample(e.data, Math.max(limit - items.length, 2), `wiki:${y}-${todayKey}`);
       generalError = e.error;
     }
+    const what = { sport: 'sporting history', entertainment: 'TV, film & music', all: 'history' }[topic];
     const label = {
       day: `On this day — ${d} ${MONTHS[m - 1]}`,
-      week: 'This week in sporting history',
-      month: `${MONTHS[m - 1]} in sporting history`,
+      week: `This week in ${what}`,
+      month: `${MONTHS[m - 1]} in ${what}`,
     }[scopeUsed];
     return {
+      topic,
       scope: wanted,
       scopeUsed,
       label,
@@ -225,12 +245,45 @@ export function createWidgets({ config = {}, fetchImpl = fetch, log = console.er
     };
   }
 
+  /** Flag or capital-city questions generated from countries.json. */
+  function geoQuiz(mode, seed, count = 20) {
+    const all = pack('countries');
+    return sample(all, count, seed).map((c, i) => {
+      let kind = mode === 'mixed' ? (i % 2 ? 'capitals' : 'flags') : mode;
+      if (kind === 'capitals' && c.skipCapital) kind = 'flags';
+      const usable = all.filter((o) => o.code !== c.code && (kind === 'flags' || !o.skipCapital));
+      const near = usable.filter((o) => o.continent === c.continent);
+      const wrong = sample(near.length >= 3 ? near : usable, 3, `${seed}:w:${i}`);
+      const label = (o) => (kind === 'flags' ? o.name : o.capital);
+      const options = sample([c, ...wrong].map(label), 4, `${seed}:o:${i}`);
+      return {
+        q: kind === 'flags' ? 'Which country does this flag belong to?' : `What is the capital of ${c.name}?`,
+        flag: flagEmoji(c.code),
+        options,
+        answer: options.indexOf(label(c)),
+        topic: 'geography',
+      };
+    });
+  }
+
+  function packFor(kind, topic) {
+    if (!TOPIC_PACKS[kind]) return pack({ joke: 'jokes', phrase: 'phrases', emoji: 'emoji' }[kind]);
+    const t = TOPICS.includes(topic) ? topic : 'sport';
+    const names = t === 'mixed' ? Object.entries(TOPIC_PACKS[kind]) : [[t, TOPIC_PACKS[kind][t]]];
+    return names.flatMap(([tp, name]) => pack(name).map((it) => (typeof it === 'string' ? { text: it, topic: tp } : { ...it, topic: tp })));
+  }
+
   function contentData(kind, opts, now) {
     const { y, m, d } = partsIn(now, tz);
-    const seed = `${kind}:${y}-${mmdd(m, d)}`;
+    const topic = TOPICS.includes(opts.topic) ? opts.topic : 'sport';
+    const seed = `${kind}:${topic}:${y}-${mmdd(m, d)}`;
     const extras = extraLines(opts.extra);
-    const packName = { joke: 'jokes', phrase: 'phrases', trivia: 'trivia', quiz: 'quiz' }[kind];
-    let base = opts.only && extras.length ? [] : pack(packName);
+    let base = opts.only && extras.length ? [] : packFor(kind, topic);
+    if (kind === 'quiz' && (topic === 'geography' || topic === 'mixed') && !(opts.only && extras.length)) {
+      base = [...base, ...geoQuiz('mixed', `${seed}:geo`, 10)];
+    }
+    if (kind === 'trivia') base = base.map((it) => it.text); // facts are plain strings on screen
+    if (kind === 'emoji' && ['Film', 'TV', 'Song'].includes(opts.category)) base = base.filter((it) => it.category === opts.category);
     let mine = [];
     if (kind === 'joke') {
       mine = extras.map((l) => {
@@ -246,12 +299,27 @@ export function createWidgets({ config = {}, fetchImpl = fetch, log = console.er
           const options = sample(cols.slice(1, 5), 4, `${seed}:mine:${i}`);
           return { q: cols[0], options, answer: options.indexOf(cols[1]) };
         });
+    } else if (kind === 'emoji') {
+      // "🦁👑 | The Lion King | Film"
+      mine = extras
+        .map((l) => l.split('|').map((s) => s.trim()))
+        .filter((cols) => cols[0] && cols[1])
+        .map(([emoji, answer, category]) => ({ emoji, answer, category: category || '' }));
     } else {
       mine = extras;
     }
     base = sample(base, 20, seed);
     // Club's own lines first in the rotation, mixed into the day's sample.
-    return { items: [...mine, ...base].slice(0, Math.max(20, mine.length)) };
+    return { topic, items: [...mine, ...base].slice(0, Math.max(20, mine.length)) };
+  }
+
+  function countryData(now) {
+    const { y, m, d } = partsIn(now, tz);
+    return {
+      items: sample(pack('countries'), 20, `country:${y}-${mmdd(m, d)}`).map((c) => ({
+        name: c.name, flag: flagEmoji(c.code), capital: c.capital, continent: c.continent, currency: c.currency,
+      })),
+    };
   }
 
   function compute(kind, opts = {}, now = new Date()) {
@@ -274,6 +342,15 @@ export function createWidgets({ config = {}, fetchImpl = fetch, log = console.er
       }
       case 'history':
         return historyData(opts, now);
+      case 'worldclock':
+        return {};
+      case 'geoquiz': {
+        const { y, m, d } = partsIn(now, tz);
+        const mode = ['flags', 'capitals', 'mixed'].includes(opts.mode) ? opts.mode : 'mixed';
+        return { mode, items: geoQuiz(mode, `geoquiz:${mode}:${y}-${mmdd(m, d)}`) };
+      }
+      case 'country':
+        return countryData(now);
       default:
         return contentData(kind, opts, now);
     }
