@@ -57,8 +57,13 @@ jobs:
     # Production deploys only from pushes / manual runs on main (PRs just build).
     if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
     runs-on: ubuntu-latest
+    # A job only sees repository-level secrets plus secrets scoped to its own
+    # environment. CLOUDFLARE_API_TOKEN / CLOUDFLARE_ACCOUNT_ID currently live in the
+    # `cloudflare_api` environment, so the job has to run there to read them.
+    # If those secrets are ever moved to repository level, change this back to
+    # `production` -- that is the better home for a deploy environment.
     environment:
-      name: production
+      name: cloudflare_api
       url: ${{ steps.deploy.outputs.deployment-url }}
     permissions:
       contents: read
@@ -81,6 +86,20 @@ jobs:
         with:
           name: site-dist
           path: dist
+
+      - name: Verify Cloudflare credentials are visible to this job
+        env:
+          CF_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CF_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: |
+          missing=""
+          [ -n "$CF_API_TOKEN" ] || missing="$missing CLOUDFLARE_API_TOKEN"
+          [ -n "$CF_ACCOUNT_ID" ] || missing="$missing CLOUDFLARE_ACCOUNT_ID"
+          if [ -n "$missing" ]; then
+            echo "::error::Empty secret(s):$missing. A job reads only repository-level secrets plus secrets scoped to its own environment (currently '${{ github.job }}' runs in cloudflare_api). Check the secret exists in that scope."
+            exit 1
+          fi
+          echo "Both Cloudflare credentials are present."
 
       - name: Deploy with Wrangler
         id: deploy
