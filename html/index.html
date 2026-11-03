@@ -117,7 +117,7 @@
         Your club's screens,<br><span class="text-accent">working for you</span>
       </h1>
       <p class="mb-9 max-w-[48ch] text-[1.0625rem] leading-relaxed text-muted">
-        PitchTribe turns a Raspberry Pi 5 into a dynamic digital noticeboard, fixtures display, bar menu board and guest Wi-Fi portal — all managed from your phone, with no subscription to pay.
+        PitchTribe turns a Raspberry Pi 5 into a dynamic digital noticeboard, fixtures display, bar menu board, live scores and quiz screen, and guest Wi-Fi portal — all managed from your phone, with no subscription to pay.
       </p>
       <div class="mb-11 flex flex-wrap gap-3">
         <a href="#install" class="btn btn-primary">
@@ -214,6 +214,81 @@
             <div class="flex items-baseline justify-between py-1"><span class="font-semibold text-[#e8d4b0]">Chips</span><span class="font-mono font-semibold tabular-nums text-gold">£3.00</span></div>
           </div>
 
+          <!-- Live scores -->
+          <div class="scr bg-linear-160 from-[#020b1c] to-[#09162a]" id="scr-scores" role="tabpanel" aria-labelledby="tab-scores">
+            <div class="shrink-0 bg-led px-[18px] py-2 text-center text-[clamp(0.8rem,1.9vw,1rem)] font-extrabold uppercase tracking-[0.1em] text-ink">Live scores — County League</div>
+            <div class="flex flex-col gap-1.5 px-[18px] py-3 text-[clamp(0.62rem,1.4vw,0.8rem)]">
+              <div class="grid grid-cols-[3.6em_1fr_auto_1fr] items-center gap-2 rounded-md border border-[#ff5d5d]/50 bg-[#ff5d5d]/10 px-2 py-1.5"><span class="rounded bg-[#ff5d5d] px-1 py-0.5 text-center text-[0.75em] font-extrabold text-white">67'</span><span class="truncate text-right font-bold">Riverside FC</span><span class="font-mono font-extrabold tabular-nums">2 – 1</span><span class="truncate font-bold">Rovers United</span></div>
+              <div class="grid grid-cols-[3.6em_1fr_auto_1fr] items-center gap-2 rounded-md border border-[#64a0c8]/15 bg-[#0e1e30]/70 px-2 py-1.5"><span class="rounded bg-led/15 px-1 py-0.5 text-center text-[0.75em] font-extrabold text-led">FT</span><span class="truncate text-right font-bold">Northdale Ath</span><span class="font-mono font-extrabold tabular-nums">0 – 0</span><span class="truncate font-bold">City Athletic</span></div>
+              <div class="grid grid-cols-[3.6em_1fr_auto_1fr] items-center gap-2 rounded-md border border-[#64a0c8]/15 bg-[#0e1e30]/70 px-2 py-1.5"><span class="rounded bg-[#64a0c8]/15 px-1 py-0.5 text-center text-[0.75em] font-extrabold text-[#7da0b8]">FT</span><span class="truncate text-right font-bold">Hilltop Town</span><span class="font-mono font-extrabold tabular-nums">1 – 3</span><span class="truncate font-bold">Valley Wanderers</span></div>
+              <div class="grid grid-cols-[3.6em_1fr_auto_1fr] items-center gap-2 rounded-md border border-[#64a0c8]/15 bg-[#0e1e30]/70 px-2 py-1.5"><span class="rounded bg-[#64a0c8]/15 px-1 py-0.5 text-center text-[0.75em] font-bold text-[#7da0b8]">SAT</span><span class="truncate text-right font-bold">Parkside</span><span class="font-mono text-[#7da0b8] tabular-nums">15:00</span><span class="truncate font-bold">Old Boys XI</span></div>
+            </div>
+          </div>
+
+          <!-- Quiz -->
+          <div class="scr items-center justify-center gap-3 bg-linear-160 from-[#020a18] to-[#091525] px-[18px] text-center" id="scr-quiz" role="tabpanel" aria-labelledby="tab-quiz">
+            <div class="text-[clamp(0.55rem,1.1vw,0.68rem)] font-bold uppercase tracking-[0.18em] text-led">— Music quiz</div>
+            <div class="max-w-[30ch] text-[clamp(0.9rem,2.3vw,1.3rem)] font-extrabold leading-tight text-balance">Which festival is held at Worthy Farm in Somerset?</div>
+            <div class="grid w-full grid-cols-2 gap-1.5 text-left text-[clamp(0.6rem,1.35vw,0.78rem)] font-bold">
+              <div class="flex items-center gap-2 rounded-md border border-[#64a0c8]/15 bg-[#0e1e30]/80 px-2 py-1.5 opacity-40"><span class="grid size-[1.6em] place-items-center rounded-full bg-[#162943] text-led">A</span>Reading</div>
+              <div class="flex items-center gap-2 rounded-md border-2 border-led bg-led/15 px-2 py-1.5"><span class="grid size-[1.6em] place-items-center rounded-full bg-led text-ink">B</span>Glastonbury</div>
+              <div class="flex items-center gap-2 rounded-md border border-[#64a0c8]/15 bg-[#0e1e30]/80 px-2 py-1.5 opacity-40"><span class="grid size-[1.6em] place-items-center rounded-full bg-[#162943] text-led">C</span>Isle of Wight</div>
+              <div class="flex items-center gap-2 rounded-md border border-[#64a0c8]/15 bg-[#0e1e30]/80 px-2 py-1.5 opacity-40"><span class="grid size-[1.6em] place-items-center rounded-full bg-[#162943] text-led">D</span>Download</div>
+            </div>
+            <div class="font-sans text-[clamp(0.52rem,1vw,0.64rem)] text-[#7da0b8]">Sport · Film &amp; TV · Music · Geography · Culture · Emoji quiz · Flags &amp; capitals</div>
+          </div>
+
+          <!-- Weather -->
+          <div class="scr bg-linear-160 from-[#020a18] to-[#091525] p-[18px]" id="scr-weather" role="tabpanel" aria-labelledby="tab-weather">
+            <div class="text-[clamp(0.55rem,1.1vw,0.68rem)] font-bold uppercase tracking-[0.18em] text-led">— Riverside FC</div>
+            <div class="mb-2 text-[clamp(0.95rem,2.4vw,1.35rem)] font-extrabold">Weather at the ground</div>
+            <div class="flex items-center gap-3">
+              <span class="text-[clamp(2.2rem,6vw,3.4rem)] leading-none" aria-hidden="true">⛅</span>
+              <div><div class="text-[clamp(1.6rem,4.4vw,2.6rem)] font-extrabold leading-none">12°C</div><div class="text-[clamp(0.65rem,1.5vw,0.85rem)] font-semibold">Partly cloudy</div><div class="font-sans text-[clamp(0.55rem,1.1vw,0.68rem)] text-[#7da0b8]">Wind 9 mph</div></div>
+            </div>
+            <div class="mt-auto grid grid-cols-4 gap-1.5 text-center text-[clamp(0.55rem,1.15vw,0.7rem)]">
+              <div class="rounded-md border border-[#64a0c8]/15 bg-[#0e1e30]/70 py-1.5"><div class="font-bold uppercase text-[#7da0b8]">Today</div><div aria-hidden="true">⛅</div><div class="font-bold">13° / 6°</div></div>
+              <div class="rounded-md border border-[#64a0c8]/15 bg-[#0e1e30]/70 py-1.5"><div class="font-bold uppercase text-[#7da0b8]">Sat</div><div aria-hidden="true">🌦️</div><div class="font-bold">11° / 5°</div></div>
+              <div class="rounded-md border border-[#64a0c8]/15 bg-[#0e1e30]/70 py-1.5"><div class="font-bold uppercase text-[#7da0b8]">Sun</div><div aria-hidden="true">☀️</div><div class="font-bold">12° / 3°</div></div>
+              <div class="rounded-md border border-[#64a0c8]/15 bg-[#0e1e30]/70 py-1.5"><div class="font-bold uppercase text-[#7da0b8]">Mon</div><div aria-hidden="true">☁️</div><div class="font-bold">10° / 6°</div></div>
+            </div>
+          </div>
+
+          <!-- Transport hub -->
+          <div class="scr bg-linear-160 from-[#020a18] to-[#091525] p-[14px]" id="scr-transport" role="tabpanel" aria-labelledby="tab-transport">
+            <div class="mb-2 text-[clamp(0.85rem,2.1vw,1.15rem)] font-extrabold">Getting home</div>
+            <div class="grid flex-1 grid-cols-2 gap-1.5 text-[clamp(0.5rem,1.1vw,0.66rem)]">
+              <div class="rounded-md border border-[#64a0c8]/15 bg-[#0e1e30]/80 p-2">
+                <div class="mb-1 text-[0.9em] font-bold uppercase tracking-[0.08em] text-gold">🚆 Departures</div>
+                <div class="grid grid-cols-[auto_1fr_auto] gap-x-1.5 gap-y-0.5"><span class="font-bold tabular-nums">14:05</span><span class="truncate">London Kings Cross</span><span class="text-led">On time</span><span class="font-bold tabular-nums">14:19</span><span class="truncate">Peterborough</span><span class="text-gold">14:23</span><span class="font-bold tabular-nums">14:35</span><span class="truncate line-through opacity-70">Brighton</span><span class="font-bold text-[#ff6b6b]">Cancelled</span></div>
+              </div>
+              <div class="rounded-md border border-[#64a0c8]/15 bg-[#0e1e30]/80 p-2">
+                <div class="mb-1 text-[0.9em] font-bold uppercase tracking-[0.08em] text-gold">🚌 Live buses — 73, 74</div>
+                <div class="grid grid-cols-[auto_1fr_auto] gap-x-1.5 gap-y-0.5"><span class="rounded bg-[#162943] px-1 font-bold">73</span><span class="truncate">to Town Centre</span><span class="text-[#7da0b8]">0.4 km N</span><span class="rounded bg-[#162943] px-1 font-bold">74</span><span class="truncate">to Station</span><span class="text-[#7da0b8]">2.1 km SE</span><span class="rounded bg-[#162943] px-1 font-bold">73</span><span class="truncate">to Riverside</span><span class="text-[#7da0b8]">4.3 km W</span></div>
+              </div>
+              <div class="rounded-md border border-[#64a0c8]/15 bg-[#0e1e30]/80 p-2">
+                <div class="mb-1 text-[0.9em] font-bold uppercase tracking-[0.08em] text-gold">🚇 Line status</div>
+                <div class="grid grid-cols-[1fr_auto] gap-y-0.5"><span>Victoria</span><span class="text-led">Good service</span><span>Central</span><span class="text-gold">Minor delays</span><span>Elizabeth line</span><span class="text-led">Good service</span></div>
+              </div>
+              <div class="rounded-md border border-[#64a0c8]/15 bg-[#0e1e30]/80 p-2">
+                <div class="mb-1 text-[0.9em] font-bold uppercase tracking-[0.08em] text-gold">✈️ Planes overhead</div>
+                <div class="grid grid-cols-[auto_1fr_auto] gap-x-1.5 gap-y-0.5"><span class="font-bold">EZY45TK</span><span>A320 · 18,300 ft</span><span class="text-[#7da0b8]">7 km</span><span class="font-bold">RYR92QF</span><span>B38M · 31,000 ft</span><span class="text-[#7da0b8]">13 km</span></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- On this day -->
+          <div class="scr bg-linear-160 from-[#020a18] to-[#091525] p-[18px]" id="scr-history" role="tabpanel" aria-labelledby="tab-history">
+            <div class="text-[clamp(0.55rem,1.1vw,0.68rem)] font-bold uppercase tracking-[0.18em] text-led">— Riverside FC</div>
+            <div class="mb-2.5 text-[clamp(0.95rem,2.4vw,1.35rem)] font-extrabold">This week in history</div>
+            <div class="flex flex-col gap-1.5 text-[clamp(0.6rem,1.35vw,0.78rem)]">
+              <div class="grid grid-cols-[3.2em_1fr] gap-2 rounded-md border border-[#64a0c8]/15 bg-[#0e1e30]/70 px-2 py-1.5"><span class="font-extrabold text-gold">1966</span><span>England win the World Cup, beating West Germany 4–2 after extra time at Wembley.</span></div>
+              <div class="grid grid-cols-[3.2em_1fr] gap-2 rounded-md border border-[#64a0c8]/15 bg-[#0e1e30]/70 px-2 py-1.5"><span class="font-extrabold text-gold">2012</span><span>The London 2012 Olympic Games open.</span></div>
+              <div class="grid grid-cols-[3.2em_1fr] gap-2 rounded-md border border-[#64a0c8]/15 bg-[#0e1e30]/70 px-2 py-1.5"><span class="font-extrabold text-gold">2022</span><span>The Lionesses win Euro 2022, beating Germany 2–1 after extra time at Wembley.</span></div>
+            </div>
+            <div class="mt-auto font-sans text-[clamp(0.52rem,1vw,0.64rem)] text-[#7da0b8]">Also: did you know? · born on this day · country of the day · spot the ball · picture of the day</div>
+          </div>
+
           <!-- Guest Wi-Fi -->
           <div class="scr items-center justify-center gap-3 bg-linear-160 from-[#040b1a] to-[#09152a] p-6 text-center" id="scr-wifi" role="tabpanel" aria-labelledby="tab-wifi">
             <svg class="text-led" width="46" height="46" viewBox="0 0 46 46" fill="none" aria-hidden="true">
@@ -235,6 +310,11 @@
         <button id="tab-noticeboard" class="scr-tab rounded-md border-[1.5px] border-line-hi px-3.5 py-1.5 text-[0.77rem] font-semibold text-muted transition hover:border-accent hover:text-accent" role="tab" type="button" aria-selected="true" aria-controls="scr-noticeboard" data-scr="noticeboard">Noticeboard</button>
         <button id="tab-fixtures" class="scr-tab rounded-md border-[1.5px] border-line-hi px-3.5 py-1.5 text-[0.77rem] font-semibold text-muted transition hover:border-accent hover:text-accent" role="tab" type="button" aria-selected="false" aria-controls="scr-fixtures" data-scr="fixtures" tabindex="-1">Fixtures</button>
         <button id="tab-menu" class="scr-tab rounded-md border-[1.5px] border-line-hi px-3.5 py-1.5 text-[0.77rem] font-semibold text-muted transition hover:border-accent hover:text-accent" role="tab" type="button" aria-selected="false" aria-controls="scr-menu" data-scr="menu" tabindex="-1">Bar menu</button>
+        <button id="tab-scores" class="scr-tab rounded-md border-[1.5px] border-line-hi px-3.5 py-1.5 text-[0.77rem] font-semibold text-muted transition hover:border-accent hover:text-accent" role="tab" type="button" aria-selected="false" aria-controls="scr-scores" data-scr="scores" tabindex="-1">Live scores</button>
+        <button id="tab-quiz" class="scr-tab rounded-md border-[1.5px] border-line-hi px-3.5 py-1.5 text-[0.77rem] font-semibold text-muted transition hover:border-accent hover:text-accent" role="tab" type="button" aria-selected="false" aria-controls="scr-quiz" data-scr="quiz" tabindex="-1">Quizzes</button>
+        <button id="tab-weather" class="scr-tab rounded-md border-[1.5px] border-line-hi px-3.5 py-1.5 text-[0.77rem] font-semibold text-muted transition hover:border-accent hover:text-accent" role="tab" type="button" aria-selected="false" aria-controls="scr-weather" data-scr="weather" tabindex="-1">Weather</button>
+        <button id="tab-transport" class="scr-tab rounded-md border-[1.5px] border-line-hi px-3.5 py-1.5 text-[0.77rem] font-semibold text-muted transition hover:border-accent hover:text-accent" role="tab" type="button" aria-selected="false" aria-controls="scr-transport" data-scr="transport" tabindex="-1">Transport</button>
+        <button id="tab-history" class="scr-tab rounded-md border-[1.5px] border-line-hi px-3.5 py-1.5 text-[0.77rem] font-semibold text-muted transition hover:border-accent hover:text-accent" role="tab" type="button" aria-selected="false" aria-controls="scr-history" data-scr="history" tabindex="-1">On this day</button>
         <button id="tab-wifi" class="scr-tab rounded-md border-[1.5px] border-line-hi px-3.5 py-1.5 text-[0.77rem] font-semibold text-muted transition hover:border-accent hover:text-accent" role="tab" type="button" aria-selected="false" aria-controls="scr-wifi" data-scr="wifi" tabindex="-1">Guest Wi-Fi</button>
       </div>
     </div>
@@ -270,7 +350,7 @@
     <div class="reveal mb-13 text-center">
       <p class="eyebrow">What PitchTribe does</p>
       <h2 class="section-title mb-3">Everything your club needs on screen</h2>
-      <p class="mx-auto max-w-[52ch] text-[1.0625rem] text-muted">Four display modes, all managed from a single web dashboard on any device connected to your club network.</p>
+      <p class="mx-auto max-w-[52ch] text-[1.0625rem] text-muted">Noticeboards, fixtures, menus, guest Wi-Fi and 30 live widgets — all managed from a single web dashboard on any device connected to your club network.</p>
     </div>
 
     <div class="grid gap-0.5 overflow-hidden rounded-[18px] border border-line bg-line sm:grid-cols-2">
@@ -327,6 +407,36 @@
           <li>Terms &amp; acceptable-use acceptance</li>
           <li>Per-session bandwidth controls</li>
           <li>No third-party portal service needed</li>
+        </ul>
+      </article>
+
+      <article class="reveal flex flex-col gap-4 bg-surface px-6 py-9 transition hover:bg-surface-2 sm:col-span-2 sm:px-8">
+        <div class="flex flex-wrap items-center gap-4">
+          <div class="flex size-[46px] items-center justify-center rounded-[11px] border border-accent/30 bg-accent/10 text-accent">
+            <svg class="size-[22px]" viewBox="0 0 22 22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><rect x="2" y="2" width="7.5" height="7.5" rx="1.5"/><rect x="12.5" y="2" width="7.5" height="7.5" rx="1.5"/><rect x="2" y="12.5" width="7.5" height="7.5" rx="1.5"/><path d="M16.25 12.5v7.5M12.5 16.25H20"/></svg>
+          </div>
+          <div>
+            <h3 class="text-[1.15rem] font-bold">Live widgets &amp; quizzes</h3>
+            <p class="max-w-[64ch] text-[0.9375rem] text-muted">Drop them into any playlist between your notices. Open data sources that allow club use, plus built-in packs that work without the internet.</p>
+          </div>
+        </div>
+        <ul class="flex flex-wrap gap-2 text-[0.8125rem] font-semibold" aria-label="Widgets">
+          <li class="rounded-full border border-line-hi px-3 py-1">⚽ Live scores</li>
+          <li class="rounded-full border border-line-hi px-3 py-1">⛅ Weather at the ground</li>
+          <li class="rounded-full border border-line-hi px-3 py-1">❓ Quizzes: sport, film &amp; TV, music, geography, culture</li>
+          <li class="rounded-full border border-line-hi px-3 py-1">🎬 Emoji quiz</li>
+          <li class="rounded-full border border-line-hi px-3 py-1">🏳️ Flags &amp; capitals</li>
+          <li class="rounded-full border border-line-hi px-3 py-1">📜 On this day</li>
+          <li class="rounded-full border border-line-hi px-3 py-1">🎯 Spot the ball</li>
+          <li class="rounded-full border border-line-hi px-3 py-1">🚆 Transport hub: trains, live buses, tube, planes</li>
+          <li class="rounded-full border border-line-hi px-3 py-1">🕒 Clocks, countdowns &amp; world clocks</li>
+          <li class="rounded-full border border-line-hi px-3 py-1">🌅 Sunrise, sunset &amp; moon</li>
+          <li class="rounded-full border border-line-hi px-3 py-1">🌊 Flood warnings</li>
+          <li class="rounded-full border border-line-hi px-3 py-1">📅 Bank holidays</li>
+          <li class="rounded-full border border-line-hi px-3 py-1">📰 News &amp; calendar feeds</li>
+          <li class="rounded-full border border-line-hi px-3 py-1">💱 Exchange rates</li>
+          <li class="rounded-full border border-line-hi px-3 py-1">😄 Jokes &amp; phrases</li>
+          <li class="rounded-full border border-line-hi px-3 py-1">🌍 10 screen languages</li>
         </ul>
       </article>
     </div>
