@@ -1,0 +1,29 @@
+[Unit]
+Description=PitchTribe kiosk display (Chromium in cage on tty1)
+After=systemd-user-sessions.service plymouth-quit-wait.service network-online.target pitchtribe.service
+Wants=network-online.target
+Conflicts=getty@tty1.service
+
+[Service]
+Type=simple
+User=pitchtribe-kiosk
+EnvironmentFile=/etc/default/pitchtribe-kiosk
+ExecStart=/usr/local/bin/pitchtribe-kiosk
+Restart=always
+RestartSec=5
+
+# Give the kiosk a real logind seat session on tty1 so cage can use the
+# display, GPU and input devices.
+PAMName=login
+TTYPath=/dev/tty1
+TTYReset=yes
+TTYVHangup=yes
+TTYVTDisallocate=yes
+StandardInput=tty-fail
+StandardOutput=journal
+StandardError=journal
+UtmpIdentifier=tty1
+UtmpMode=user
+
+[Install]
+WantedBy=graphical.target multi-user.target

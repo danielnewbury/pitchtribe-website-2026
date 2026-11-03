@@ -1,0 +1,626 @@
+'use strict';
+const crypto = require('node:crypto');
+const fs = require('node:fs');
+const os = require('node:os');
+const path = require('node:path');
+const { Transform } = require('node:stream');
+const { pipeline } = require('node:stream/promises');
+const express = require('express');
+
+const { Store, newId } = require('./store');
+const { Hub } = require('./hub');
+const auth = require('./auth');
+const v = require('./validate');
+const pkg = require('../package.json');
+
+const PUBLIC_DIR = path.join(__dirname, '..', 'public');
+
+/** Uploadable media: MIME type -> [asset type, file extension]. */
+const MEDIA_TYPES = {
+  'image/jpeg': ['image', '.jpg'],
+  'image/png': ['image', '.png'],
+  'image/gif': ['image', '.gif'],
+  'image/webp': ['image', '.webp'],
+  'image/avif': ['image', '.avif'],
+  'image/svg+xml': ['image', '.svg'],
+  'video/mp4': ['video', '.mp4'],
+  'video/webm': ['video', '.webm'],
+  'video/quicktime': ['video', '.mov'],
+};
+
+const ASSET_TYPES = ['image', 'video', 'url', 'notice', 'menu', 'fixtures'];
+const DEFAULT_DURATION = { image: 10, video: 0, url: 30, notice: 12, menu: 20, fixtures: 15 };
+const NOTICE_STYLES = ['default', 'accent', 'amber', 'alert', 'light'];
+const ROTATIONS = [0, 90, 180, 270];
+const MAX_SCREENS = 200;
+const ONLINE_MS = 2.5 * 60 * 1000;
+
+function lanUrls(port) {
+  const urls = [];
+  for (const addrs of Object.values(os.networkInterfaces())) {
+    for (const a of addrs || []) {
+      if (a.family === 'IPv4' && !a.internal) urls.push(`http://${a.address}${port === 80 ? '' : `:${port}`}/`);
+    }
+  }
+  return urls;
+}
+
+function createApp(opts = {}) {
+  const dataDir = path.resolve(opts.dataDir || process.env.DATA_DIR || path.join(__dirname, '..', 'data'));
+  const mediaDir = path.join(dataDir, 'media');
+  fs.mkdirSync(mediaDir, { recursive: true });
+  const maxUploadBytes = Number(opts.maxUploadMb ?? process.env.MAX_UPLOAD_MB ?? 1024) * 1024 * 1024;
+  const port = Number(opts.port ?? process.env.PORT ?? 8080);
+
+  const store = new Store(path.join(dataDir, 'db.json'));
+  const hub = new Hub();
+  const limiter = new auth.LoginLimiter();
+  store.on('change', (revision) => hub.broadcast('changed', { revision }));
+
+  const app = express();
+  app.disable('x-powered-by');
+  if (process.env.TRUST_PROXY) app.set('trust proxy', process.env.TRUST_PROXY);
+
+  // ---------- Security headers ----------
+  app.use((req, res, next) => {
+    res.set({
+      'X-Content-Type-Options': 'nosniff',
+      'Referrer-Policy': 'same-origin',
+    });
+    if (req.path.startsWith('/player')) {
+      // Screens may embed arbitrary web pages (the "Web page" content type).
+      res.set(
+        'Content-Security-Policy',
+        "default-src 'self'; img-src 'self' data:; media-src 'self'; frame-src http: https:; object-src 'none'; base-uri 'none'"
+      );
+    } else if (!req.path.startsWith('/media/')) {
+      res.set({
+        'Content-Security-Policy':
+          "default-src 'self'; img-src 'self' data: blob:; media-src 'self' blob:; frame-src 'self'; object-src 'none'; base-uri 'none'; frame-ancestors 'self'; form-action 'self'",
+        'X-Frame-Options': 'SAMEORIGIN',
+      });
+    }
+    next();
+  });
+
+  app.use(express.json({ limit: '1mb' }));
+
+  // ---------- Helpers ----------
+  const data = () => store.data;
+  const findOr404 = (list, id, what) => {
+    const item = list.find((x) => x.id === id);
+    if (!item) throw new v.HttpError(404, `${what} not found`);
+    return item;
+  };
+  const route = (fn) => (req, res, next) => {
+    try {
+      const out = fn(req, res);
+      if (out && typeof out.then === 'function') out.catch(next);
+    } catch (err) {
+      next(err);
+    }
+  };
+
+  function isAuthed(req) {
+    const token = auth.parseCookies(req.headers.cookie)[auth.COOKIE];
+    return Boolean(data().settings.adminHash) && auth.verifyToken(token, data().settings.sessionSecret);
+  }
+
+  /** Dashboard API guard. Mutations also need a custom header, which a
+      cross-site form or <img> can't send (CSRF defence alongside SameSite). */
+  function requireAuth(req, res, next) {
+    if (!isAuthed(req)) return res.status(401).json({ error: 'Please sign in' });
+    if (req.method !== 'GET' && req.method !== 'HEAD' && req.get('x-pitchtribe') !== '1') {
+      return res.status(403).json({ error: 'Missing request header' });
+    }
+    next();
+  }
+
+  const publicSettings = () => {
+    const s = data().settings;
+    return { clubName: s.clubName, defaultPlaylistId: s.defaultPlaylistId };
+  };
+
+  const screenView = (s) => ({
+    ...s,
+    online: hub.isConnected(s.id) || Date.now() - (s.lastSeen || 0) < ONLINE_MS,
+  });
+
+  // ---------- Content model ----------
+  function sanitizeAsset(type, body, existing = {}) {
+    const a = {
+      name: v.str(body.name ?? existing.name, { max: 120, required: true, field: 'Name' }),
+      duration: v.int(body.duration ?? existing.duration, {
+        min: type === 'video' ? 0 : 1,
+        max: 86400,
+        fallback: DEFAULT_DURATION[type],
+      }),
+    };
+    if (type === 'image' || type === 'video') {
+      a.fit = v.oneOf(body.fit ?? existing.fit, ['contain', 'cover'], 'contain');
+    }
+    if (type === 'video') a.muted = v.bool(body.muted, existing.muted ?? true);
+    if (type === 'url') a.url = v.httpUrl(body.url ?? existing.url);
+
+    const c = { ...(existing.content || {}), ...(body.content || {}) };
+    if (type === 'notice') {
+      a.content = {
+        title: v.str(c.title, { max: 200, field: 'Title' }),
+        body: v.str(c.body, { max: 3000, field: 'Message' }),
+        style: v.oneOf(c.style, NOTICE_STYLES, 'default'),
+      };
+      if (!a.content.title && !a.content.body) throw v.bad('A notice needs a title or a message');
+    }
+    if (type === 'menu') {
+      a.content = {
+        title: v.str(c.title, { max: 200, field: 'Title' }),
+        text: v.str(c.text, { max: 20000, field: 'Menu' }),
+      };
+    }
+    if (type === 'fixtures') {
+      a.content = {
+        title: v.str(c.title, { max: 200, field: 'Title' }),
+        text: v.str(c.text, { max: 50000, field: 'Fixtures' }),
+        limit: v.int(c.limit, { min: 1, max: 20, fallback: 8 }),
+      };
+    }
+    return a;
+  }
+
+  function sanitizePlaylist(body, existing) {
+    const assets = new Set(data().assets.map((a) => a.id));
+    const items = Array.isArray(body.items) ? body.items : existing.items;
+    if (items.length > 500) throw v.bad('Too many items in one playlist');
+    return {
+      name: v.str(body.name ?? existing.name, { max: 80, required: true, field: 'Playlist name' }),
+      showClock: v.bool(body.showClock, existing.showClock ?? true),
+      ticker: v.str(body.ticker ?? existing.ticker, { max: 2000, field: 'Ticker' }),
+      items: items
+        .filter((it) => it && assets.has(it.assetId))
+        .map((it) => ({
+          id: typeof it.id === 'string' && /^[\w-]{1,32}$/.test(it.id) ? it.id : newId(),
+          assetId: it.assetId,
+          enabled: v.bool(it.enabled, true),
+          duration: it.duration === null || it.duration === '' || it.duration === undefined ? null : v.int(it.duration, { min: 0, max: 86400 }),
+          schedule: v.schedule(it.schedule),
+        })),
+    };
+  }
+
+  function mediaUrl(asset) {
+    return asset.file ? `/media/${asset.file.filename}` : undefined;
+  }
+
+  function buildManifest(playlist, screen) {
+    const d = data();
+    const assets = new Map(d.assets.map((a) => [a.id, a]));
+    const items = [];
+    for (const it of playlist ? playlist.items : []) {
+      const a = assets.get(it.assetId);
+      if (!a || !it.enabled) continue;
+      items.push({
+        id: it.id,
+        assetId: a.id,
+        type: a.type,
+        name: a.name,
+        duration: it.duration ?? a.duration,
+        schedule: it.schedule,
+        src: mediaUrl(a),
+        url: a.url,
+        fit: a.fit,
+        muted: a.muted,
+        content: a.content,
+        updatedAt: a.updatedAt,
+      });
+    }
+    return {
+      revision: d.revision,
+      generatedAt: new Date().toISOString(),
+      clubName: d.settings.clubName || 'PitchTribe',
+      screen: screen ? { id: screen.id, name: screen.name, rotation: screen.rotation || 0 } : null,
+      playlist: playlist
+        ? { id: playlist.id, name: playlist.name, showClock: playlist.showClock, ticker: playlist.ticker }
+        : null,
+      items,
+      dashboardUrls: lanUrls(port),
+    };
+  }
+
+  // ---------- Player (screens) — no login, LAN only ----------
+  function screenFor(req, { register }) {
+    const id = req.params.screenId;
+    if (!v.SCREEN_ID_RE.test(id)) throw v.bad('Invalid screen id');
+    let screen = data().screens.find((s) => s.id === id);
+    if (!screen && register) {
+      if (data().screens.length >= MAX_SCREENS) throw new v.HttpError(429, 'Too many screens');
+      screen = store.touch(
+        (d) => {
+          const s = {
+            id,
+            name: id,
+            playlistId: d.settings.defaultPlaylistId,
+            rotation: 0,
+            createdAt: new Date().toISOString(),
+            lastSeen: Date.now(),
+          };
+          d.screens.push(s);
+          return s;
+        },
+        { immediate: true }
+      );
+    }
+    if (screen) {
+      const w = v.int(req.query.w, { min: 0, max: 16384 });
+      const h = v.int(req.query.h, { min: 0, max: 16384 });
+      store.touch(() => {
+        screen.lastSeen = Date.now();
+        screen.ip = req.ip;
+        screen.userAgent = v.str(req.get('user-agent'), { max: 300 }).slice(0, 300);
+        if (w && h) screen.resolution = `${w}×${h}`;
+      });
+    }
+    return screen;
+  }
+
+  app.get(
+    '/api/player/:screenId/manifest',
+    route((req, res) => {
+      const screen = screenFor(req, { register: true });
+      const playlist = data().playlists.find((p) => p.id === screen.playlistId) || null;
+      res.set('Cache-Control', 'no-store').json(buildManifest(playlist, screen));
+    })
+  );
+
+  app.get(
+    '/api/player/:screenId/events',
+    route((req, res) => {
+      const screen = screenFor(req, { register: false });
+      hub.add(req, res, screen ? screen.id : req.params.screenId);
+    })
+  );
+
+  // ---------- Auth ----------
+  app.get('/api/auth/status', (req, res) => {
+    res.json({
+      setupRequired: !data().settings.adminHash,
+      authenticated: isAuthed(req),
+      clubName: data().settings.clubName,
+    });
+  });
+
+  app.post(
+    '/api/auth/setup',
+    route((req, res) => {
+      if (data().settings.adminHash) throw new v.HttpError(409, 'Already set up');
+      const clubName = v.str(req.body.clubName, { max: 80, required: true, field: 'Club name' });
+      const password = String(req.body.password || '');
+      if (password.length < 8) throw v.bad('Password must be at least 8 characters');
+      store.mutate((d) => {
+        d.settings.clubName = clubName;
+        d.settings.adminHash = auth.hashPassword(password);
+        const now = new Date().toISOString();
+        const welcome = {
+          id: newId(),
+          type: 'notice',
+          name: 'Welcome notice',
+          duration: 12,
+          content: {
+            title: `Welcome to ${clubName}`,
+            body: 'This screen is powered by PitchTribe.\nOpen the dashboard to add notices, menus, fixtures, photos and videos.',
+            style: 'accent',
+          },
+          createdAt: now,
+          updatedAt: now,
+        };
+        d.assets.push(welcome);
+        const main = {
+          id: newId(),
+          name: 'Main',
+          showClock: true,
+          ticker: '',
+          items: [{ id: newId(), assetId: welcome.id, enabled: true, duration: null, schedule: v.schedule({}) }],
+          createdAt: now,
+          updatedAt: now,
+        };
+        d.playlists.push(main);
+        d.settings.defaultPlaylistId = main.id;
+        for (const s of d.screens) if (!s.playlistId) s.playlistId = main.id;
+      });
+      res.set('Set-Cookie', auth.sessionCookie(auth.issueToken(data().settings.sessionSecret), req)).json({ ok: true });
+    })
+  );
+
+  app.post(
+    '/api/auth/login',
+    route((req, res) => {
+      if (limiter.blocked(req.ip)) throw new v.HttpError(429, 'Too many attempts — wait 15 minutes and try again');
+      if (!auth.verifyPassword(req.body.password, data().settings.adminHash)) {
+        limiter.fail(req.ip);
+        throw new v.HttpError(401, 'Wrong password');
+      }
+      limiter.reset(req.ip);
+      res.set('Set-Cookie', auth.sessionCookie(auth.issueToken(data().settings.sessionSecret), req)).json({ ok: true });
+    })
+  );
+
+  app.post('/api/auth/logout', (req, res) => {
+    res.set('Set-Cookie', auth.clearCookie()).json({ ok: true });
+  });
+
+  // ---------- Dashboard API ----------
+  const api = express.Router();
+  api.use(requireAuth);
+
+  api.get('/state', (req, res) => {
+    const d = data();
+    res.set('Cache-Control', 'no-store').json({
+      version: pkg.version,
+      revision: d.revision,
+      settings: publicSettings(),
+      assets: d.assets.map((a) => ({ ...a, src: mediaUrl(a) })),
+      playlists: d.playlists,
+      screens: d.screens.map(screenView),
+      dashboardUrls: lanUrls(port),
+      maxUploadMb: Math.round(maxUploadBytes / 1024 / 1024),
+    });
+  });
+
+  api.put(
+    '/settings',
+    route((req, res) => {
+      const clubName = v.str(req.body.clubName, { max: 80, required: true, field: 'Club name' });
+      const defaultPlaylistId = req.body.defaultPlaylistId || null;
+      if (defaultPlaylistId) findOr404(data().playlists, defaultPlaylistId, 'Playlist');
+      store.mutate((d) => {
+        d.settings.clubName = clubName;
+        d.settings.defaultPlaylistId = defaultPlaylistId;
+      });
+      res.json(publicSettings());
+    })
+  );
+
+  api.post(
+    '/settings/password',
+    route((req, res) => {
+      if (!auth.verifyPassword(req.body.current, data().settings.adminHash)) throw v.bad('Current password is wrong');
+      const next = String(req.body.next || '');
+      if (next.length < 8) throw v.bad('New password must be at least 8 characters');
+      store.touch(
+        (d) => {
+          d.settings.adminHash = auth.hashPassword(next);
+          d.settings.sessionSecret = crypto.randomBytes(32).toString('hex');
+        },
+        { immediate: true }
+      );
+      res.set('Set-Cookie', auth.sessionCookie(auth.issueToken(data().settings.sessionSecret), req)).json({ ok: true });
+    })
+  );
+
+  // Assets ------------------------------------------------------------------
+  api.post(
+    '/assets/upload',
+    route(async (req, res) => {
+      const mime = String(req.get('content-type') || '').split(';')[0].trim().toLowerCase();
+      const kind = MEDIA_TYPES[mime];
+      if (!kind) throw new v.HttpError(415, 'Unsupported file type. Use JPG, PNG, GIF, WebP, SVG, MP4, WebM or MOV.');
+      const declared = Number(req.get('content-length') || 0);
+      if (declared > maxUploadBytes) throw new v.HttpError(413, 'File is too large');
+      let originalName = 'Upload';
+      try {
+        originalName = decodeURIComponent(req.get('x-filename') || 'Upload');
+      } catch {
+        /* keep default */
+      }
+      const [type, ext] = kind;
+      const id = newId();
+      const filename = `${id}${ext}`;
+      const final = path.join(mediaDir, filename);
+      const tmp = `${final}.part`;
+      let size = 0;
+      const counter = new Transform({
+        transform(chunk, _enc, cb) {
+          size += chunk.length;
+          if (size > maxUploadBytes) cb(new v.HttpError(413, 'File is too large'));
+          else cb(null, chunk);
+        },
+      });
+      try {
+        await pipeline(req, counter, fs.createWriteStream(tmp));
+      } catch (err) {
+        fs.rmSync(tmp, { force: true });
+        throw err.status ? err : new v.HttpError(400, 'Upload interrupted');
+      }
+      if (size === 0) {
+        fs.rmSync(tmp, { force: true });
+        throw v.bad('The file is empty');
+      }
+      fs.renameSync(tmp, final);
+      const now = new Date().toISOString();
+      const name = originalName.replace(/\.[a-z0-9]{2,5}$/i, '').slice(0, 120) || 'Upload';
+      const asset = {
+        id,
+        type,
+        ...sanitizeAsset(type, { name, duration: req.query.duration }),
+        file: { filename, mime, size, originalName: originalName.slice(0, 200) },
+        createdAt: now,
+        updatedAt: now,
+      };
+      store.mutate((d) => d.assets.push(asset));
+      res.status(201).json({ ...asset, src: mediaUrl(asset) });
+    })
+  );
+
+  api.post(
+    '/assets',
+    route((req, res) => {
+      const type = req.body.type;
+      if (!['url', 'notice', 'menu', 'fixtures'].includes(type)) throw v.bad('Unknown content type');
+      const now = new Date().toISOString();
+      const asset = { id: newId(), type, ...sanitizeAsset(type, req.body), createdAt: now, updatedAt: now };
+      const playlistId = req.body.addToPlaylist;
+      const playlist = playlistId ? findOr404(data().playlists, playlistId, 'Playlist') : null;
+      store.mutate((d) => {
+        d.assets.push(asset);
+        if (playlist) playlist.items.push({ id: newId(), assetId: asset.id, enabled: true, duration: null, schedule: v.schedule({}) });
+      });
+      res.status(201).json(asset);
+    })
+  );
+
+  api.patch(
+    '/assets/:id',
+    route((req, res) => {
+      const asset = findOr404(data().assets, req.params.id, 'Content');
+      const next = sanitizeAsset(asset.type, req.body, asset);
+      store.mutate(() => Object.assign(asset, next, { updatedAt: new Date().toISOString() }));
+      res.json({ ...asset, src: mediaUrl(asset) });
+    })
+  );
+
+  api.delete(
+    '/assets/:id',
+    route((req, res) => {
+      const asset = findOr404(data().assets, req.params.id, 'Content');
+      store.mutate((d) => {
+        d.assets = d.assets.filter((a) => a.id !== asset.id);
+        for (const p of d.playlists) p.items = p.items.filter((it) => it.assetId !== asset.id);
+      });
+      if (asset.file) fs.rmSync(path.join(mediaDir, path.basename(asset.file.filename)), { force: true });
+      res.json({ ok: true });
+    })
+  );
+
+  // Playlists ---------------------------------------------------------------
+  api.post(
+    '/playlists',
+    route((req, res) => {
+      const now = new Date().toISOString();
+      const playlist = {
+        id: newId(),
+        ...sanitizePlaylist({ ...req.body, items: [] }, { items: [] }),
+        createdAt: now,
+        updatedAt: now,
+      };
+      store.mutate((d) => {
+        d.playlists.push(playlist);
+        if (!d.settings.defaultPlaylistId) d.settings.defaultPlaylistId = playlist.id;
+      });
+      res.status(201).json(playlist);
+    })
+  );
+
+  api.put(
+    '/playlists/:id',
+    route((req, res) => {
+      const playlist = findOr404(data().playlists, req.params.id, 'Playlist');
+      const next = sanitizePlaylist(req.body, playlist);
+      store.mutate(() => Object.assign(playlist, next, { updatedAt: new Date().toISOString() }));
+      res.json(playlist);
+    })
+  );
+
+  api.delete(
+    '/playlists/:id',
+    route((req, res) => {
+      const playlist = findOr404(data().playlists, req.params.id, 'Playlist');
+      store.mutate((d) => {
+        d.playlists = d.playlists.filter((p) => p.id !== playlist.id);
+        const fallback = d.playlists[0]?.id ?? null;
+        if (d.settings.defaultPlaylistId === playlist.id) d.settings.defaultPlaylistId = fallback;
+        for (const s of d.screens) if (s.playlistId === playlist.id) s.playlistId = d.settings.defaultPlaylistId;
+      });
+      res.json({ ok: true });
+    })
+  );
+
+  // Screens -----------------------------------------------------------------
+  api.patch(
+    '/screens/:id',
+    route((req, res) => {
+      const screen = findOr404(data().screens, req.params.id, 'Screen');
+      const update = {};
+      if (req.body.name !== undefined) update.name = v.str(req.body.name, { max: 80, required: true, field: 'Screen name' });
+      if (req.body.playlistId !== undefined) {
+        update.playlistId = req.body.playlistId || null;
+        if (update.playlistId) findOr404(data().playlists, update.playlistId, 'Playlist');
+      }
+      if (req.body.rotation !== undefined) update.rotation = v.oneOf(Number(req.body.rotation), ROTATIONS, 0);
+      store.mutate(() => Object.assign(screen, update));
+      res.json(screenView(screen));
+    })
+  );
+
+  api.delete(
+    '/screens/:id',
+    route((req, res) => {
+      const screen = findOr404(data().screens, req.params.id, 'Screen');
+      store.mutate((d) => {
+        d.screens = d.screens.filter((s) => s.id !== screen.id);
+      });
+      res.json({ ok: true });
+    })
+  );
+
+  api.post(
+    '/screens/:id/command',
+    route((req, res) => {
+      const screen = findOr404(data().screens, req.params.id, 'Screen');
+      const command = v.oneOf(req.body.command, ['identify', 'reload'], null);
+      if (!command) throw v.bad('Unknown command');
+      const delivered = hub.send(screen.id, command, { name: screen.name, id: screen.id });
+      res.json({ delivered });
+    })
+  );
+
+  // Preview any playlist in a browser tab without registering a screen.
+  api.get(
+    '/preview/:playlistId/manifest',
+    route((req, res) => {
+      const playlist = findOr404(data().playlists, req.params.playlistId, 'Playlist');
+      res.set('Cache-Control', 'no-store').json(buildManifest(playlist, null));
+    })
+  );
+
+  app.use('/api', api);
+  app.use('/api', (req, res) => res.status(404).json({ error: 'Not found' }));
+
+  // ---------- Static ----------
+  app.use(
+    '/media',
+    express.static(mediaDir, {
+      immutable: true,
+      maxAge: '365d',
+      index: false,
+      dotfiles: 'deny',
+      setHeaders(res) {
+        // Uploaded files (incl. SVG) can never run script in our origin.
+        res.set('Content-Security-Policy', "default-src 'none'; img-src 'self'; media-src 'self'; style-src 'unsafe-inline'; sandbox");
+      },
+    })
+  );
+  app.use('/shared', express.static(path.join(PUBLIC_DIR, 'shared'), { maxAge: 0 }));
+  app.use('/player', express.static(path.join(PUBLIC_DIR, 'player'), { maxAge: 0 }));
+  app.use('/admin', express.static(path.join(PUBLIC_DIR, 'admin'), { maxAge: 0 }));
+  app.get('/favicon.svg', (req, res) => res.sendFile(path.join(PUBLIC_DIR, 'shared', 'favicon.svg')));
+  app.get('/', (req, res) => res.redirect('/admin/'));
+  app.get('/healthz', (req, res) => res.json({ ok: true, version: pkg.version }));
+
+  // ---------- Errors ----------
+  // eslint-disable-next-line no-unused-vars
+  app.use((err, req, res, _next) => {
+    const status = err.status || err.statusCode || 500;
+    if (status >= 500) console.error(err);
+    if (res.headersSent) return res.end();
+    const message = status >= 500 ? 'Something went wrong' : err.type === 'entity.parse.failed' ? 'Invalid JSON' : err.message;
+    res.status(status).json({ error: message });
+  });
+
+  const close = () => {
+    hub.close();
+    store.flush();
+  };
+
+  return { app, store, hub, close, dataDir };
+}
+
+module.exports = { createApp, MEDIA_TYPES, ASSET_TYPES };

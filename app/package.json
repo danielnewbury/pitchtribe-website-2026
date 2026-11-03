@@ -1,0 +1,19 @@
+{
+  "name": "pitchtribe",
+  "version": "0.1.0",
+  "private": true,
+  "description": "PitchTribe — self-hosted digital signage for clubs: a management dashboard plus a kiosk player for Raspberry Pi screens.",
+  "license": "MIT",
+  "main": "server.js",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node --watch server.js",
+    "test": "node --test test/*.test.js"
+  },
+  "dependencies": {
+    "express": "5.1.0"
+  }
+}

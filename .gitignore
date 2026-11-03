@@ -25,3 +25,6 @@ dist/
 # Cloudflare / Wrangler
 .wrangler/
 .dev.vars
+
+# Signage app runtime data (database + uploaded media)
+app/data/

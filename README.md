@@ -9,7 +9,9 @@ from any device on the club's own network.
 
 **Live at [pitchtribe.media](https://pitchtribe.media).**
 
-This repository contains the **website only** — no signage application code lives here.
+This repository contains the website and, in [`app/`](app/README.md), the signage application
+itself: a Node.js server with a management dashboard and a kiosk player, installed on a Pi with
+`deploy/install.sh`.
 
 ## Hosting
 
@@ -38,6 +40,9 @@ its own apex record and its email routing (MX/SPF/DKIM) untouched.
 | `wrangler.toml` | Pages project config (`pages_build_output_dir = "./dist"`) |
 | `.github/workflows/deploy.yml` | CI: build on pull requests, build and deploy on push to `main` |
 | `dist/` | Build output (git-ignored) |
+| `app/` | Signage app: dashboard, player and server — see [`app/README.md`](app/README.md) |
+| `deploy/` | Raspberry Pi installer, systemd units and kiosk launcher for the app |
+| `.github/workflows/app.yml` | CI: tests the signage app when `app/` or `deploy/` change |
 
 ## Local development
 

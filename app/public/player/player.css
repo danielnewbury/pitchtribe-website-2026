@@ -1,0 +1,287 @@
+/* PitchTribe player — full-screen, 1080p/4K friendly. Sizes use vmin so
+   slides scale with any display and orientation. */
+:root {
+  --bg: #060c16;
+  --surface: #0e1e30;
+  --surface-2: #162943;
+  --fg: #e4f0f8;
+  --muted: #8fb0c6;
+  --accent: #2ce6a8;
+  --amber: #f7c94b;
+  --alert: #ff5d5d;
+  --line: rgb(100 160 200 / 0.18);
+  --ticker-h: 0px;
+  --fade: 700ms;
+  color-scheme: dark;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+html, body {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  background: #000;
+  color: var(--fg);
+  font-family: "Inter", "Segoe UI", system-ui, -apple-system, Roboto, "Helvetica Neue", Arial, sans-serif;
+  cursor: none;
+  -webkit-font-smoothing: antialiased;
+  user-select: none;
+}
+
+#root {
+  position: fixed;
+  inset: 0;
+  overflow: hidden;
+  background: var(--bg);
+  transform-origin: center center;
+}
+#root.rotate-90, #root.rotate-270 {
+  inset: auto;
+  top: 50%;
+  left: 50%;
+  width: 100vh;
+  height: 100vw;
+}
+#root.rotate-90 { transform: translate(-50%, -50%) rotate(90deg); }
+#root.rotate-180 { transform: rotate(180deg); }
+#root.rotate-270 { transform: translate(-50%, -50%) rotate(270deg); }
+
+#stage {
+  position: absolute;
+  inset: 0 0 var(--ticker-h) 0;
+  overflow: hidden;
+  container-type: size;
+}
+
+.slide {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  transition: opacity var(--fade) ease;
+  background: var(--bg);
+  overflow: hidden;
+}
+.slide.in { opacity: 1; }
+
+/* Media ---------------------------------------------------------------- */
+.slide.media { background: #000; }
+.slide.media img,
+.slide.media video,
+.slide.web iframe {
+  width: 100%;
+  height: 100%;
+  display: block;
+  border: 0;
+}
+.slide.media .fit-contain { object-fit: contain; }
+.slide.media .fit-cover { object-fit: cover; }
+.slide.web { background: #fff; }
+
+/* Text slides ---------------------------------------------------------- */
+.panel {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  padding: 6cqmin 7cqmin;
+  font-size: 3.4cqmin;
+  background:
+    radial-gradient(120% 80% at 100% 0%, rgb(44 230 168 / 0.10), transparent 60%),
+    radial-gradient(90% 70% at 0% 100%, rgb(88 166 255 / 0.10), transparent 60%),
+    var(--bg);
+}
+.kicker {
+  display: flex;
+  align-items: center;
+  gap: 0.6em;
+  font-size: 0.62em;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--accent);
+}
+.kicker::before {
+  content: "";
+  width: 1.8em;
+  height: 0.22em;
+  border-radius: 1em;
+  background: currentColor;
+}
+.panel h1 {
+  font-size: 2.1em;
+  line-height: 1.06;
+  letter-spacing: -0.02em;
+  font-weight: 800;
+  margin: 0.35em 0 0.45em;
+  text-wrap: balance;
+}
+.fit {
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+}
+
+/* Notice */
+.notice { justify-content: center; }
+.notice .fit { flex: 0 1 auto; display: flex; flex-direction: column; justify-content: center; }
+.notice h1 { font-size: 3.2em; margin-top: 0.2em; }
+.notice .body p { font-size: 1.3em; line-height: 1.35; color: var(--muted); max-width: 40ch; text-wrap: pretty; }
+.notice .body p + p { margin-top: 0.55em; }
+.notice.style-accent { background: linear-gradient(135deg, #0a3a2e, #06241f 55%, var(--bg)); }
+.notice.style-amber { background: linear-gradient(135deg, #3d2c05, #1f1704 60%, var(--bg)); }
+.notice.style-amber .kicker { color: var(--amber); }
+.notice.style-alert { background: linear-gradient(135deg, #4a0f12, #250709 60%, var(--bg)); }
+.notice.style-alert .kicker { color: #ff8a8a; }
+.notice.style-light { background: #f3f7fa; color: #0d1f2e; }
+.notice.style-light .body p { color: #3d5a72; }
+.notice.style-light .kicker { color: #00855f; }
+
+/* Menu */
+.menu .fit { columns: 2; column-gap: 2.4em; column-fill: balance; }
+.menu-section { break-inside: avoid; margin-bottom: 1.1em; }
+.menu-section h2 {
+  font-size: 0.78em;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--amber);
+  border-bottom: 1px solid var(--line);
+  padding-bottom: 0.35em;
+  margin-bottom: 0.45em;
+}
+.menu-item { display: flex; align-items: baseline; gap: 0.5em; padding: 0.22em 0; }
+.menu-item .name { font-weight: 600; }
+.menu-item .dots { flex: 1; border-bottom: 2px dotted var(--line); transform: translateY(-0.25em); min-width: 1em; }
+.menu-item .price { font-weight: 800; color: var(--accent); font-variant-numeric: tabular-nums; }
+.menu-item .notes { display: block; font-size: 0.62em; color: var(--muted); font-weight: 400; margin-top: 0.1em; }
+.menu-item.sold-out .name, .menu-item.sold-out .price { text-decoration: line-through; opacity: 0.45; }
+.badge {
+  display: inline-block;
+  font-size: 0.55em;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  padding: 0.2em 0.55em;
+  border-radius: 0.4em;
+  background: var(--alert);
+  color: #fff;
+  vertical-align: 0.25em;
+  margin-left: 0.4em;
+  text-decoration: none;
+}
+
+/* Fixtures */
+.fixtures-list { list-style: none; display: flex; flex-direction: column; gap: 0.5em; }
+.fixture {
+  display: grid;
+  grid-template-columns: 9.5em 1fr auto;
+  align-items: center;
+  gap: 1em;
+  padding: 0.55em 0.8em;
+  border: 1px solid var(--line);
+  border-radius: 0.5em;
+  background: rgb(14 30 48 / 0.7);
+}
+.fixture .when { color: var(--muted); font-size: 0.8em; font-weight: 600; font-variant-numeric: tabular-nums; }
+.fixture .title { font-weight: 700; line-height: 1.2; }
+.fixture .meta { font-size: 0.65em; color: var(--muted); text-align: right; }
+.fixture.next { border-color: var(--accent); background: rgb(44 230 168 / 0.1); padding: 0.9em 0.8em; }
+.fixture.next .title { font-size: 1.3em; }
+.fixture.next .when { color: var(--accent); }
+.countdown {
+  display: block;
+  font-size: 0.75em;
+  font-weight: 800;
+  color: var(--bg);
+  background: var(--accent);
+  border-radius: 0.4em;
+  padding: 0.2em 0.5em;
+  margin-top: 0.3em;
+  text-align: center;
+}
+.empty-note { color: var(--muted); font-size: 1.1em; }
+
+/* Chrome --------------------------------------------------------------- */
+#clock {
+  position: absolute;
+  top: 2.2vmin;
+  right: 2.6vmin;
+  z-index: 5;
+  font-size: 3vmin;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  padding: 0.25em 0.6em;
+  border-radius: 0.5em;
+  background: rgb(6 12 22 / 0.72);
+  border: 1px solid var(--line);
+  backdrop-filter: blur(6px);
+}
+
+#ticker {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: var(--ticker-h);
+  z-index: 5;
+  overflow: hidden;
+  background: var(--accent);
+  color: #04120d;
+  display: flex;
+  align-items: center;
+  font-weight: 700;
+  font-size: calc(var(--ticker-h) * 0.48);
+  white-space: nowrap;
+}
+.ticker-track {
+  display: inline-flex;
+  padding-left: 100%;
+  animation: ticker linear infinite;
+  will-change: transform;
+}
+.ticker-track span { padding-right: 3em; }
+.ticker-track span::after { content: "✦"; padding-left: 3em; opacity: 0.55; }
+@keyframes ticker { to { transform: translateX(-100%); } }
+
+#splash {
+  position: absolute;
+  inset: 0;
+  z-index: 8;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  gap: 1.6vmin;
+  padding: 6vmin;
+  background:
+    radial-gradient(80% 60% at 50% 0%, rgb(44 230 168 / 0.12), transparent 70%),
+    var(--bg);
+}
+.splash-logo { width: 14vmin; height: 14vmin; color: var(--accent); margin-bottom: 2vmin; }
+.splash-title { font-size: 6vmin; font-weight: 800; letter-spacing: -0.02em; }
+.splash-msg { font-size: 3vmin; color: var(--muted); max-width: 60ch; }
+.splash-meta { font-size: 2.2vmin; color: var(--muted); font-family: ui-monospace, "SF Mono", Menlo, monospace; opacity: 0.8; }
+
+#identify {
+  position: absolute;
+  inset: 0;
+  z-index: 10;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2vmin;
+  background: rgb(6 12 22 / 0.86);
+  border: 1.2vmin solid var(--accent);
+  font-size: 9vmin;
+  font-weight: 800;
+  text-align: center;
+}
+#identify small { font-size: 3vmin; color: var(--muted); font-weight: 600; font-family: ui-monospace, monospace; }
+
+[hidden] { display: none !important; }
+
+@media (prefers-reduced-motion: reduce) {
+  :root { --fade: 0ms; }
+}

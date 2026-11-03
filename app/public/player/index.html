@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex">
+  <title>PitchTribe Screen</title>
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="player.css">
+</head>
+<body>
+  <div id="root">
+    <main id="stage" aria-live="off"></main>
+    <div id="clock" hidden></div>
+    <footer id="ticker" hidden><div class="ticker-track"></div></footer>
+    <section id="splash" hidden>
+      <svg class="splash-logo" viewBox="0 0 32 32" aria-hidden="true">
+        <path d="M16 4 27 10.5v11L16 28 5 21.5v-11z" fill="none" stroke="currentColor" stroke-width="1.6"/>
+        <path d="M16 10.5 21.5 13.5v5L16 21.5 10.5 18.5v-5z" fill="currentColor"/>
+      </svg>
+      <h1 class="splash-title"></h1>
+      <p class="splash-msg"></p>
+      <p class="splash-meta"></p>
+    </section>
+    <div id="identify" hidden></div>
+  </div>
+  <script src="/shared/schedule.js"></script>
+  <script src="/shared/formats.js"></script>
+  <script src="player.js"></script>
+</body>
+</html>
