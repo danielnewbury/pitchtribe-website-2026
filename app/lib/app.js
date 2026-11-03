@@ -9,6 +9,7 @@ const express = require('express');
 
 const { Store, newId } = require('./store');
 const { Hub } = require('./hub');
+const { Sports, LEAGUE_KEY_RE, SHOW_OPTIONS } = require('./sports');
 const auth = require('./auth');
 const v = require('./validate');
 const pkg = require('../package.json');
@@ -28,8 +29,9 @@ const MEDIA_TYPES = {
   'video/quicktime': ['video', '.mov'],
 };
 
-const ASSET_TYPES = ['image', 'video', 'url', 'notice', 'menu', 'fixtures'];
-const DEFAULT_DURATION = { image: 10, video: 0, url: 30, notice: 12, menu: 20, fixtures: 15 };
+const ASSET_TYPES = ['image', 'video', 'url', 'notice', 'menu', 'fixtures', 'scores'];
+const TEXT_TYPES = ['url', 'notice', 'menu', 'fixtures', 'scores'];
+const DEFAULT_DURATION = { image: 10, video: 0, url: 30, notice: 12, menu: 20, fixtures: 15, scores: 15 };
 const NOTICE_STYLES = ['default', 'accent', 'amber', 'alert', 'light'];
 const ROTATIONS = [0, 90, 180, 270];
 const MAX_SCREENS = 200;
@@ -57,6 +59,17 @@ function createApp(opts = {}) {
   const limiter = new auth.LoginLimiter();
   store.on('change', (revision) => hub.broadcast('changed', { revision }));
 
+  // Sports engine (../signage-server), configured from dashboard settings.
+  const sports = new Sports({
+    fetchImpl: opts.sportsFetch,
+    log: opts.log || console.error,
+    publicUrl: `${(lanUrls(port)[0] || `http://localhost:${port}/`).replace(/\/$/, '')}/feeds`,
+  });
+  const configureSports = () => sports.configure(store.data.settings.sports, { title: store.data.settings.clubName || 'Sports' });
+  configureSports();
+  // New scores: screens refetch their manifest (live-score slides carry the data).
+  sports.on('update', () => hub.broadcast('changed', { revision: store.data.revision, sports: true }));
+
   const app = express();
   app.disable('x-powered-by');
   if (process.env.TRUST_PROXY) app.set('trust proxy', process.env.TRUST_PROXY);
@@ -71,7 +84,13 @@ function createApp(opts = {}) {
       // Screens may embed arbitrary web pages (the "Web page" content type).
       res.set(
         'Content-Security-Policy',
-        "default-src 'self'; img-src 'self' data:; media-src 'self'; frame-src http: https:; object-src 'none'; base-uri 'none'"
+        "default-src 'self'; img-src 'self' data: https:; media-src 'self'; frame-src 'self' http: https:; object-src 'none'; base-uri 'none'"
+      );
+    } else if (req.path.startsWith('/feeds')) {
+      // The sports display page uses inline styles/script and remote team logos.
+      res.set(
+        'Content-Security-Policy',
+        "default-src 'self'; img-src 'self' https: data:; style-src 'self' 'unsafe-inline'; script-src 'self' 'unsafe-inline'; connect-src 'self'; object-src 'none'; base-uri 'none'; frame-ancestors 'self'"
       );
     } else if (!req.path.startsWith('/media/')) {
       res.set({
@@ -81,6 +100,24 @@ function createApp(opts = {}) {
       });
     }
     next();
+  });
+
+  // ---------- Signage-server engine at /feeds (sports now, widgets too) ----------
+  // GET routes (display page, JSON, SSE) are open on the LAN like the player.
+  // POST routes (refresh, push, MCP) need the sports API token or a dashboard login.
+  app.use('/feeds', (req, res) => {
+    if (req.method !== 'GET' && req.method !== 'HEAD' && req.method !== 'OPTIONS') {
+      const token = store.data.settings.sports?.apiToken || '';
+      const given = String(req.get('authorization') || '').replace(/^Bearer\s+/i, '');
+      const tokenOk =
+        token && given.length === token.length && crypto.timingSafeEqual(Buffer.from(given), Buffer.from(token));
+      const sessionOk = isAuthed(req) && req.get('x-pitchtribe') === '1';
+      if (!tokenOk && !sessionOk) {
+        res.set('WWW-Authenticate', 'Bearer').status(401).json({ error: 'Unauthorized' });
+        return;
+      }
+    }
+    sports.handle(req, res);
   });
 
   app.use(express.json({ limit: '1mb' }));
@@ -120,6 +157,19 @@ function createApp(opts = {}) {
     const s = data().settings;
     return { clubName: s.clubName, defaultPlaylistId: s.defaultPlaylistId };
   };
+
+  function sportsView() {
+    const s = data().settings.sports;
+    return {
+      enabled: s.enabled,
+      leagues: s.leagues,
+      timezone: s.timezone,
+      apiToken: s.apiToken,
+      running: sports.enabled,
+      catalog: sports.catalog.map(({ key, name }) => ({ key, name })),
+      status: sports.status(),
+    };
+  }
 
   const screenView = (s) => ({
     ...s,
@@ -162,6 +212,15 @@ function createApp(opts = {}) {
         title: v.str(c.title, { max: 200, field: 'Title' }),
         text: v.str(c.text, { max: 50000, field: 'Fixtures' }),
         limit: v.int(c.limit, { min: 1, max: 20, fallback: 8 }),
+      };
+    }
+    if (type === 'scores') {
+      const leagues = Array.isArray(c.leagues) ? c.leagues.filter((k) => typeof k === 'string' && LEAGUE_KEY_RE.test(k)) : [];
+      a.content = {
+        title: v.str(c.title, { max: 200, field: 'Title' }),
+        leagues: [...new Set(leagues)].slice(0, 30),
+        show: v.oneOf(c.show, SHOW_OPTIONS, 'all'),
+        limit: v.int(c.limit, { min: 1, max: 30, fallback: 10 }),
       };
     }
     return a;
@@ -210,6 +269,7 @@ function createApp(opts = {}) {
         fit: a.fit,
         muted: a.muted,
         content: a.content,
+        data: a.type === 'scores' ? sports.events(a.content) : undefined,
         updatedAt: a.updatedAt,
       });
     }
@@ -362,6 +422,7 @@ function createApp(opts = {}) {
       screens: d.screens.map(screenView),
       dashboardUrls: lanUrls(port),
       maxUploadMb: Math.round(maxUploadBytes / 1024 / 1024),
+      sports: sportsView(),
     });
   });
 
@@ -375,6 +436,7 @@ function createApp(opts = {}) {
         d.settings.clubName = clubName;
         d.settings.defaultPlaylistId = defaultPlaylistId;
       });
+      configureSports();
       res.json(publicSettings());
     })
   );
@@ -393,6 +455,41 @@ function createApp(opts = {}) {
         { immediate: true }
       );
       res.set('Set-Cookie', auth.sessionCookie(auth.issueToken(data().settings.sessionSecret), req)).json({ ok: true });
+    })
+  );
+
+  api.put(
+    '/settings/sports',
+    route((req, res) => {
+      const known = new Set(sports.catalog.map((l) => l.key));
+      const leagues = Array.isArray(req.body.leagues) ? [...new Set(req.body.leagues.filter((k) => known.has(k)))] : [];
+      const timezone = v.str(req.body.timezone || 'Europe/London', { max: 60, field: 'Timezone' });
+      try {
+        new Intl.DateTimeFormat('en-GB', { timeZone: timezone });
+      } catch {
+        throw v.bad('Unknown timezone — use a name like Europe/London');
+      }
+      store.mutate((d) => {
+        Object.assign(d.settings.sports, { enabled: v.bool(req.body.enabled, false), leagues, timezone });
+      });
+      configureSports();
+      res.json(sportsView());
+    })
+  );
+
+  api.post(
+    '/settings/sports/token',
+    route((req, res) => {
+      store.touch((d) => { d.settings.sports.apiToken = crypto.randomBytes(24).toString('base64url'); }, { immediate: true });
+      res.json(sportsView());
+    })
+  );
+
+  api.post(
+    '/sports/refresh',
+    route(async (req, res) => {
+      await sports.refresh();
+      res.json(sportsView());
     })
   );
 
@@ -454,7 +551,7 @@ function createApp(opts = {}) {
     '/assets',
     route((req, res) => {
       const type = req.body.type;
-      if (!['url', 'notice', 'menu', 'fixtures'].includes(type)) throw v.bad('Unknown content type');
+      if (!TEXT_TYPES.includes(type)) throw v.bad('Unknown content type');
       const now = new Date().toISOString();
       const asset = { id: newId(), type, ...sanitizeAsset(type, req.body), createdAt: now, updatedAt: now };
       const playlistId = req.body.addToPlaylist;
@@ -616,11 +713,12 @@ function createApp(opts = {}) {
   });
 
   const close = () => {
+    sports.close();
     hub.close();
     store.flush();
   };
 
-  return { app, store, hub, close, dataDir };
+  return { app, store, hub, sports, close, dataDir };
 }
 
 module.exports = { createApp, MEDIA_TYPES, ASSET_TYPES };

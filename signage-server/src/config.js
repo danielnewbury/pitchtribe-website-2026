@@ -30,7 +30,20 @@ export function loadConfig(env = process.env) {
     .filter(Boolean);
   const file = candidates.find((p) => existsSync(p));
   const fromFile = file ? JSON.parse(readFileSync(file, 'utf8')) : {};
-  const config = { ...DEFAULTS, ...fromFile, configFile: file ?? null };
+  return resolveConfig(fromFile, { env, configFile: file ?? null });
+}
+
+/** The leagues shipped in config.example.json — the catalogue the PitchTribe dashboard offers. */
+export function exampleConfig() {
+  return JSON.parse(readFileSync(resolve(ROOT, 'config.example.json'), 'utf8'));
+}
+
+/**
+ * Build a full config from a plain object (used when embedding the server in the
+ * PitchTribe app). Relative `file` paths resolve against `baseDir` (default: this package).
+ */
+export function resolveConfig(fromFile = {}, { env = {}, configFile = null, baseDir = ROOT } = {}) {
+  const config = { ...DEFAULTS, ...fromFile, configFile };
 
   if (env.PORT) config.port = Number(env.PORT);
   if (env.HOST) config.host = env.HOST;
@@ -40,7 +53,7 @@ export function loadConfig(env = process.env) {
   config.publicUrl = config.publicUrl.replace(/\/+$/, '');
 
   // Resolve relative paths (manual sources) against the server root.
-  config.leagues = config.leagues.map((l) => (l.file ? { ...l, file: resolve(ROOT, l.file) } : l));
+  config.leagues = config.leagues.map((l) => (l.file ? { ...l, file: resolve(baseDir, l.file) } : l));
   config.pushTargets = config.pushTargets.filter((t) => t.enabled !== false);
   return config;
 }

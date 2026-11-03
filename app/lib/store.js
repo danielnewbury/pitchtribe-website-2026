@@ -9,6 +9,15 @@ const { EventEmitter } = require('node:events');
 
 const SCHEMA_VERSION = 1;
 
+function defaultSports() {
+  return {
+    enabled: false,
+    leagues: ['eng.1'],
+    timezone: 'Europe/London',
+    apiToken: crypto.randomBytes(24).toString('base64url'),
+  };
+}
+
 function emptyData() {
   return {
     schemaVersion: SCHEMA_VERSION,
@@ -18,6 +27,7 @@ function emptyData() {
       adminHash: '',
       sessionSecret: crypto.randomBytes(32).toString('hex'),
       defaultPlaylistId: null,
+      sports: defaultSports(),
     },
     assets: [],
     playlists: [],
@@ -45,7 +55,9 @@ class Store extends EventEmitter {
     }
     const data = JSON.parse(raw);
     const base = emptyData();
-    return { ...base, ...data, settings: { ...base.settings, ...data.settings } };
+    const settings = { ...base.settings, ...data.settings };
+    settings.sports = { ...base.settings.sports, ...(data.settings && data.settings.sports) };
+    return { ...base, ...data, settings };
   }
 
   writeNow(data = this.data) {

@@ -131,7 +131,7 @@ export function renderDisplay(snapshot, opts = {}) {
   const tick = () => { clock.textContent = new Date().toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', timeZone: ${JSON.stringify(tz)} }); };
   tick(); setInterval(tick, 10000);
   ${opts.live === false ? '' : `if ('EventSource' in window) {
-    const es = new EventSource('/api/stream');
+    const es = new EventSource('api/stream');
     es.addEventListener('update', () => location.reload());
   }
   // Safety net if the stream drops: full reload every 10 minutes.

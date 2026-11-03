@@ -48,7 +48,7 @@
   let renderToken = 0;
 
   const signature = (it) =>
-    JSON.stringify([it.id, it.type, it.src, it.url, it.content, it.fit, it.muted, it.duration, it.updatedAt]);
+    JSON.stringify([it.id, it.type, it.src, it.url, it.content, it.fit, it.muted, it.duration, it.updatedAt, it.data]);
   const playable = () => (manifest ? manifest.items.filter((it) => PTSchedule.isLive(it)) : []);
 
   // ---------------------------------------------------------------- loading
@@ -286,10 +286,68 @@
         slide.append(panel);
         break;
       }
+      case 'scores': {
+        const panel = el('section', 'panel scores');
+        panel.append(el('div', 'kicker', club), el('h1', '', c.title || item.name));
+        const fit = el('div', 'fit');
+        if (!item.data) {
+          fit.append(el('p', 'empty-note', 'Sports feeds are switched off — turn them on in Settings.'));
+        } else if (!item.data.length) {
+          fit.append(el('p', 'empty-note', c.show === 'live' ? 'No matches in progress right now.' : 'No matches to show right now.'));
+        } else {
+          let league = null;
+          let list = null;
+          for (const e of item.data) {
+            if (e.leagueName !== league) {
+              league = e.leagueName;
+              fit.append(el('h2', 'league', league));
+              list = el('ul', 'score-list');
+              fit.append(list);
+            }
+            list.append(scoreRow(e));
+          }
+        }
+        panel.append(fit);
+        slide.append(panel);
+        break;
+      }
       default:
         throw new Error(`Unknown type ${item.type}`);
     }
     return { el: slide, ready };
+  }
+
+  function teamCell(t, side) {
+    const cell = el('span', `team ${side}`);
+    const name = el('span', 'team-name', t.name);
+    if (t.logo && /^https:\/\//.test(t.logo)) {
+      const img = el('img', 'logo');
+      img.alt = '';
+      img.src = t.logo;
+      img.addEventListener('error', () => img.remove());
+      if (side === 'home') cell.append(name, img);
+      else cell.append(img, name);
+    } else {
+      cell.append(name);
+    }
+    return cell;
+  }
+
+  function scoreRow(e) {
+    const li = el('li', `score-row ${e.status}`);
+    const start = e.start ? new Date(e.start) : null;
+    const hhmm = start ? start.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' }) : '';
+    let mid;
+    if (e.status === 'scheduled') mid = el('span', 'mid vs', hhmm || 'v');
+    else if (e.status === 'postponed') mid = el('span', 'mid vs', 'P–P');
+    else mid = el('span', 'mid score', `${e.home.score ?? '-'} – ${e.away.score ?? '-'}`);
+    let badge;
+    if (e.status === 'live') badge = el('span', 'tag live', e.statusText || 'LIVE');
+    else if (e.status === 'final') badge = el('span', 'tag final', e.statusText || 'FT');
+    else if (e.status === 'postponed') badge = el('span', 'tag pp', 'Postponed');
+    else badge = el('span', 'tag when', start ? PTFormats.formatWhen({ date: start, hasTime: false }) : '');
+    li.append(badge, teamCell(e.home, 'home'), mid, teamCell(e.away, 'away'));
+    return li;
   }
 
   /** Shrink a text slide's font until its content fits on screen. */

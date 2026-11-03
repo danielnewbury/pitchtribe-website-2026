@@ -41,7 +41,7 @@ function authorized(req, token) {
 }
 
 /**
- * Routes:
+ * Routes (relative to wherever the handler is mounted — `/` standalone, `/sports` inside the app):
  *   GET  /display            full-screen auto-rotating pamphlet (?leagues=eng.1,ucl&theme=light&rotate=10)
  *   GET  /api/health         status
  *   GET  /api/leagues        league list + status
@@ -52,7 +52,7 @@ function authorized(req, token) {
  *   POST /api/push           push to signage targets (Bearer token if apiToken set)
  *   POST /mcp                MCP over Streamable HTTP (Bearer token if apiToken set)
  */
-export function createHttpServer({ store, config, push, mcp, log = console.error }) {
+export function createRequestHandler({ store, config, push, mcp, log = console.error }) {
   const clients = new Set();
   store.on('update', () => {
     for (const res of clients) res.write(`event: update\ndata: ${JSON.stringify({ updatedAt: store.updatedAt })}\n\n`);
@@ -60,7 +60,7 @@ export function createHttpServer({ store, config, push, mcp, log = console.error
   const keepAlive = setInterval(() => { for (const res of clients) res.write(': ping\n\n'); }, 25_000);
   keepAlive.unref();
 
-  const server = createServer(async (req, res) => {
+  const handler = async (req, res) => {
     const url = new URL(req.url, 'http://localhost');
     const route = `${req.method} ${url.pathname.replace(/\/+$/, '') || '/'}`;
     try {
@@ -131,11 +131,22 @@ export function createHttpServer({ store, config, push, mcp, log = console.error
       log(`[http] ${route}: ${err.message}`);
       if (!res.headersSent) send(res, err.status ?? 500, { error: err.message });
     }
-  });
+  };
 
-  server.on('close', () => {
+  handler.clients = clients;
+  /** Stop keep-alives and end open streams (call when shutting down). */
+  handler.close = () => {
     clearInterval(keepAlive);
     for (const res of clients) res.end();
-  });
+    clients.clear();
+  };
+  return handler;
+}
+
+/** Standalone HTTP server around createRequestHandler(). */
+export function createHttpServer(ctx) {
+  const handler = createRequestHandler(ctx);
+  const server = createServer(handler);
+  server.on('close', handler.close);
   return server;
 }

@@ -6,9 +6,14 @@ const os = require('node:os');
 const path = require('node:path');
 const { createApp } = require('../lib/app');
 
+const espnFixture = JSON.parse(
+  fs.readFileSync(path.join(__dirname, '..', '..', 'signage-server', 'test', 'fixtures', 'espn-eng1.json'), 'utf8')
+);
+const fakeEspn = async () => ({ ok: true, status: 200, json: async () => espnFixture });
+
 async function startServer() {
   const dataDir = fs.mkdtempSync(path.join(os.tmpdir(), 'pitchtribe-test-'));
-  const ctx = createApp({ dataDir, maxUploadMb: 1 });
+  const ctx = createApp({ dataDir, maxUploadMb: 1, sportsFetch: fakeEspn, log: () => {} });
   const server = await new Promise((resolve) => {
     const s = ctx.app.listen(0, '127.0.0.1', () => resolve(s));
   });
@@ -208,4 +213,76 @@ test('screens receive a push when content changes', async (t) => {
   assert.equal(r.body.delivered, 1);
   r = await s.call('POST', '/api/screens/lounge/command', { command: 'format-disk' });
   assert.equal(r.status, 400);
+});
+
+test('sports engine runs inside the app: settings, /sports routes, MCP auth, live-score slides', async (t) => {
+  const s = await startServer();
+  t.after(s.stop);
+  await s.call('POST', '/api/auth/setup', { clubName: 'Riverside FC', password: 'correct horse' });
+  await s.ctx.sports.ready;
+
+  let r = await s.call('GET', '/api/state');
+  assert.equal(r.body.sports.enabled, false);
+  assert.ok(r.body.sports.catalog.some((l) => l.key === 'eng.1'), 'league catalogue comes from signage-server');
+  assert.ok(!r.body.sports.catalog.some((l) => l.key === 'club'), 'manual club league is not offered');
+  const token = r.body.sports.apiToken;
+  assert.ok(token.length >= 24);
+
+  r = await s.call('GET', '/feeds/api/health');
+  assert.equal(r.status, 404, 'off until enabled');
+
+  r = await s.call('PUT', '/api/settings/sports', { enabled: true, leagues: ['eng.1', 'not-a-league'], timezone: 'Europe/London' });
+  assert.equal(r.status, 200);
+  assert.deepEqual(r.body.leagues, ['eng.1']);
+  assert.equal(r.body.running, true);
+  r = await s.call('PUT', '/api/settings/sports', { enabled: true, leagues: ['eng.1'], timezone: 'Mars/Olympus' });
+  assert.equal(r.status, 400);
+
+  r = await s.call('POST', '/api/sports/refresh', {});
+  assert.equal(r.status, 200);
+  assert.ok(r.body.status[0].events > 0);
+
+  // The engine's own routes, served by the app.
+  r = await s.call('GET', '/feeds/api/health');
+  assert.equal(r.body.ok, true);
+  r = await s.call('GET', '/feeds/display');
+  assert.match(r.headers.get('content-type'), /text\/html/);
+  assert.match(r.body, /new EventSource\('api\/stream'\)/, 'stream URL is relative so it works under /feeds');
+  assert.match(r.headers.get('content-security-policy'), /script-src 'self' 'unsafe-inline'/);
+
+  // MCP needs the token (or a dashboard session).
+  const rpc = { jsonrpc: '2.0', id: 1, method: 'tools/list' };
+  s.clearCookie();
+  r = await s.call('POST', '/feeds/mcp', rpc, { headers: { 'x-pitchtribe': '' } });
+  assert.equal(r.status, 401);
+  r = await s.call('POST', '/feeds/mcp', rpc, { headers: { authorization: `Bearer ${token}`, 'x-pitchtribe': '' } });
+  assert.equal(r.status, 200);
+  assert.ok(r.body.result.tools.some((tool) => tool.name === 'get_live_scores'));
+  await s.call('POST', '/api/auth/login', { password: 'correct horse' });
+
+  // A "Live scores" slide carries the data in the screen manifest.
+  r = await s.call('POST', '/api/assets', {
+    type: 'scores', name: 'Premier League', content: { title: 'Premier League', leagues: ['eng.1', '<bad>'], show: 'all', limit: 5 },
+    addToPlaylist: (await s.call('GET', '/api/state')).body.playlists[0].id,
+  });
+  assert.equal(r.status, 201);
+  assert.deepEqual(r.body.content.leagues, ['eng.1']);
+  r = await s.call('GET', '/api/player/bar-tv/manifest');
+  const slide = r.body.items.find((i) => i.type === 'scores');
+  assert.ok(slide.data.length > 0 && slide.data.length <= 5);
+  assert.ok(slide.data[0].home.name && 'score' in slide.data[0].home);
+
+  // Score changes are pushed to screens.
+  let pushed = 0;
+  const orig = s.ctx.hub.broadcast.bind(s.ctx.hub);
+  s.ctx.hub.broadcast = (event, data) => { if (data && data.sports) pushed += 1; return orig(event, data); };
+  s.ctx.sports.emit('update');
+  assert.equal(pushed, 1);
+
+  // Switching off removes the data and the routes.
+  await s.call('PUT', '/api/settings/sports', { enabled: false, leagues: ['eng.1'] });
+  r = await s.call('GET', '/api/player/bar-tv/manifest');
+  assert.equal(r.body.items.find((i) => i.type === 'scores').data, null);
+  r = await s.call('GET', '/feeds/api/health');
+  assert.equal(r.status, 404);
 });

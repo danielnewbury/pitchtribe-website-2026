@@ -1,12 +1,12 @@
-name: Signage app
+name: Signage app + server
 
 on:
   push:
     branches: [main]
-    paths: ['app/**', 'deploy/**', '.github/workflows/app.yml']
+    paths: ['app/**', 'signage-server/**', 'deploy/**', '.github/workflows/app.yml']
   pull_request:
     branches: [main]
-    paths: ['app/**', 'deploy/**', '.github/workflows/app.yml']
+    paths: ['app/**', 'signage-server/**', 'deploy/**', '.github/workflows/app.yml']
   workflow_dispatch:
 
 permissions:
@@ -14,7 +14,7 @@ permissions:
 
 jobs:
   test:
-    name: Test signage app
+    name: Test signage package
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -33,7 +33,11 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Run tests
+      - name: Test signage-server (sports engine)
+        working-directory: signage-server
+        run: npm test
+
+      - name: Test app (with the engine embedded)
         run: npm test
 
       - name: Check deploy scripts

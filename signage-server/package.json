@@ -12,5 +12,15 @@
     "start": "node src/index.js",
     "mcp": "node src/mcp-stdio.js",
     "test": "node --test test/*.test.js"
-  }
+  },
+  "main": "src/service.js",
+  "exports": {
+    ".": "./src/service.js",
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "src",
+    "data",
+    "config.example.json"
+  ]
 }

@@ -39,6 +39,7 @@
     notice: 'M4 10v4h3l6 4V6L7 10z M16 9a4 4 0 0 1 0 6 M18.5 6.5a7.5 7.5 0 0 1 0 11',
     menu: 'M5 4h14v16H5z M8 8h8 M8 12h8 M8 16h5',
     fixtures: 'M4 6h16v14H4z M4 10h16 M8 3v5 M16 3v5 M8 14h3',
+    scores: 'M8 21h8 M12 17v4 M7 4h10v5a5 5 0 0 1-10 0z M7 6H4v1a3 3 0 0 0 3 3 M17 6h3v1a3 3 0 0 1-3 3',
     content: 'M4 4h7v7H4z M13 4h7v7h-7z M4 13h7v7H4z M13 13h7v7h-7z',
     playlist: 'M4 6h12 M4 12h12 M4 18h8 M17 15l4 2.5-4 2.5z',
     screen: 'M3 5h18v12H3z M8 21h8 M12 17v4',
@@ -84,7 +85,7 @@
     return svg;
   }
 
-  const TYPE_LABEL = { image: 'Image', video: 'Video', url: 'Web page', notice: 'Notice', menu: 'Menu board', fixtures: 'Fixtures' };
+  const TYPE_LABEL = { image: 'Image', video: 'Video', url: 'Web page', notice: 'Notice', menu: 'Menu board', fixtures: 'Fixtures', scores: 'Live scores' };
   const STATUS_LABEL = { live: 'Live now', scheduled: 'Scheduled', expired: 'Expired', 'off-hours': 'Off-hours', disabled: 'Off' };
   const NOTICE_STYLES = [
     ['default', 'Navy', '#0e1e30'],
@@ -330,7 +331,7 @@
   function viewContent() {
     const fileInput = h('input', { type: 'file', multiple: true, accept: 'image/*,video/mp4,video/webm,video/quicktime', hidden: true, onchange: () => { startUploads([...fileInput.files]); fileInput.value = ''; } });
 
-    const filters = [['all', 'All'], ['image', 'Images'], ['video', 'Videos'], ['notice', 'Notices'], ['menu', 'Menus'], ['fixtures', 'Fixtures'], ['url', 'Web pages']];
+    const filters = [['all', 'All'], ['image', 'Images'], ['video', 'Videos'], ['notice', 'Notices'], ['menu', 'Menus'], ['fixtures', 'Fixtures'], ['scores', 'Scores'], ['url', 'Web pages']];
     const list = state.assets
       .filter((a) => contentFilter === 'all' || a.type === contentFilter)
       .filter((a) => !contentSearch || a.name.toLowerCase().includes(contentSearch.toLowerCase()))
@@ -358,6 +359,7 @@
           h('button', { class: 'btn', type: 'button', onclick: () => editAsset({ type: 'notice' }) }, icon('notice'), 'Notice'),
           h('button', { class: 'btn', type: 'button', onclick: () => editAsset({ type: 'menu' }) }, icon('menu'), 'Menu'),
           h('button', { class: 'btn', type: 'button', onclick: () => editAsset({ type: 'fixtures' }) }, icon('fixtures'), 'Fixtures'),
+          h('button', { class: 'btn', type: 'button', onclick: () => editAsset({ type: 'scores' }) }, icon('scores'), 'Live scores'),
           h('button', { class: 'btn', type: 'button', onclick: () => editAsset({ type: 'url' }) }, icon('url'), 'Web page'),
           fileInput)),
       h('div', { class: 'dropzone' }, 'Drop photos or videos here to upload', h('br'), h('span', { class: 'small' }, `JPG, PNG, GIF, WebP, SVG, MP4, WebM · up to ${state.maxUploadMb} MB each`)),
@@ -431,14 +433,14 @@
     const isNew = !asset.id;
     const type = asset.type;
     const c = asset.content || {};
-    const defaults = { url: 30, notice: 12, menu: 20, fixtures: 15 };
+    const defaults = { url: 30, notice: 12, menu: 20, fixtures: 15, scores: 15 };
     const f = {}; // field elements
     const body = h('form', { class: 'form-grid', onsubmit: (e) => { e.preventDefault(); save(); } });
 
     if (type === 'image') body.append(h('img', { class: 'preview-media', src: asset.src, alt: '' }));
     if (type === 'video') body.append(h('video', { class: 'preview-media', src: asset.src, controls: true, muted: true, preload: 'metadata' }));
 
-    f.name = h('input', { type: 'text', value: asset.name || '', maxlength: 120, required: true, placeholder: { notice: 'e.g. AGM notice', menu: 'e.g. Bar menu', fixtures: 'e.g. First team fixtures', url: 'e.g. League table' }[type] });
+    f.name = h('input', { type: 'text', value: asset.name || '', maxlength: 120, required: true, placeholder: { notice: 'e.g. AGM notice', menu: 'e.g. Bar menu', fixtures: 'e.g. First team fixtures', scores: 'e.g. Premier League scores', url: 'e.g. League table' }[type] });
     f.duration = h('input', { type: 'number', min: type === 'video' ? 0 : 1, max: 86400, value: asset.duration ?? defaults[type] ?? 10, required: true });
     body.append(h('div', { class: 'row-2' },
       h('label', { class: 'field' }, 'Name', f.name),
@@ -492,6 +494,28 @@
         body.append(h('label', { class: 'field' }, 'Show at most', f.limit));
       }
     }
+    if (type === 'scores') {
+      const sp = state.sports;
+      f.title = h('input', { type: 'text', value: c.title || '', maxlength: 200, placeholder: 'Latest scores' });
+      const chosen = new Set(c.leagues || []);
+      const available = sp.catalog.filter((l) => sp.enabled && sp.leagues.includes(l.key));
+      f.leagues = { get value() { return [...chosen]; } };
+      f.show = h('select', {}, [['all', 'Live, results and fixtures'], ['live', 'Live matches only'], ['results', 'Latest results'], ['fixtures', 'Upcoming fixtures']]
+        .map(([v, l]) => h('option', { value: v, selected: (c.show || 'all') === v }, l)));
+      f.limit = h('input', { type: 'number', min: 1, max: 30, value: c.limit || 10 });
+      body.append(h('label', { class: 'field' }, 'Heading on screen', f.title));
+      body.append(available.length
+        ? h('div', { class: 'field' }, 'Competitions',
+            h('div', { class: 'chips' }, available.map((l) => {
+              const chip = h('button', { class: 'chip', type: 'button', 'aria-pressed': String(chosen.has(l.key)),
+                onclick: () => { chosen.has(l.key) ? chosen.delete(l.key) : chosen.add(l.key); chip.setAttribute('aria-pressed', String(chosen.has(l.key))); } }, l.name);
+              return chip;
+            })),
+            h('span', { class: 'hint' }, 'None selected = all the leagues switched on in Settings.'))
+        : h('p', { class: 'help' }, 'Sports feeds are switched off. ', h('a', { href: '#/settings', onclick: () => m.close() }, 'Choose leagues in Settings'), ' — this slide fills in once they are on.'));
+      body.append(h('div', { class: 'row-2' }, h('label', { class: 'field' }, 'Show', f.show), h('label', { class: 'field' }, 'At most (matches)', f.limit)));
+      body.append(h('p', { class: 'small muted' }, 'Scores update on screen by themselves: every minute during live matches, every 10 minutes otherwise.'));
+    }
     if (isNew && state.playlists.length) {
       f.addTo = h('select', {}, h('option', { value: '' }, 'Don’t add yet'),
         state.playlists.map((p, i) => h('option', { value: p.id, selected: i === 0 }, p.name)));
@@ -525,6 +549,7 @@
       if (type === 'notice') payload.content = { title: f.title.value, body: f.body.value, style: f.style.value };
       if (type === 'menu') payload.content = { title: f.title.value, text: f.text.value };
       if (type === 'fixtures') payload.content = { title: f.title.value, text: f.text.value, limit: Number(f.limit.value) };
+      if (type === 'scores') payload.content = { title: f.title.value, leagues: f.leagues.value, show: f.show.value, limit: Number(f.limit.value) };
       saveBtn.disabled = true;
       try {
         if (isNew) await api('POST', '/assets', { type, ...payload, addToPlaylist: f.addTo?.value || undefined });
@@ -973,6 +998,8 @@ ${d(18, '14:00')} | Riverside FC v Northdale Athletic | County Cup | Home`;
       h('label', { class: 'field' }, 'New password', next, h('span', { class: 'hint' }, 'At least 8 characters.')),
       h('div', {}, h('button', { class: 'btn', type: 'submit' }, 'Change password')));
 
+    const sports = sportsCard();
+
     const about = h('div', { class: 'card panel-box stack', style: 'gap:10px' },
       h('h2', {}, 'About'),
       h('dl', { class: 'kv' },
@@ -983,7 +1010,63 @@ ${d(18, '14:00')} | Riverside FC v Northdale Athletic | County Cup | Home`;
 
     return shell('settings',
       h('div', { class: 'page-head' }, h('div', {}, h('h1', {}, 'Settings'))),
-      h('div', { class: 'stack', style: 'max-width:640px' }, general, pw, about));
+      h('div', { class: 'stack', style: 'max-width:640px' }, general, sports, pw, about));
+  }
+
+  function sportsCard() {
+    const sp = state.sports;
+    const chosen = new Set(sp.leagues);
+    const enabled = h('input', { type: 'checkbox', checked: sp.enabled });
+    const tz = h('input', { type: 'text', value: sp.timezone, maxlength: 60 });
+    const status = new Map(sp.status.map((st) => [st.key, st]));
+    const copyBtn = (text) => h('button', { class: 'btn sm', type: 'button', onclick: () => navigator.clipboard?.writeText(text).then(() => toast('Copied'), () => toast('Copy failed — select the text instead', 'error')) }, icon('copy'), 'Copy');
+    const sportsBase = `${baseUrl()}/feeds`;
+
+    const form = h('form', {
+      class: 'card panel-box form-grid',
+      onsubmit: async (e) => {
+        e.preventDefault();
+        try {
+          state.sports = await api('PUT', '/settings/sports', { enabled: enabled.checked, leagues: [...chosen], timezone: tz.value });
+          render();
+          toast(enabled.checked ? 'Sports feeds on — fetching scores now' : 'Sports feeds off');
+          if (enabled.checked) setTimeout(async () => { await refresh().catch(() => {}); if (currentView === 'settings') render(); }, 4000);
+        } catch (err) { toast(err.message, 'error'); }
+      },
+    },
+      h('h2', {}, 'Sports feeds'),
+      h('p', { class: 'small muted' }, 'Fixtures, live scores and results from public feeds, for “Live scores” slides. Needs an internet connection.'),
+      h('label', { class: 'switch' }, enabled, 'Fetch sports scores'),
+      h('div', { class: 'field' }, 'Competitions',
+        h('div', { class: 'chips' }, sp.catalog.map((l) => {
+          const chip = h('button', { class: 'chip', type: 'button', 'aria-pressed': String(chosen.has(l.key)),
+            onclick: () => { chosen.has(l.key) ? chosen.delete(l.key) : chosen.add(l.key); chip.setAttribute('aria-pressed', String(chosen.has(l.key))); } }, l.name);
+          return chip;
+        }))),
+      h('label', { class: 'field' }, 'Timezone', tz, h('span', { class: 'hint' }, 'For kick-off times on the sports display page, e.g. Europe/London.')),
+      sp.running && h('dl', { class: 'kv' }, sp.catalog.filter((l) => status.has(l.key)).map((l) => {
+        const st = status.get(l.key);
+        return [h('dt', {}, l.name), h('dd', {}, st.error ? `⚠ ${st.error}` : `${st.events} matches${st.live ? ` · ${st.live} live` : ''} · updated ${st.fetchedAt ? ago(Date.parse(st.fetchedAt)) : 'pending'}`)];
+      })),
+      h('div', { class: 'actions' },
+        h('button', { class: 'btn primary', type: 'submit' }, 'Save'),
+        sp.running && h('button', { class: 'btn', type: 'button', onclick: async () => {
+          try { state.sports = await api('POST', '/sports/refresh', {}); render(); toast('Scores refreshed'); } catch (err) { toast(err.message, 'error'); }
+        } }, icon('refresh'), 'Refresh now')),
+      sp.running && h('details', { class: 'help' },
+        h('summary', {}, 'Display page, API and AI assistants (MCP)'),
+        h('div', { class: 'stack', style: 'margin-top:10px;gap:10px' },
+          h('p', {}, 'A ready-made rotating scores page any screen can open, a JSON API, and an MCP endpoint so AI assistants can read scores and trigger refreshes.'),
+          h('div', { class: 'copy-row' }, h('code', {}, `${sportsBase}/display`), copyBtn(`${sportsBase}/display`)),
+          h('div', { class: 'copy-row' }, h('code', {}, `${sportsBase}/api/snapshot`), copyBtn(`${sportsBase}/api/snapshot`)),
+          h('div', { class: 'copy-row' }, h('code', {}, `${sportsBase}/mcp`), copyBtn(`${sportsBase}/mcp`)),
+          h('p', {}, 'MCP and other POST requests need this bearer token:'),
+          h('div', { class: 'copy-row' }, h('code', {}, sp.apiToken), copyBtn(sp.apiToken),
+            h('button', { class: 'btn sm', type: 'button', onclick: async () => {
+              if (!(await confirmDialog('New token?', 'Anything using the current token will stop working until it is updated.', { confirmLabel: 'Generate', danger: false }))) return;
+              try { state.sports = await api('POST', '/settings/sports/token', {}); render(); toast('New token generated'); } catch (err) { toast(err.message, 'error'); }
+            } }, icon('refresh'), 'New')))));
+    return form;
   }
 
   // ================================================================ router

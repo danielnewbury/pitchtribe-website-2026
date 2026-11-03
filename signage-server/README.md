@@ -13,6 +13,20 @@ It has no dependencies and needs Node 20 or later. It runs on a Raspberry Pi 5.
    every 60 s when live ┘                   └─► MCP              (stdio, or POST /mcp)
 ```
 
+## Two ways to run it
+
+- **Inside the PitchTribe app (recommended).** `app/` depends on this package (`file:../signage-server`).
+  It runs the engine in the same process and serves every route below under **`/feeds`**, for example
+  `/feeds/display`, `/feeds/api/snapshot` and `/feeds/mcp`. Leagues are chosen in the dashboard
+  (**Settings → Sports feeds**). Screens show scores as **Live scores** slides in normal playlists.
+  POST routes need the dashboard's sports API token, shown on that settings page. `deploy/install.sh`
+  installs both packages together.
+- **Standalone**, as described in the rest of this file: `npm start` on its own port, configured with
+  `config.json`.
+
+As a library, `import { createSportsService, resolveConfig } from 'pitchtribe-signage-server'` returns
+the store, the MCP handler and an HTTP `handler(req, res)` you can mount anywhere.
+
 ## Quick start
 
 ```bash

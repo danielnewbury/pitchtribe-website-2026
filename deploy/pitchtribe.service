@@ -1,16 +1,16 @@
 [Unit]
-Description=PitchTribe signage server (dashboard + player API)
+Description=PitchTribe signage (dashboard, player API, sports engine)
 After=network.target
 
 [Service]
 Type=simple
 User=pitchtribe
 Group=pitchtribe
-WorkingDirectory=/opt/pitchtribe
+WorkingDirectory=/opt/pitchtribe/app
 Environment=NODE_ENV=production
 Environment=PORT=@PORT@
 Environment=DATA_DIR=/var/lib/pitchtribe
-ExecStart=/usr/bin/env node /opt/pitchtribe/server.js
+ExecStart=/usr/bin/env node /opt/pitchtribe/app/server.js
 Restart=always
 RestartSec=3
 

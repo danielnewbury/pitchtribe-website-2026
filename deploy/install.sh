@@ -5,7 +5,8 @@
 #
 # Installs:
 #   - Node.js 22 (NodeSource) if a recent Node isn't present
-#   - the PitchTribe server in /opt/pitchtribe, data in /var/lib/pitchtribe
+#   - PitchTribe in /opt/pitchtribe (app/ + the signage-server sports engine it embeds),
+#     data in /var/lib/pitchtribe
 #   - pitchtribe.service        — dashboard + API on port 80
 #   - pitchtribe-kiosk.service  — full-screen Chromium (in the cage Wayland
 #                                 kiosk) on the HDMI output, showing this Pi's screen
@@ -29,7 +30,7 @@ log() { printf '\033[1;32m==>\033[0m %s\n' "$*"; }
 die() { printf '\033[1;31mError:\033[0m %s\n' "$*" >&2; exit 1; }
 
 [[ $EUID -eq 0 ]] || die "run with sudo"
-[[ -f "$SRC_DIR/app/server.js" ]] || die "run this script from a PitchTribe checkout (app/server.js not found)"
+[[ -f "$SRC_DIR/app/server.js" && -f "$SRC_DIR/signage-server/package.json" ]] || die "run this script from a PitchTribe checkout (app/ and signage-server/ not found)"
 command -v apt-get >/dev/null || die "this installer supports Debian / Raspberry Pi OS only"
 
 export DEBIAN_FRONTEND=noninteractive
@@ -59,10 +60,12 @@ if [[ -z "$SERVER" ]]; then
   id -u "$SVC_USER" >/dev/null 2>&1 || useradd --system --home "$DATA_DIR" --shell /usr/sbin/nologin "$SVC_USER"
   install -d -o "$SVC_USER" -g "$SVC_USER" -m 0750 "$DATA_DIR"
   rm -rf "$APP_DIR.new"
-  mkdir -p "$APP_DIR.new"
-  cp -a "$SRC_DIR/app/." "$APP_DIR.new/"
-  rm -rf "$APP_DIR.new/data" "$APP_DIR.new/node_modules"
-  (cd "$APP_DIR.new" && npm ci --omit=dev --no-audit --no-fund)
+  mkdir -p "$APP_DIR.new/app" "$APP_DIR.new/signage-server"
+  cp -a "$SRC_DIR/app/." "$APP_DIR.new/app/"
+  cp -a "$SRC_DIR/signage-server/." "$APP_DIR.new/signage-server/"
+  rm -rf "$APP_DIR.new/app/data" "$APP_DIR.new/app/node_modules" "$APP_DIR.new/signage-server/config.json"
+  # app depends on ../signage-server (file: dependency, linked by npm)
+  (cd "$APP_DIR.new/app" && npm ci --omit=dev --no-audit --no-fund)
   rm -rf "$APP_DIR.old"
   [[ -d "$APP_DIR" ]] && mv "$APP_DIR" "$APP_DIR.old"
   mv "$APP_DIR.new" "$APP_DIR"

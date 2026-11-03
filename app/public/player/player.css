@@ -199,6 +199,39 @@ html, body {
   margin-top: 0.3em;
   text-align: center;
 }
+/* Live scores */
+.scores h2.league {
+  font-size: 0.7em;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--amber);
+  margin: 0.4em 0 0.5em;
+}
+.scores h2.league:first-child { margin-top: 0; }
+.score-list { list-style: none; display: flex; flex-direction: column; gap: 0.35em; margin-bottom: 0.6em; }
+.score-row {
+  display: grid;
+  grid-template-columns: 6.5em 1fr auto 1fr;
+  align-items: center;
+  gap: 0.8em;
+  padding: 0.4em 0.8em;
+  border: 1px solid var(--line);
+  border-radius: 0.5em;
+  background: rgb(14 30 48 / 0.7);
+}
+.score-row .team { display: flex; align-items: center; gap: 0.5em; font-weight: 700; min-width: 0; }
+.score-row .team.home { justify-content: flex-end; text-align: right; }
+.score-row .team-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.score-row .logo { width: 1.3em; height: 1.3em; object-fit: contain; flex: none; }
+.score-row .mid { min-width: 4.2em; text-align: center; font-weight: 800; font-variant-numeric: tabular-nums; }
+.score-row .mid.vs { color: var(--muted); font-weight: 600; font-size: 0.85em; }
+.score-row.live { border-color: var(--alert); background: rgb(255 93 93 / 0.08); }
+.score-row.live .mid { color: #fff; }
+.tag { font-size: 0.55em; font-weight: 800; letter-spacing: 0.06em; text-transform: uppercase; padding: 0.3em 0.6em; border-radius: 0.4em; text-align: center; background: var(--surface-2); color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.tag.live { background: var(--alert); color: #fff; }
+.tag.final { background: rgb(44 230 168 / 0.15); color: var(--accent); }
+.tag.pp { background: rgb(247 201 75 / 0.15); color: var(--amber); }
+
 .empty-note { color: var(--muted); font-size: 1.1em; }
 
 /* Chrome --------------------------------------------------------------- */
