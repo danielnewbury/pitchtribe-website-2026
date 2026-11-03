@@ -1,0 +1,45 @@
+name: Signage app + server
+
+on:
+  push:
+    branches: [main]
+    paths: ['app/**', 'signage-server/**', 'deploy/**', '.github/workflows/app.yml']
+  pull_request:
+    branches: [main]
+    paths: ['app/**', 'signage-server/**', 'deploy/**', '.github/workflows/app.yml']
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    name: Test signage package
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: app
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+          cache-dependency-path: app/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Test signage-server (sports engine)
+        working-directory: signage-server
+        run: npm test
+
+      - name: Test app (with the engine embedded)
+        run: npm test
+
+      - name: Check deploy scripts
+        working-directory: deploy
+        run: bash -n install.sh && bash -n kiosk.sh

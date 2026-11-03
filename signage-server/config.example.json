@@ -1,0 +1,78 @@
+{
+  "port": 8090,
+  "host": "0.0.0.0",
+  "publicUrl": "http://signage.local:8090",
+  "apiToken": "",
+  "title": "Sports Centre",
+  "timezone": "Europe/London",
+  "daysBack": 3,
+  "daysAhead": 7,
+  "refreshMinutes": 10,
+  "liveRefreshSeconds": 60,
+  "rotateSeconds": 15,
+  "rowsPerPage": 10,
+  "weather": {
+    "place": "London",
+    "latitude": 51.5072,
+    "longitude": -0.1276,
+    "windUnit": "mph"
+  },
+  "widgets": {
+    "wikipedia": true
+  },
+  "leagues": [
+    {
+      "key": "eng.1",
+      "source": "espn",
+      "path": "soccer/eng.1",
+      "name": "Premier League"
+    },
+    {
+      "key": "eng.2",
+      "source": "espn",
+      "path": "soccer/eng.2",
+      "name": "Championship"
+    },
+    {
+      "key": "sco.1",
+      "source": "espn",
+      "path": "soccer/sco.1",
+      "name": "Scottish Premiership"
+    },
+    {
+      "key": "ucl",
+      "source": "espn",
+      "path": "soccer/uefa.champions",
+      "name": "Champions League"
+    },
+    {
+      "key": "nfl",
+      "source": "espn",
+      "path": "football/nfl",
+      "name": "NFL"
+    },
+    {
+      "key": "nba",
+      "source": "espn",
+      "path": "basketball/nba",
+      "name": "NBA"
+    },
+    {
+      "key": "club",
+      "source": "manual",
+      "file": "data/club-fixtures.json",
+      "name": "Our Club"
+    }
+  ],
+  "pushTargets": [
+    {
+      "name": "example-webhook",
+      "enabled": false,
+      "url": "https://signage.example.com/api/content",
+      "format": "json",
+      "headers": {
+        "Authorization": "Bearer CHANGE_ME"
+      }
+    }
+  ]
+}

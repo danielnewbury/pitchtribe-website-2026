@@ -25,3 +25,9 @@ dist/
 # Cloudflare / Wrangler
 .wrangler/
 .dev.vars
+
+# Signage app runtime data (database + uploaded media)
+app/data/
+
+# Signage server local config (may contain tokens)
+signage-server/config.json

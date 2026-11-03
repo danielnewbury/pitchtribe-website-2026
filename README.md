@@ -9,7 +9,13 @@ from any device on the club's own network.
 
 **Live at [pitchtribe.media](https://pitchtribe.media).**
 
-This repository contains the **website only** — no signage application code lives here.
+This repository contains the website and the signage software, which installs on a Pi as one package
+with `deploy/install.sh`:
+
+- [`app/`](app/README.md): the signage app. A Node.js server with a management dashboard and a kiosk
+  player. It hosts the sports engine below at `/sports`.
+- [`signage-server/`](signage-server/README.md): the sports engine. It collects fixtures, live scores and
+  results (display page, JSON API, webhook push, MCP). The app uses it as a library, and it can also run on its own.
 
 ## Hosting
 
@@ -37,7 +43,11 @@ its own apex record and its email routing (MX/SPF/DKIM) untouched.
 | `scripts/fingerprint.mjs` | Content-hashes built assets and rewrites HTML references |
 | `wrangler.toml` | Pages project config (`pages_build_output_dir = "./dist"`) |
 | `.github/workflows/deploy.yml` | CI: build on pull requests, build and deploy on push to `main` |
+| `signage-server/` | Sports fixtures/scores server: display page, JSON API, webhook push, MCP. Not part of the site build |
 | `dist/` | Build output (git-ignored) |
+| `app/` | Signage app: dashboard, player and server — see [`app/README.md`](app/README.md) |
+| `deploy/` | Raspberry Pi installer, systemd units and kiosk launcher for the app |
+| `.github/workflows/app.yml` | CI: tests the signage app when `app/` or `deploy/` change |
 
 ## Local development
 
