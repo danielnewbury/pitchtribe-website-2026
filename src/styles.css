@@ -1,6 +1,10 @@
 /* PitchTribe — Tailwind v4 entry point.
    Compiled by `npm run build:css` into dist/assets/app.css. */
-@import "tailwindcss";
+/* source(none) disables Tailwind's automatic content detection, which otherwise
+   scans every non-ignored file in the repo and harvests ordinary prose as class
+   names (README, package.json and CI YAML were contributing .visible, .contents,
+   .inline and .static). All real markup lives in html/, so scan only that. */
+@import "tailwindcss" source(none);
 
 /* Scan the static root for class names. */
 @source "../html";
