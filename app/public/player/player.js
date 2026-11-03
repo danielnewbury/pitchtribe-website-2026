@@ -43,6 +43,33 @@
   }
 
   let manifest = null;
+  // Screen language: labels via t(), dates/times/relative times/country names via Intl.
+  let t = PTI18n.translator('en');
+  const loc = () => t.locale;
+  const cap1 = (x) => (x ? x.charAt(0).toLocaleUpperCase(loc()) + x.slice(1) : x);
+  const rel = (n, unit) => cap1(new Intl.RelativeTimeFormat(loc(), { numeric: 'auto' }).format(n, unit));
+  const countryName = (code, fallback) => {
+    try { return new Intl.DisplayNames([loc()], { type: 'region' }).of(code) || fallback; } catch { return fallback; }
+  };
+  const monthName = (m) => new Date(2000, m - 1, 1).toLocaleDateString(loc(), { month: 'long' });
+  const dayMonth = (m, d) => new Date(2000, m - 1, d).toLocaleDateString(loc(), { day: 'numeric', month: 'long' });
+  /** "Today · 14:00", "Tomorrow", "Sat 9 Nov · 15:00" in the screen language. */
+  function whenText(date, hasTime) {
+    const now = new Date();
+    const day0 = (x) => new Date(x.getFullYear(), x.getMonth(), x.getDate()).getTime();
+    const diff = Math.round((day0(date) - day0(now)) / 86400000);
+    const day = diff === 0 || diff === 1 ? rel(diff, 'day') : date.toLocaleDateString(loc(), { weekday: 'short', day: 'numeric', month: 'short' });
+    return hasTime ? `${day} · ${date.toLocaleTimeString(loc(), { hour: '2-digit', minute: '2-digit' })}` : day;
+  }
+  function countdownText(date, hasTime) {
+    const ms = date.getTime() - Date.now();
+    if (ms <= 0) return hasTime ? t('liveNow') : rel(0, 'day');
+    const mins = Math.floor(ms / 60000);
+    if (mins < 60) return rel(mins, 'minute');
+    const hours = Math.floor(mins / 60);
+    if (hours < 24) return rel(hours, 'hour');
+    return rel(Math.ceil(ms / 86400000), 'day');
+  }
   let current = null; // { item, sig, el }
   let advanceTimer = null;
   let renderToken = 0;
@@ -78,12 +105,16 @@
           return;
         } catch { /* corrupt cache */ }
       }
-      showSplash('Connecting…', 'Waiting for the PitchTribe server. This screen will start automatically.');
+      showSplash(t('connecting'), t('waitingServer'));
     }
   }
 
   function apply(m) {
     manifest = m;
+    if (t.lang !== (m.language || 'en')) {
+      t = PTI18n.translator(m.language || 'en');
+      document.documentElement.lang = t.lang;
+    }
     applyChrome();
     if (!current) return next();
     const still = playable().find((it) => it.id === current.item.id);
@@ -253,7 +284,7 @@
           for (const it of section.items) {
             const row = el('div', `menu-item${it.soldOut ? ' sold-out' : ''}`);
             const name = el('div', 'name', it.name);
-            if (it.soldOut) name.append(el('span', 'badge', 'Sold out'));
+            if (it.soldOut) name.append(el('span', 'badge', t('soldOut')));
             if (it.notes) name.append(el('span', 'notes', it.notes));
             row.append(name, el('div', 'dots'), el('div', 'price', it.price));
             sec.append(row);
@@ -270,16 +301,16 @@
         const fit = el('div', 'fit');
         const now = new Date();
         const list = PTFormats.parseFixtures(c.text, { now }).slice(0, c.limit || 8);
-        if (!list.length) fit.append(el('p', 'empty-note', 'No upcoming fixtures — check back soon.'));
+        if (!list.length) fit.append(el('p', 'empty-note', t('noUpcoming')));
         const ul = el('ul', 'fixtures-list');
         let highlighted = false;
         for (const f of list) {
           const li = el('li', 'fixture');
-          const when = el('div', 'when', PTFormats.formatWhen(f, now));
+          const when = el('div', 'when', f.date ? whenText(f.date, f.hasTime) : f.whenText);
           if (f.date && !highlighted) {
             highlighted = true;
             li.classList.add('next');
-            when.append(el('span', 'countdown', PTFormats.countdown(f, now)));
+            when.append(el('span', 'countdown', countdownText(f.date, f.hasTime)));
           }
           li.append(when, el('div', 'title', f.title), el('div', 'meta', [f.competition, f.venue].filter(Boolean).join(' · ')));
           ul.append(li);
@@ -294,9 +325,9 @@
         panel.append(el('div', 'kicker', club), el('h1', '', c.title || item.name));
         const fit = el('div', 'fit');
         if (!item.data) {
-          fit.append(el('p', 'empty-note', 'Sports feeds are switched off — turn them on in Settings.'));
+          fit.append(el('p', 'empty-note', t('sportsOff')));
         } else if (!item.data.length) {
-          fit.append(el('p', 'empty-note', c.show === 'live' ? 'No matches in progress right now.' : 'No matches to show right now.'));
+          fit.append(el('p', 'empty-note', c.show === 'live' ? t('noLiveMatches') : t('noMatches')));
         } else {
           let league = null;
           let list = null;
@@ -316,6 +347,7 @@
       }
       case 'widget': {
         const w = renderWidget(item);
+        if (item.data && item.data.credit) w.el.append(el('div', 'credit', item.data.credit));
         slide.append(w.el);
         if (w.ready) ready = w.ready;
         onShow = w.onShow || null;
@@ -327,13 +359,13 @@
     return { el: slide, ready, onShow };
   }
 
-  function teamCell(t, side) {
+  function teamCell(team, side) {
     const cell = el('span', `team ${side}`);
-    const name = el('span', 'team-name', t.name);
-    if (t.logo && /^https:\/\//.test(t.logo)) {
+    const name = el('span', 'team-name', team.name);
+    if (team.logo && /^https:\/\//.test(team.logo)) {
       const img = el('img', 'logo');
       img.alt = '';
-      img.src = t.logo;
+      img.src = team.logo;
       img.addEventListener('error', () => img.remove());
       if (side === 'home') cell.append(name, img);
       else cell.append(img, name);
@@ -346,16 +378,16 @@
   function scoreRow(e) {
     const li = el('li', `score-row ${e.status}`);
     const start = e.start ? new Date(e.start) : null;
-    const hhmm = start ? start.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' }) : '';
+    const hhmm = start ? start.toLocaleTimeString(loc(), { hour: '2-digit', minute: '2-digit' }) : '';
     let mid;
     if (e.status === 'scheduled') mid = el('span', 'mid vs', hhmm || 'v');
     else if (e.status === 'postponed') mid = el('span', 'mid vs', 'P–P');
     else mid = el('span', 'mid score', `${e.home.score ?? '-'} – ${e.away.score ?? '-'}`);
     let badge;
-    if (e.status === 'live') badge = el('span', 'tag live', e.statusText || 'LIVE');
-    else if (e.status === 'final') badge = el('span', 'tag final', e.statusText || 'FT');
-    else if (e.status === 'postponed') badge = el('span', 'tag pp', 'Postponed');
-    else badge = el('span', 'tag when', start ? PTFormats.formatWhen({ date: start, hasTime: false }) : '');
+    if (e.status === 'live') badge = el('span', 'tag live', e.statusText || t('liveNow'));
+    else if (e.status === 'final') badge = el('span', 'tag final', e.statusText || t('ft'));
+    else if (e.status === 'postponed') badge = el('span', 'tag pp', t('postponed'));
+    else badge = el('span', 'tag when', start ? whenText(start, false) : '');
     li.append(badge, teamCell(e.home, 'home'), mid, teamCell(e.away, 'away'));
     return li;
   }
@@ -381,9 +413,11 @@
     const now = new Date();
     for (const e of stage.querySelectorAll('[data-live]')) {
       const kind = e.dataset.live;
-      if (kind === 'time') e.textContent = now.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
+      if (kind === 'time') e.textContent = now.toLocaleTimeString(loc(), { hour: '2-digit', minute: '2-digit' });
+      else if (kind === 'tztime') e.textContent = now.toLocaleTimeString(loc(), { hour: '2-digit', minute: '2-digit', timeZone: e.dataset.tz });
+      else if (kind === 'tzday') e.textContent = now.toLocaleDateString(loc(), { weekday: 'long', timeZone: e.dataset.tz });
       else if (kind === 'seconds') e.textContent = pad2(now.getSeconds());
-      else if (kind === 'date') e.textContent = now.toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+      else if (kind === 'date') e.textContent = now.toLocaleDateString(loc(), { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
       else if (kind === 'hand') {
         const h = now.getHours() % 12;
         const m = now.getMinutes();
@@ -413,6 +447,44 @@
     const fit = el('div', 'fit');
     panel.append(fit);
     return { panel, fit };
+  }
+
+  const quizTitle = (topic) => t(`q_${topic || 'sport'}`);
+  const triviaTitle = (topic) => (!topic || topic === 'sport' || topic === 'mixed' ? t('dyk') : t('dykTopic', { topic: t(`t_${topic}`) }));
+
+  /** Question, four options, timer bar, answer revealed at 65% of the slide. */
+  function renderQuiz(item, q, kicker) {
+    const { panel, fit } = widgetPanel('quiz', kicker, '');
+    if (!q) return { el: panel };
+    if (q.flag) fit.append(el('div', 'quiz-flag', q.flag));
+    const qText = q.qtype === 'flag' ? t('flagQ') : q.qtype === 'capital' && q.code ? t('capitalQ', { country: countryName(q.code, q.q) }) : q.q;
+    fit.append(el('p', 'quiz-q', qText));
+    const grid = el('ol', 'quiz-options');
+    q.options.forEach((option, i) => {
+      const opt = q.optionCodes && q.optionCodes[i] ? countryName(q.optionCodes[i], option) : option;
+      const li = el('li', i === q.answer ? 'right' : 'wrong');
+      li.append(el('span', 'quiz-letter', 'ABCD'[i]), el('span', '', opt));
+      grid.append(li);
+    });
+    fit.append(grid);
+    return withReveal(panel, 0.65);
+  }
+
+  /** Timer bar, then the slide gets .revealed at `at` × its duration. */
+  function withReveal(panel, at) {
+    const bar = el('div', 'quiz-timer');
+    const fill = el('div', '');
+    bar.append(fill);
+    panel.append(bar);
+    return {
+      el: panel,
+      onShow: (ms) => {
+        const revealIn = ms * at;
+        fill.style.transitionDuration = `${revealIn}ms`;
+        requestAnimationFrame(() => { fill.style.width = '0%'; });
+        setTimeout(() => panel.classList.add('revealed'), revealIn);
+      },
+    };
   }
 
   function renderWidget(item) {
@@ -449,12 +521,12 @@
           box.dataset.target = c.target;
           for (const unit of ['days', 'hours', 'mins', 'secs']) {
             const cell = el('div', 'cd-cell');
-            cell.append(el('span', 'cd-num', '--'), el('span', 'cd-unit', unit));
+            cell.append(el('span', 'cd-num', '--'), el('span', 'cd-unit', t(unit)));
             box.append(cell);
           }
           fit.append(box);
           const when = new Date(c.target);
-          fit.append(el('div', 'clock-date static', when.toLocaleString('en-GB', { weekday: 'long', day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit' })));
+          fit.append(el('div', 'clock-date static', when.toLocaleString(loc(), { weekday: 'long', day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit' })));
         } else {
           const time = el('div', 'clock-time');
           const hm = el('span', '');
@@ -473,30 +545,30 @@
       }
 
       case 'weather': {
-        const { panel, fit } = widgetPanel('weather', club, c.title || `Weather${d.place ? ` — ${d.place}` : ''}`);
+        const { panel, fit } = widgetPanel('weather', club, c.title || `${t('weather')}${d.place ? ` — ${d.place}` : ''}`);
         const now = el('div', 'wx-now');
         now.append(el('div', 'wx-icon', d.current.icon));
         const info = el('div', 'wx-info');
-        info.append(el('div', 'wx-temp', `${d.current.temp}${d.units.temp}`), el('div', 'wx-text', d.current.text), el('div', 'wx-wind', `Wind ${d.current.wind} ${d.units.wind}`));
+        info.append(el('div', 'wx-temp', `${d.current.temp}${d.units.temp}`), el('div', 'wx-text', d.current.cond ? t(`c_${d.current.cond}`) : d.current.text), el('div', 'wx-wind', t('wind', { speed: `${d.current.wind} ${d.units.wind}` })));
         now.append(info);
         fit.append(now);
         const days = el('div', 'wx-days');
         (d.days || []).forEach((day, i) => {
           const dt = new Date(`${day.date}T12:00:00`);
-          const label = i === 0 ? 'Today' : i === 1 ? 'Tomorrow' : dt.toLocaleDateString('en-GB', { weekday: 'long' });
+          const label = i <= 1 ? rel(i, 'day') : cap1(dt.toLocaleDateString(loc(), { weekday: 'long' }));
           const card = el('div', 'wx-day');
           card.append(el('div', 'wx-day-name', label), el('div', 'wx-day-icon', day.icon), el('div', 'wx-day-temp', `${day.max}° / ${day.min}°`));
           if (day.rain != null) card.append(el('div', 'wx-day-rain', `💧 ${day.rain}%`));
           days.append(card);
         });
         fit.append(days);
-        if (d.stale) fit.append(el('p', 'wx-note', 'Forecast may be out of date (no internet).'));
+        if (d.stale) fit.append(el('p', 'wx-note', t('forecastStale')));
         return { el: panel };
       }
 
       case 'joke': {
         const joke = nextOf(item, d.items || []);
-        const { panel, fit } = widgetPanel('joke', c.title || 'Joke time', '');
+        const { panel, fit } = widgetPanel('joke', c.title || t('jokeTime'), '');
         if (!joke) return { el: panel };
         fit.append(el('p', 'joke-q', joke.q));
         const a = el('p', 'joke-a', joke.a || '');
@@ -513,49 +585,293 @@
 
       case 'trivia': {
         const fact = nextOf(item, d.items || []);
-        const { panel, fit } = widgetPanel('trivia', club, c.title || 'Did you know?');
+        const { panel, fit } = widgetPanel('trivia', club, c.title || triviaTitle(d.topic));
         fit.append(el('p', 'trivia-text', fact || ''));
         return { el: panel };
       }
 
       case 'quiz': {
         const q = nextOf(item, d.items || []);
-        const { panel, fit } = widgetPanel('quiz', c.title || 'Quiz time', '');
-        if (!q) return { el: panel };
-        fit.append(el('p', 'quiz-q', q.q));
-        const grid = el('ol', 'quiz-options');
-        q.options.forEach((opt, i) => {
-          const li = el('li', i === q.answer ? 'right' : 'wrong');
-          li.append(el('span', 'quiz-letter', 'ABCD'[i]), el('span', '', opt));
-          grid.append(li);
-        });
+        return renderQuiz(item, q, c.title || quizTitle(d.topic));
+      }
+
+
+      case 'geoquiz': {
+        const q = nextOf(item, d.items || []);
+        return renderQuiz(item, q, c.title || t({ flags: 'nameFlag', capitals: 'capitals', mixed: 'flagsCapitals' }[d.mode] || 'flagsCapitals'));
+      }
+
+      case 'emoji': {
+        const e = nextOf(item, d.items || []);
+        const { panel, fit } = widgetPanel('emoji', c.title || t('emojiQuiz'), '');
+        if (!e) return { el: panel };
+        fit.append(el('p', 'emoji-prompt', t(['Film', 'TV', 'Song'].includes(e.category) ? `g_${e.category}` : 'g_any')), el('div', 'emoji-clue', e.emoji));
+        fit.append(el('p', 'emoji-answer', e.answer));
+        return withReveal(panel, 0.6);
+      }
+
+      case 'country': {
+        const ct = nextOf(item, d.items || []);
+        const { panel, fit } = widgetPanel('country', club, c.title || t('countryDay'));
+        if (!ct) return { el: panel };
+        const card = el('div', 'country-card');
+        const facts = el('dl', 'country-facts');
+        for (const [k, val] of [[t('capital'), ct.capital], [t('continent'), t(`ct_${ct.continent}`)], [t('currency'), ct.currency]]) facts.append(el('dt', '', k), el('dd', '', val));
+        const text = el('div', '');
+        text.append(el('div', 'country-name', ct.code ? countryName(ct.code, ct.name) : ct.name), facts);
+        card.append(el('div', 'country-flag', ct.flag), text);
+        fit.append(card);
+        return { el: panel };
+      }
+
+      case 'worldclock': {
+        const { panel, fit } = widgetPanel('worldclock', club, c.title || t('worldClocks'));
+        const grid = el('div', 'world-grid');
+        for (const z of c.zones || []) {
+          const card = el('div', 'world-card');
+          const time = el('div', 'world-time');
+          time.dataset.live = 'tztime';
+          time.dataset.tz = z.tz;
+          const day = el('div', 'world-day');
+          day.dataset.live = 'tzday';
+          day.dataset.tz = z.tz;
+          card.append(el('div', 'world-city', z.label), time, day);
+          grid.append(card);
+        }
         fit.append(grid);
-        const bar = el('div', 'quiz-timer');
-        const fill = el('div', '');
-        bar.append(fill);
-        panel.append(bar);
-        return {
-          el: panel,
-          onShow: (ms) => {
-            const revealIn = ms * 0.65;
-            fill.style.transitionDuration = `${revealIn}ms`;
-            requestAnimationFrame(() => { fill.style.width = '0%'; });
-            setTimeout(() => panel.classList.add('revealed'), revealIn);
-          },
-        };
+        return { el: panel };
       }
 
       case 'history': {
-        const { panel, fit } = widgetPanel('history', club, c.title || d.label);
+        const histLabel = !d.month ? d.label
+          : d.scopeUsed === 'day' ? t('onThisDay', { date: dayMonth(d.month, d.day) })
+            : d.scopeUsed === 'week' ? t(`week_${d.topic || 'sport'}`)
+              : t(`month_${d.topic || 'sport'}`, { month: cap1(monthName(d.month)) });
+        const { panel, fit } = widgetPanel('history', club, c.title || histLabel);
         const list = el('ul', 'history-list');
         for (const it of d.items || []) {
-          const li = el('li', it.sport ? 'sport' : 'general');
+          const li = el('li', it.tag || (it.sport ? 'sport' : 'general'));
           const [mm, dd] = it.date.split('-').map(Number);
-          const when = new Date(2000, mm - 1, dd).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' });
+          const when = new Date(2000, mm - 1, dd).toLocaleDateString(loc(), { day: 'numeric', month: 'short' });
           li.append(el('span', 'year', String(it.year)), el('span', 'text', it.text), el('span', 'when', d.scopeUsed === 'day' ? '' : when));
           list.append(li);
         }
         fit.append(list);
+        return { el: panel };
+      }
+
+
+      case 'transport': {
+        const { panel, fit } = widgetPanel('transport', club, c.title || t('transport'));
+        const grid = el('div', `tx-grid n${Math.min((d.sections || []).length, 4)}`);
+        for (const sec of d.sections || []) {
+          const box = el('section', `tx-box tx-${sec.key}`);
+          const secTitle = sec.customTitle || {
+            tracker: sec.routes ? t('liveBuses', { routes: sec.routes.join(', ') }) : sec.title,
+            trains: sec.station ? t('departuresAt', { station: sec.station }) : t('departures'),
+            buses: sec.stop ? t('busesAt', { stop: sec.stop }) : t('buses'),
+            lines: t('lines'), roads: t('roads'), planes: t('planes'),
+          }[sec.key] || sec.title;
+          box.append(el('h2', '', `${{ tracker: '🚌', trains: '🚆', buses: '🚌', lines: '🚇', roads: '🚗', planes: '✈️' }[sec.key] || ''} ${secTitle}`));
+          if (sec.error) {
+            box.append(el('p', 'tx-empty', sec.error));
+          } else if (sec.key === 'trains') {
+            for (const m of sec.messages || []) box.append(el('p', 'tx-msg', m));
+            const ul = el('ul', 'tx-list');
+            for (const tr of sec.services || []) {
+              const li = el('li', tr.cancelled ? 'bad' : /on time/i.test(tr.expected) ? 'good' : 'warn');
+              li.append(el('span', 'tx-time', tr.time), el('span', 'tx-main', tr.destination), el('span', 'tx-side', tr.cancelled ? t('cancelled') : `${tr.expected}${tr.platform ? ` · P${tr.platform}` : ''}`));
+              ul.append(li);
+            }
+            if (!(sec.services || []).length) box.append(el('p', 'tx-empty', t('noDepartures')));
+            box.append(ul);
+          } else if (sec.key === 'buses') {
+            const ul = el('ul', 'tx-list');
+            for (const a of sec.arrivals || []) {
+              const li = el('li', '');
+              li.append(el('span', 'tx-route', a.line), el('span', 'tx-main', a.destination), el('span', 'tx-side', a.minutes <= 1 ? t('due') : t('min', { n: a.minutes })));
+              ul.append(li);
+            }
+            if (!(sec.arrivals || []).length) box.append(el('p', 'tx-empty', t('noBusesDue')));
+            box.append(ul);
+          } else if (sec.key === 'tracker') {
+            const ul = el('ul', 'tx-list');
+            for (const b of sec.buses || []) {
+              const li = el('li', '');
+              li.append(el('span', 'tx-route', b.line), el('span', 'tx-main', t('toward', { place: b.destination || '—' })), el('span', 'tx-side', `${b.distanceKm} km ${b.direction}${b.minutesAgo ? ` · ${rel(-b.minutesAgo, 'minute')}` : ''}`));
+              ul.append(li);
+            }
+            if (!(sec.buses || []).length) box.append(el('p', 'tx-empty', t('noTracked', { km: sec.radiusKm })));
+            box.append(ul);
+          } else if (sec.key === 'lines') {
+            const ul = el('ul', 'tx-lines');
+            for (const l of sec.lines || []) {
+              const li = el('li', l.severity >= 10 ? 'good' : l.severity >= 9 ? 'warn' : 'bad');
+              li.append(el('span', `tx-swatch line-${l.id}`, ''), el('span', 'tx-main', l.name), el('span', 'tx-side', l.status));
+              ul.append(li);
+            }
+            box.append(ul);
+          } else if (sec.key === 'roads') {
+            const ul = el('ul', 'tx-lines');
+            for (const r of sec.roads || []) {
+              const li = el('li', r.status === 'Good' ? 'good' : /Serious|Severe|Closure/.test(r.status) ? 'bad' : 'warn');
+              li.append(el('span', 'tx-route', r.name), el('span', 'tx-main', r.detail || r.status), el('span', 'tx-side', r.status));
+              ul.append(li);
+            }
+            box.append(ul);
+          } else if (sec.key === 'planes') {
+            const ul = el('ul', 'tx-list');
+            for (const a of sec.aircraft || []) {
+              const li = el('li', '');
+              li.append(el('span', 'tx-route', a.callsign), el('span', 'tx-main', [a.type, a.altitudeFt ? `${a.altitudeFt.toLocaleString(loc())} ft` : ''].filter(Boolean).join(' · ')), el('span', 'tx-side', `${a.distanceKm} km`));
+              ul.append(li);
+            }
+            if (!(sec.aircraft || []).length) box.append(el('p', 'tx-empty', t('noAircraft', { km: sec.radiusKm })));
+            box.append(ul);
+          }
+          grid.append(box);
+        }
+        fit.append(grid);
+        return { el: panel };
+      }
+
+      case 'bankholiday': {
+        const { panel, fit } = widgetPanel('list', club, c.title || t('bankHols', { nation: t(`n_${d.division}`) }));
+        const ul = el('ul', 'info-list');
+        for (const h of d.items || []) {
+          const li = el('li', '');
+          const when = new Date(`${h.date}T12:00:00`).toLocaleDateString(loc(), { weekday: 'long', day: 'numeric', month: 'long' });
+          li.append(el('span', 'big', h.title), el('span', '', when), el('span', 'tag-pill', rel(h.daysAway, 'day')));
+          ul.append(li);
+        }
+        fit.append(ul);
+        return { el: panel };
+      }
+
+      case 'floods': {
+        const { panel, fit } = widgetPanel('floods', club, c.title || t('floods'));
+        if (!(d.items || []).length) {
+          fit.append(el('div', 'all-clear', '✅'), el('p', 'all-clear-text', t('noFloods', { km: d.radius })));
+        } else {
+          const ul = el('ul', 'info-list');
+          for (const f of d.items) {
+            const li = el('li', `flood-${f.level}`);
+            li.append(el('span', 'tag-pill', f.severity), el('span', 'big', f.area), el('span', '', f.county));
+            ul.append(li);
+          }
+          fit.append(ul);
+        }
+        return { el: panel };
+      }
+
+      case 'carbon': {
+        const { panel, fit } = widgetPanel('carbon', club, c.title || t('electricity', { region: d.region }));
+        const idx = String(d.intensity?.index || '').toLowerCase();
+        const head = el('div', `carbon-head idx-${idx.replace(/\s+/g, '-')}`);
+        head.append(el('div', 'carbon-index', idx ? t(`i_${idx}`) : '—'), el('div', 'carbon-value', `${d.intensity?.actual ?? d.intensity?.forecast ?? '—'} gCO₂/kWh`));
+        fit.append(head);
+        const bars = el('div', 'mix');
+        for (const m of (d.mix || []).slice(0, 7)) {
+          const row = el('div', 'mix-row');
+          const bar = el('div', 'mix-bar');
+          const fill = el('div', `mix-fill fuel-${m.fuel}`);
+          fill.style.width = `${Math.min(100, m.perc)}%`;
+          bar.append(fill);
+          row.append(el('span', 'mix-fuel', t(`f_${m.fuel}`)), bar, el('span', 'mix-perc', `${m.perc}%`));
+          bars.append(row);
+        }
+        fit.append(bars);
+        return { el: panel };
+      }
+
+      case 'quakes': {
+        const { panel, fit } = widgetPanel('list', club, c.title || t('quakes'));
+        const ul = el('ul', 'info-list');
+        for (const q of d.items || []) {
+          const li = el('li', q.mag >= 6 ? 'quake-big' : '');
+          const ago = q.time ? Math.round((Date.now() - Date.parse(q.time)) / 3_600_000) : null;
+          li.append(el('span', 'tag-pill', `M${q.mag.toFixed(1)}`), el('span', 'big', q.place), el('span', '', ago === null ? '' : ago < 24 ? rel(-ago, 'hour') : rel(-Math.round(ago / 24), 'day')));
+          ul.append(li);
+        }
+        if (!(d.items || []).length) fit.append(el('p', 'empty-note', t('noQuakes')));
+        fit.append(ul);
+        return { el: panel };
+      }
+
+      case 'currency': {
+        const FLAGS = { EUR: '🇪🇺', USD: '🇺🇸', GBP: '🇬🇧', JPY: '🇯🇵', AUD: '🇦🇺', CAD: '🇨🇦', CHF: '🇨🇭', CNY: '🇨🇳', SEK: '🇸🇪', NOK: '🇳🇴', DKK: '🇩🇰', PLN: '🇵🇱', NZD: '🇳🇿', INR: '🇮🇳', ZAR: '🇿🇦', TRY: '🇹🇷', HKD: '🇭🇰', SGD: '🇸🇬', MXN: '🇲🇽', BRL: '🇧🇷', CZK: '🇨🇿', HUF: '🇭🇺', ISK: '🇮🇸', KRW: '🇰🇷', THB: '🇹🇭' };
+        const { panel, fit } = widgetPanel('currency', club, c.title || `${t('fx')} — ${FLAGS[d.base] || ''} 1 ${d.base}`);
+        const grid = el('div', 'fx-grid');
+        for (const r of d.rates || []) {
+          const card = el('div', 'fx-card');
+          card.append(el('div', 'fx-flag', FLAGS[r.code] || '💱'), el('div', 'fx-rate', r.rate >= 100 ? r.rate.toFixed(0) : r.rate.toFixed(r.rate >= 10 ? 2 : 4)), el('div', 'fx-code', r.code));
+          grid.append(card);
+        }
+        fit.append(grid);
+        if (d.date) fit.append(el('p', 'wx-note', t('fxDate', { date: new Date(`${d.date}T12:00:00`).toLocaleDateString(loc(), { day: 'numeric', month: 'long', year: 'numeric' }) })));
+        return { el: panel };
+      }
+
+      case 'potd': {
+        const wrap = el('section', 'potd');
+        const img = el('img', 'potd-img');
+        img.alt = '';
+        img.referrerPolicy = 'no-referrer';
+        img.src = d.src;
+        const cap = el('div', 'potd-caption');
+        cap.append(el('strong', '', c.title || t('potd')), el('span', '', d.description || d.title || ''));
+        wrap.append(img, cap);
+        return { el: wrap, ready: withTimeout(img.decode(), 10000) };
+      }
+
+      case 'births': {
+        const { panel, fit } = widgetPanel('history', club, c.title || (d.month ? t('born', { date: dayMonth(d.month, d.day) }) : d.label));
+        const list = el('ul', 'history-list');
+        for (const it of d.items || []) {
+          const li = el('li', 'general');
+          li.append(el('span', 'year', String(it.year)), el('span', 'text', it.text), el('span', 'when', ''));
+          list.append(li);
+        }
+        fit.append(list);
+        return { el: panel };
+      }
+
+      case 'sky': {
+        const { panel, fit } = widgetPanel('sky', club, c.title || `${t('sky')}${d.place ? ` — ${d.place}` : ''}`);
+        const grid = el('div', 'sky-grid');
+        const card = (icon, label, value) => { const x = el('div', 'sky-card'); x.append(el('div', 'sky-icon', icon), el('div', 'sky-value', value || '—'), el('div', 'sky-label', label)); return x; };
+        grid.append(card('🌅', t('sunrise'), d.sunrise), card('🌇', t('sunset'), d.sunset), card('☀️', t('daylight'), d.dayLength), card(d.moon?.emoji || '🌙', t('lit', { n: d.moon?.illumination ?? '—' }), Number.isInteger(d.moon?.index) ? t(`m${d.moon.index}`) : d.moon?.name));
+        fit.append(grid);
+        return { el: panel };
+      }
+
+      case 'headlines': {
+        const { panel, fit } = widgetPanel('list', d.title || club, c.title || t('news'));
+        const ul = el('ul', 'info-list news');
+        for (const it of d.items || []) {
+          const li = el('li', '');
+          li.append(el('span', 'big', it.title), el('span', '', it.date ? new Date(it.date).toLocaleDateString(loc(), { day: 'numeric', month: 'short' }) : ''));
+          ul.append(li);
+        }
+        if (!(d.items || []).length) fit.append(el('p', 'empty-note', t('noNews')));
+        fit.append(ul);
+        return { el: panel };
+      }
+
+      case 'events': {
+        const { panel, fit } = widgetPanel('list', d.title || club, c.title || t('comingUp'));
+        const ul = el('ul', 'info-list');
+        for (const ev of d.items || []) {
+          const li = el('li', '');
+          const start = new Date(ev.start);
+          const when = ev.allDay
+            ? start.toLocaleDateString(loc(), { weekday: 'short', day: 'numeric', month: 'short' })
+            : `${start.toLocaleDateString(loc(), { weekday: 'short', day: 'numeric', month: 'short' })} · ${start.toLocaleTimeString(loc(), { hour: '2-digit', minute: '2-digit' })}`;
+          li.append(el('span', 'tag-pill', when), el('span', 'big', ev.title), el('span', '', ev.location || ''));
+          ul.append(li);
+        }
+        if (!(d.items || []).length) fit.append(el('p', 'empty-note', t('noEvents')));
+        fit.append(ul);
         return { el: panel };
       }
 
@@ -595,12 +911,12 @@
           frame.append(mark);
         }
         const caption = el('div', 'sb-caption');
-        caption.append(el('strong', '', c.title || 'Spot the ball'));
+        caption.append(el('strong', '', c.title || t('spot')));
         if (d.answer) {
-          caption.append(el('span', 'sb-result', `Answer: ${d.answer.cell}`));
+          caption.append(el('span', 'sb-result', t('answerIs', { cell: d.answer.cell })));
         } else {
-          const parts = ['Where is the ball?', d.grid ? 'Pick a square' : ''];
-          if (d.revealAt) parts.push(`Answer revealed ${new Date(d.revealAt).toLocaleString('en-GB', { weekday: 'short', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}`);
+          const parts = [t('whereBall'), d.grid ? t('pickSquare') : ''];
+          if (d.revealAt) parts.push(t('revealAt', { when: new Date(d.revealAt).toLocaleString(loc(), { weekday: 'short', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }) }));
           caption.append(el('span', '', parts.filter(Boolean).join(' · ')));
         }
         if (d.prize) caption.append(el('span', 'sb-prize', `🏆 ${d.prize}`));
@@ -671,7 +987,7 @@
   function updateClock() {
     const clock = $('#clock');
     if (clock.hidden) return;
-    clock.textContent = new Date().toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
+    clock.textContent = new Date().toLocaleTimeString(loc(), { hour: '2-digit', minute: '2-digit' });
   }
 
   function showSplash(msg, meta) {
@@ -688,9 +1004,9 @@
     if (previewId) {
       showSplash('Nothing in this playlist is scheduled to play right now.', '');
     } else if (!manifest.playlist) {
-      showSplash('This screen has no playlist yet.', `Screen “${screenId}” · choose a playlist at ${dash}`);
+      showSplash(t('noPlaylist'), t('screenAt', { name: screenId, url: dash }));
     } else {
-      showSplash('Nothing scheduled right now.', `Screen “${manifest.screen.name}” · manage at ${dash}`);
+      showSplash(t('nothingNow'), t('screenAt', { name: manifest.screen.name, url: dash }));
     }
   }
 

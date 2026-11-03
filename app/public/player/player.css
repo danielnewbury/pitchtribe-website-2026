@@ -401,6 +401,109 @@ html, body {
 .sb-result { font-weight: 800; color: #ff6b6b; }
 .sb-prize { color: var(--amber); font-weight: 700; }
 
+/* Quiz flags, emoji quiz, country, world clocks */
+.quiz-flag { font-size: 5.5em; line-height: 1; margin-bottom: 0.25em; }
+.widget.w-emoji { text-align: center; }
+.widget.w-emoji .kicker { justify-content: center; }
+.emoji-prompt { font-size: 1.3em; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: 0.12em; }
+.emoji-clue { font-size: 6em; line-height: 1.15; margin: 0.25em 0; letter-spacing: 0.08em; }
+.emoji-answer { font-size: 2.2em; font-weight: 800; color: var(--accent); opacity: 0; transform: scale(0.92); transition: opacity 500ms ease, transform 500ms ease; }
+.revealed .emoji-answer { opacity: 1; transform: none; }
+.country-card { display: flex; align-items: center; gap: 1.4em; }
+.country-flag { font-size: 9em; line-height: 1; }
+.country-name { font-size: 3em; font-weight: 800; letter-spacing: -0.02em; line-height: 1.05; margin-bottom: 0.4em; }
+.country-facts { display: grid; grid-template-columns: auto 1fr; gap: 0.35em 1em; font-size: 1.25em; }
+.country-facts dt { color: var(--muted); font-weight: 600; }
+.country-facts dd { margin: 0; font-weight: 700; }
+.world-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(8.5em, 1fr)); gap: 0.7em; }
+.world-card { padding: 0.8em 0.6em; border-radius: 0.6em; background: rgb(14 30 48 / 0.8); border: 1px solid var(--line); text-align: center; }
+.world-city { font-size: 0.75em; font-weight: 800; letter-spacing: 0.12em; text-transform: uppercase; color: var(--accent); }
+.world-time { font-size: 2.6em; font-weight: 800; font-variant-numeric: tabular-nums; line-height: 1.1; margin: 0.1em 0; }
+.world-day { font-size: 0.7em; color: var(--muted); }
+.history-list li.entertainment .year { color: var(--violet, #bc64ff); }
+
+/* Credits (licence attribution) */
+.credit { position: absolute; right: 2.4cqmin; bottom: 1.4cqmin; font-size: 1.5cqmin; color: var(--muted); opacity: 0.8; max-width: 70%; text-align: right; z-index: 2; }
+.potd .credit, .spotball .credit { color: #ddd; text-shadow: 0 1px 2px #000; }
+
+/* Generic info lists (bank holidays, quakes, floods, news, calendar) */
+.info-list { list-style: none; display: flex; flex-direction: column; gap: 0.5em; }
+.info-list li { display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: 0.9em; padding: 0.6em 0.9em; border-radius: 0.5em; background: rgb(14 30 48 / 0.75); border: 1px solid var(--line); }
+.info-list .big { font-weight: 700; line-height: 1.25; }
+.info-list li > span:last-child { color: var(--muted); font-size: 0.75em; text-align: right; }
+.info-list.news li { grid-template-columns: 1fr auto; }
+.tag-pill { display: inline-block; padding: 0.25em 0.6em; border-radius: 0.4em; background: var(--surface-2); color: var(--accent); font-weight: 800; font-size: 0.75em; white-space: nowrap; }
+.flood-1 .tag-pill { background: #b00020; color: #fff; }
+.flood-2 .tag-pill { background: #e4572e; color: #fff; }
+.flood-3 .tag-pill { background: var(--amber); color: #201600; }
+.quake-big .tag-pill { background: #e4572e; color: #fff; }
+.all-clear { font-size: 6em; text-align: center; }
+.all-clear-text { font-size: 1.6em; font-weight: 700; text-align: center; }
+
+/* Carbon intensity */
+.carbon-head { display: flex; align-items: baseline; gap: 0.8em; margin-bottom: 0.9em; }
+.carbon-index { font-size: 3.4em; font-weight: 800; line-height: 1; }
+.carbon-value { font-size: 1.1em; color: var(--muted); }
+.idx-very-low .carbon-index, .idx-low .carbon-index { color: var(--accent); }
+.idx-moderate .carbon-index { color: var(--amber); }
+.idx-high .carbon-index, .idx-very-high .carbon-index { color: #ff6b6b; }
+.mix { display: grid; gap: 0.45em; }
+.mix-row { display: grid; grid-template-columns: 6em 1fr 4em; align-items: center; gap: 0.8em; }
+.mix-fuel { text-transform: capitalize; font-weight: 600; }
+.mix-bar { height: 0.9em; border-radius: 1em; background: rgb(255 255 255 / 0.07); overflow: hidden; }
+.mix-fill { height: 100%; border-radius: 1em; background: var(--muted); }
+.fuel-wind, .fuel-solar, .fuel-hydro { background: var(--accent); }
+.fuel-nuclear { background: #b48cff; }
+.fuel-biomass { background: #8bc34a; }
+.fuel-imports { background: #58a6ff; }
+.fuel-gas, .fuel-coal, .fuel-other { background: #ff8a65; }
+.mix-perc { text-align: right; font-variant-numeric: tabular-nums; color: var(--muted); }
+
+/* Exchange rates */
+.fx-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(6.5em, 1fr)); gap: 0.7em; }
+.fx-card { text-align: center; padding: 0.8em 0.5em; border-radius: 0.6em; background: rgb(14 30 48 / 0.8); border: 1px solid var(--line); }
+.fx-flag { font-size: 2.6em; line-height: 1; }
+.fx-rate { font-size: 2em; font-weight: 800; font-variant-numeric: tabular-nums; margin-top: 0.15em; }
+.fx-code { color: var(--muted); font-weight: 700; letter-spacing: 0.1em; font-size: 0.8em; }
+
+/* Picture of the day */
+.potd { position: absolute; inset: 0; background: #000; }
+.potd-img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; }
+.potd-caption { position: absolute; left: 0; right: 0; bottom: 0; padding: 4cqmin 3cqmin 5cqmin; background: linear-gradient(transparent, rgb(0 0 0 / 0.8)); display: flex; flex-direction: column; gap: 0.6cqmin; font-size: 2.4cqmin; color: #eee; }
+.potd-caption strong { color: var(--accent); text-transform: uppercase; letter-spacing: 0.12em; font-size: 0.8em; }
+.potd-caption span { max-width: 80ch; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+
+/* Sun & moon */
+.sky-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 0.8em; }
+.sky-card { text-align: center; padding: 1em 0.5em; border-radius: 0.6em; background: rgb(14 30 48 / 0.8); border: 1px solid var(--line); }
+.sky-icon { font-size: 3em; line-height: 1; }
+.sky-value { font-size: 1.7em; font-weight: 800; margin-top: 0.3em; }
+.sky-label { color: var(--muted); font-size: 0.75em; margin-top: 0.2em; }
+
+/* Transport hub */
+.tx-grid { display: grid; gap: 0.8em; grid-template-columns: 1fr; align-items: start; }
+.tx-grid.n2, .tx-grid.n3, .tx-grid.n4 { grid-template-columns: 1fr 1fr; }
+.tx-box { padding: 0.7em 0.8em; border-radius: 0.6em; background: rgb(14 30 48 / 0.8); border: 1px solid var(--line); min-width: 0; }
+.tx-box h2 { font-size: 0.8em; letter-spacing: 0.08em; text-transform: uppercase; color: var(--amber); margin-bottom: 0.5em; }
+.tx-list, .tx-lines { list-style: none; display: flex; flex-direction: column; gap: 0.3em; font-size: 0.8em; }
+.tx-list li, .tx-lines li { display: grid; grid-template-columns: auto 1fr auto; gap: 0.6em; align-items: center; padding: 0.25em 0; border-bottom: 1px solid var(--line); }
+.tx-time { font-weight: 800; font-variant-numeric: tabular-nums; }
+.tx-route { font-weight: 800; background: var(--surface-2); color: var(--fg); padding: 0.1em 0.45em; border-radius: 0.3em; min-width: 2.2em; text-align: center; }
+.tx-main { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.tx-side { font-size: 0.85em; color: var(--muted); white-space: nowrap; }
+.tx-list li.good .tx-side, .tx-lines li.good .tx-side { color: var(--accent); }
+.tx-list li.warn .tx-side, .tx-lines li.warn .tx-side { color: var(--amber); }
+.tx-list li.bad .tx-side, .tx-lines li.bad .tx-side { color: #ff6b6b; font-weight: 700; }
+.tx-list li.bad .tx-main { text-decoration: line-through; opacity: 0.7; }
+.tx-swatch { width: 0.9em; height: 0.9em; border-radius: 0.2em; background: var(--muted); }
+.line-bakerloo { background: #b36305; } .line-central { background: #e32017; } .line-circle { background: #ffd300; }
+.line-district { background: #00782a; } .line-hammersmith-city { background: #f3a9bb; } .line-jubilee { background: #a0a5a9; }
+.line-metropolitan { background: #9b0056; } .line-northern { background: #fff; } .line-piccadilly { background: #003688; }
+.line-victoria { background: #0098d4; } .line-waterloo-city { background: #95cdba; } .line-elizabeth { background: #6950a1; }
+.line-dlr { background: #00a4a7; } .line-liberty, .line-lioness, .line-mildmay, .line-suffragette, .line-weaver, .line-windrush, .line-london-overground { background: #ee7c0e; }
+.tx-msg { font-size: 0.7em; color: var(--amber); margin-bottom: 0.4em; }
+.tx-empty { font-size: 0.75em; color: var(--muted); }
+
 [hidden] { display: none !important; }
 
 @media (prefers-reduced-motion: reduce) {

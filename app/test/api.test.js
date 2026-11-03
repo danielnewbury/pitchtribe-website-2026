@@ -308,7 +308,7 @@ test('widgets: settings, every kind in manifests, spot-the-ball answer stays sec
 
   r = await s.call('PUT', '/api/settings/widgets', { weather: { place: 'Leeds', latitude: 53.8, longitude: 'x' } });
   assert.equal(r.status, 400);
-  r = await s.call('PUT', '/api/settings/widgets', { weather: { place: 'Leeds', latitude: 53.8, longitude: -1.55 }, wikipedia: false });
+  r = await s.call('PUT', '/api/settings/widgets', { weather: { place: 'Leeds', latitude: 53.8, longitude: -1.55, provider: 'openmeteo' }, wikipedia: false });
   assert.equal(r.status, 200);
   assert.equal(r.body.weather.windUnit, 'mph');
 
@@ -368,4 +368,135 @@ test('widgets: settings, every kind in manifests, spot-the-ball answer stays sec
   // Widget data is also on the engine's public API.
   r = await s.call('GET', '/feeds/api/widgets/trivia');
   assert.equal(r.body.items.length, 20);
+});
+
+test('culture widgets: topics, emoji quiz, flags & capitals, country of the day, world clocks', async (t) => {
+  const s = await startServer();
+  t.after(s.stop);
+  await s.call('POST', '/api/auth/setup', { clubName: 'Riverside FC', password: 'correct horse' });
+  await s.ctx.feeds.ready;
+  const playlistId = (await s.call('GET', '/api/state')).body.playlists[0].id;
+  const add = (content) => s.call('POST', '/api/assets', { type: 'widget', name: content.kind, content, addToPlaylist: playlistId });
+
+  let r = await add({ kind: 'quiz', topic: 'music' });
+  assert.equal(r.body.content.topic, 'music');
+  r = await add({ kind: 'trivia', topic: 'nonsense' });
+  assert.equal(r.body.content.topic, 'sport', 'unknown topic falls back');
+  r = await add({ kind: 'history', scope: 'month', topic: 'entertainment' });
+  assert.equal(r.body.content.topic, 'entertainment');
+  assert.equal((await add({ kind: 'emoji', category: 'Film' })).status, 201);
+  assert.equal((await add({ kind: 'geoquiz', mode: 'flags' })).status, 201);
+  assert.equal((await add({ kind: 'country' })).status, 201);
+  r = await add({ kind: 'worldclock', zones: [{ label: 'Tokyo', tz: 'Asia/Tokyo' }, { label: 'New York', tz: 'America/New_York' }] });
+  assert.equal(r.status, 201);
+  assert.equal((await add({ kind: 'worldclock', zones: [{ label: 'Nowhere', tz: 'Mars/Base' }] })).status, 400);
+  assert.equal((await add({ kind: 'worldclock', zones: [] })).status, 400);
+
+  r = await s.call('GET', '/api/player/bar-tv/manifest');
+  const w = (kind) => r.body.items.find((i) => i.type === 'widget' && i.content.kind === kind);
+  assert.equal(w('quiz').data.topic, 'music');
+  assert.ok(w('quiz').data.items.every((q) => q.topic === 'music'));
+  assert.ok(w('history').data.items.every((i) => i.tag === 'entertainment'));
+  assert.ok(w('emoji').data.items.every((e) => e.category === 'Film'));
+  assert.ok(w('geoquiz').data.items.every((q) => q.flag && q.q.includes('flag')));
+  assert.ok(w('country').data.items[0].capital);
+  assert.equal(w('worldclock').data, undefined, 'world clocks are drawn by the screen');
+  assert.deepEqual(w('worldclock').content.zones.map((z) => z.tz), ['Asia/Tokyo', 'America/New_York']);
+});
+
+test('data-source widgets and transport hub: validation, options reach the engine, keys stay server-side', async (t) => {
+  const s = await startServer();
+  t.after(s.stop);
+  await s.call('POST', '/api/auth/setup', { clubName: 'Biggleswade Town', password: 'correct horse' });
+  await s.ctx.feeds.ready;
+  const playlistId = (await s.call('GET', '/api/state')).body.playlists[0].id;
+  const add = (content) => s.call('POST', '/api/assets', { type: 'widget', name: content.kind, content, addToPlaylist: playlistId });
+
+  let r = await s.call('PUT', '/api/settings/widgets', {
+    weather: { place: 'Biggleswade', latitude: 52.087, longitude: -0.264 },
+    trains: { url: 'https://rail.example', token: 'rail-secret' },
+    bods: { apiKey: 'bods-secret' },
+  });
+  assert.equal(r.status, 200);
+  assert.equal(r.body.weather.provider, 'metno', 'MET Norway is the default (commercial use allowed)');
+  assert.equal(r.body.bods.apiKey, 'bods-secret', 'admins can see their keys');
+
+  // Transport hub validation
+  assert.equal((await add({ kind: 'transport', sections: [] })).status, 400);
+  assert.equal((await add({ kind: 'transport', sections: ['trains'] })).status, 400, 'station code needed');
+  assert.equal((await add({ kind: 'transport', sections: ['tracker'] })).status, 400, 'route numbers needed');
+  r = await add({ kind: 'transport', sections: ['tracker', 'trains', 'planes'], station: 'biw', trackLines: '73, 74 188', trackTitle: 'Buses to Bedford' });
+  assert.equal(r.status, 201);
+  assert.deepEqual(r.body.content.trackLines, ['73', '74', '188']);
+  assert.equal(r.body.content.station, 'BIW');
+
+  for (const content of [
+    { kind: 'bankholiday', division: 'scotland' },
+    { kind: 'floods', radius: 10 },
+    { kind: 'carbon', postcode: 'sg18' },
+    { kind: 'quakes', feed: 'significant_week' },
+    { kind: 'currency', base: 'GBP', symbols: ['EUR', 'USD', 'GBP', 'XXX'] },
+    { kind: 'potd' },
+    { kind: 'births' },
+    { kind: 'sky' },
+    { kind: 'headlines', url: 'https://club.example/news.rss' },
+    { kind: 'events', url: 'webcal://club.example/fixtures.ics' },
+    { kind: 'quiz', topic: 'music', source: 'opentdb' },
+  ]) {
+    r = await add(content);
+    assert.equal(r.status, 201, `${content.kind}: ${JSON.stringify(r.body)}`);
+  }
+  assert.equal((await add({ kind: 'carbon', postcode: 'not a postcode' })).status, 400);
+  assert.equal((await add({ kind: 'headlines', url: 'javascript:alert(1)' })).status, 400);
+  assert.equal((await add({ kind: 'currency', symbols: ['XXX'] })).status, 400);
+
+  const st = (await s.call('GET', '/api/state')).body;
+  const byKind = (k) => st.assets.find((a) => a.content?.kind === k).content;
+  assert.deepEqual(byKind('currency').symbols, ['EUR', 'USD']);
+  assert.equal(byKind('carbon').postcode, 'SG18');
+  assert.equal(byKind('events').url, 'https://club.example/fixtures.ics');
+
+  r = await s.call('GET', '/api/player/clubhouse/manifest');
+  const raw = JSON.stringify(r.body);
+  assert.ok(!raw.includes('rail-secret') && !raw.includes('bods-secret'), 'API keys never reach screens');
+  const w = (k) => r.body.items.find((i) => i.type === 'widget' && i.content.kind === k);
+  assert.equal(w('sky').data.place, 'Biggleswade');
+  assert.match(w('sky').data.sunrise, /^\d\d:\d\d$/);
+  assert.deepEqual(w('transport').data.sections.map((x) => x.key), ['tracker', 'trains', 'planes']);
+  assert.equal(w('transport').data.sections[0].title, 'Bus tracker');
+});
+
+test('screen language: club default, per-screen override, validation', async (t) => {
+  const s = await startServer();
+  t.after(s.stop);
+  await s.call('POST', '/api/auth/setup', { clubName: 'Riverside FC', password: 'correct horse' });
+  let r = await s.call('GET', '/api/state');
+  assert.equal(r.body.settings.language, 'en');
+  assert.ok(r.body.languages.some((l) => l.code === 'ja' && l.name === '日本語'));
+  r = await s.call('GET', '/api/player/bar-tv/manifest');
+  assert.equal(r.body.language, 'en');
+
+  await s.call('PUT', '/api/settings', { clubName: 'Riverside FC', language: 'fr' });
+  r = await s.call('GET', '/api/player/bar-tv/manifest');
+  assert.equal(r.body.language, 'fr', 'club default');
+  await s.call('PATCH', '/api/screens/bar-tv', { language: 'pl' });
+  r = await s.call('GET', '/api/player/bar-tv/manifest');
+  assert.equal(r.body.language, 'pl', 'per-screen override');
+  await s.call('PATCH', '/api/screens/bar-tv', { language: '' });
+  assert.equal((await s.call('GET', '/api/player/bar-tv/manifest')).body.language, 'fr', 'back to club default');
+  await s.call('PUT', '/api/settings', { clubName: 'Riverside FC', language: 'klingon' });
+  assert.equal((await s.call('GET', '/api/state')).body.settings.language, 'en', 'unknown codes fall back to English');
+});
+
+test('every language has every label', () => {
+  const { STRINGS, LANGUAGES } = require('../public/shared/i18n.js');
+  const keys = Object.keys(STRINGS.en);
+  for (const { code } of LANGUAGES) {
+    const missing = keys.filter((k) => !(k in STRINGS[code]));
+    assert.deepEqual(missing, [], `${code} is missing labels`);
+    for (const k of keys) {
+      const placeholders = (STRINGS.en[k].match(/\{\w+\}/g) || []).sort();
+      assert.deepEqual((STRINGS[code][k].match(/\{\w+\}/g) || []).sort(), placeholders, `${code}.${k} keeps its placeholders`);
+    }
+  }
 });

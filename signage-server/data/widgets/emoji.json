@@ -1,0 +1,165 @@
+{
+  "about": "Guess the film, TV show or song from the emojis. The answer is revealed partway through.",
+  "items": [
+    {
+      "emoji": "🦁👑",
+      "answer": "The Lion King",
+      "category": "Film"
+    },
+    {
+      "emoji": "🚢🧊💔",
+      "answer": "Titanic",
+      "category": "Film"
+    },
+    {
+      "emoji": "🦈🌊🚤",
+      "answer": "Jaws",
+      "category": "Film"
+    },
+    {
+      "emoji": "👽📞🏠",
+      "answer": "E.T. the Extra-Terrestrial",
+      "category": "Film"
+    },
+    {
+      "emoji": "🧙‍♂️💍🌋",
+      "answer": "The Lord of the Rings",
+      "category": "Film"
+    },
+    {
+      "emoji": "🦖🏝️🚙",
+      "answer": "Jurassic Park",
+      "category": "Film"
+    },
+    {
+      "emoji": "🐠🔍🌊",
+      "answer": "Finding Nemo",
+      "category": "Film"
+    },
+    {
+      "emoji": "❄️👸⛄",
+      "answer": "Frozen",
+      "category": "Film"
+    },
+    {
+      "emoji": "🍫🏭🎫",
+      "answer": "Charlie and the Chocolate Factory",
+      "category": "Film"
+    },
+    {
+      "emoji": "👻🚫🔫",
+      "answer": "Ghostbusters",
+      "category": "Film"
+    },
+    {
+      "emoji": "⏰🚗⚡",
+      "answer": "Back to the Future",
+      "category": "Film"
+    },
+    {
+      "emoji": "🏴‍☠️🌊⚓",
+      "answer": "Pirates of the Caribbean",
+      "category": "Film"
+    },
+    {
+      "emoji": "🤠🧸🚀",
+      "answer": "Toy Story",
+      "category": "Film"
+    },
+    {
+      "emoji": "🐼🥋",
+      "answer": "Kung Fu Panda",
+      "category": "Film"
+    },
+    {
+      "emoji": "🎈🏠👴",
+      "answer": "Up",
+      "category": "Film"
+    },
+    {
+      "emoji": "🦇🃏🌃",
+      "answer": "The Dark Knight",
+      "category": "Film"
+    },
+    {
+      "emoji": "🌧️☂️💃",
+      "answer": "Singin' in the Rain",
+      "category": "Film"
+    },
+    {
+      "emoji": "☕🛋️👫👫👫",
+      "answer": "Friends",
+      "category": "TV"
+    },
+    {
+      "emoji": "👑🎲🐉",
+      "answer": "Game of Thrones",
+      "category": "TV"
+    },
+    {
+      "emoji": "🍩💛👨‍👩‍👧‍👦",
+      "answer": "The Simpsons",
+      "category": "TV"
+    },
+    {
+      "emoji": "🕰️📦💙",
+      "answer": "Doctor Who",
+      "category": "TV"
+    },
+    {
+      "emoji": "🎂🇬🇧⛺",
+      "answer": "The Great British Bake Off",
+      "category": "TV"
+    },
+    {
+      "emoji": "🧪🚐💰",
+      "answer": "Breaking Bad",
+      "category": "TV"
+    },
+    {
+      "emoji": "🚲🔦🙃",
+      "answer": "Stranger Things",
+      "category": "TV"
+    },
+    {
+      "emoji": "💃🕺✨",
+      "answer": "Strictly Come Dancing",
+      "category": "TV"
+    },
+    {
+      "emoji": "🟡🚢🎵",
+      "answer": "Yellow Submarine",
+      "category": "Song"
+    },
+    {
+      "emoji": "🧊🧊👶",
+      "answer": "Ice Ice Baby",
+      "category": "Song"
+    },
+    {
+      "emoji": "🛣️🔥🎸",
+      "answer": "Highway to Hell",
+      "category": "Song"
+    },
+    {
+      "emoji": "💃👑",
+      "answer": "Dancing Queen",
+      "category": "Song"
+    },
+    {
+      "emoji": "🌈⬆️",
+      "answer": "Over the Rainbow",
+      "category": "Song"
+    },
+    {
+      "emoji": "👁️🐯",
+      "answer": "Eye of the Tiger",
+      "category": "Song"
+    },
+    {
+      "emoji": "🚶☀️",
+      "answer": "Walking on Sunshine",
+      "category": "Song"
+    }
+  ]
+}

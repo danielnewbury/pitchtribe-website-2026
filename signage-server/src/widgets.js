@@ -12,16 +12,40 @@ import { resolve } from 'node:path';
 import { EventEmitter } from 'node:events';
 import { createHash } from 'node:crypto';
 import { ROOT } from './config.js';
+import { createSources, BANK_HOLIDAY_DIVISIONS } from './sources.js';
 
 export const WIDGET_KINDS = [
   { kind: 'clock', name: 'Clock', description: 'Digital or analogue clock, or a countdown to kick-off', source: 'screen' },
   { kind: 'weather', name: 'Weather', description: 'Current conditions and a short forecast (Open-Meteo, no API key)', source: 'live' },
   { kind: 'joke', name: 'Joke', description: 'Family-friendly sports jokes with a punchline reveal', source: 'bundled' },
   { kind: 'phrase', name: 'Phrase', description: 'Club-spirit phrases in big type', source: 'bundled' },
-  { kind: 'trivia', name: 'Did you know?', description: 'Sporting trivia facts', source: 'bundled' },
-  { kind: 'quiz', name: 'Quiz', description: 'Multiple-choice sports questions with an answer reveal', source: 'bundled' },
-  { kind: 'history', name: 'Sporting history', description: 'This day, week or month in sporting history (plus general history from Wikipedia)', source: 'bundled+live' },
+  { kind: 'trivia', name: 'Did you know?', description: 'Trivia facts: sport, film & TV, music, geography or culture', source: 'bundled' },
+  { kind: 'quiz', name: 'Quiz', description: 'Multiple-choice questions with an answer reveal: sport, film & TV, music, geography or culture', source: 'bundled' },
+  { kind: 'history', name: 'On this day', description: 'This day, week or month in sporting or TV/film/music history (plus general history from Wikipedia)', source: 'bundled+live' },
+  { kind: 'emoji', name: 'Emoji quiz', description: 'Guess the film, TV show or song from emojis', source: 'bundled' },
+  { kind: 'geoquiz', name: 'Flags & capitals', description: 'Geography quiz: name the country from its flag, or its capital city', source: 'bundled' },
+  { kind: 'country', name: 'Country of the day', description: 'A country’s flag, capital, continent and currency', source: 'bundled' },
+  { kind: 'worldclock', name: 'World clocks', description: 'The time in cities around the world', source: 'screen' },
+  { kind: 'transport', name: 'Transport hub', description: 'Live bus tracker (England), train departures (National Rail), London buses, tube/rail line status, London roads and planes overhead', source: 'live' },
+  { kind: 'bankholiday', name: 'Bank holidays', description: 'Upcoming UK bank holidays (GOV.UK)', source: 'live' },
+  { kind: 'floods', name: 'Flood warnings', description: 'Environment Agency flood warnings near the ground (England)', source: 'live' },
+  { kind: 'carbon', name: 'Grid carbon', description: 'How green the electricity is right now (Carbon Intensity API)', source: 'live' },
+  { kind: 'quakes', name: 'Earthquakes', description: 'Recent earthquakes worldwide (USGS)', source: 'live' },
+  { kind: 'currency', name: 'Exchange rates', description: 'Daily reference exchange rates (European Central Bank)', source: 'live' },
+  { kind: 'potd', name: 'Picture of the day', description: 'Wikimedia Commons picture of the day', source: 'live' },
+  { kind: 'births', name: 'Born on this day', description: 'Famous birthdays today (Wikipedia)', source: 'live' },
+  { kind: 'sky', name: 'Sunrise, sunset & moon', description: 'Sun times and moon phase for the ground (calculated, no internet needed)', source: 'screen' },
+  { kind: 'headlines', name: 'News headlines', description: 'Headlines from any RSS or Atom feed, e.g. your club or league website', source: 'live' },
+  { kind: 'events', name: 'Calendar', description: 'Upcoming events from any iCal (.ics) calendar, e.g. Google Calendar or your league', source: 'live' },
 ];
+
+export const TOPICS = ['sport', 'film-tv', 'music', 'geography', 'culture', 'mixed'];
+export const HISTORY_TOPICS = ['sport', 'entertainment', 'all'];
+const TOPIC_PACKS = {
+  quiz: { sport: 'quiz', 'film-tv': 'quiz-film-tv', music: 'quiz-music', geography: 'quiz-geography', culture: 'quiz-culture' },
+  trivia: { sport: 'trivia', 'film-tv': 'trivia-film-tv', music: 'trivia-music', geography: 'trivia-geography', culture: 'trivia-culture' },
+};
+export const TOPIC_LABELS = { sport: 'Sport', 'film-tv': 'Film & TV', music: 'Music', geography: 'Geography', culture: 'Culture', mixed: 'General knowledge' };
 const KINDS = new Set(WIDGET_KINDS.map((k) => k.kind));
 
 const PACK_DIR = resolve(ROOT, 'data', 'widgets');
@@ -62,6 +86,8 @@ function partsIn(now, tz) {
   return { y: Number(p.year), m: Number(p.month), d: Number(p.day), dow: ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].indexOf(p.weekday) };
 }
 const pad = (n) => String(n).padStart(2, '0');
+/** "GB" -> 🇬🇧 (regional indicator symbols). */
+export const flagEmoji = (code) => String.fromCodePoint(...[...String(code).toUpperCase()].map((c) => 0x1f1e6 + c.charCodeAt(0) - 65));
 const mmdd = (m, d) => `${pad(m)}-${pad(d)}`;
 const MONTHS = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
 
@@ -85,9 +111,12 @@ const WMO = {
   85: ['Snow showers', '🌨️', '🌨️'], 86: ['Heavy snow showers', '❄️', '❄️'],
   95: ['Thunderstorm', '⛈️', '⛈️'], 96: ['Thunderstorm with hail', '⛈️', '⛈️'], 99: ['Thunderstorm with hail', '⛈️', '⛈️'],
 };
+const WMO_COND = { 0: 'clear', 1: 'fair', 2: 'partly', 3: 'cloudy', 45: 'fog', 48: 'fog', 51: 'drizzle', 53: 'drizzle', 55: 'drizzle', 56: 'drizzle', 57: 'drizzle',
+  61: 'lightrain', 63: 'rain', 65: 'heavyrain', 66: 'rain', 67: 'rain', 71: 'snow', 73: 'snow', 75: 'snow', 77: 'snow', 80: 'showers', 81: 'showers', 82: 'heavyrain',
+  85: 'snowshowers', 86: 'snowshowers', 95: 'thunder', 96: 'thunder', 99: 'thunder' };
 export function describeWeather(code, isDay = true) {
   const [text, day, night] = WMO[code] ?? ['Unknown', '🌡️', '🌡️'];
-  return { text, icon: isDay ? day : night };
+  return { text, icon: isDay ? day : night, cond: WMO_COND[code] || '' };
 }
 
 // ----------------------------------------------------------------- widget set
@@ -97,11 +126,21 @@ export function createWidgets({ config = {}, fetchImpl = fetch, log = console.er
   const tz = config.timezone || 'Europe/London';
   const weatherCfg = config.weather || null;
   const wikipedia = config.widgets?.wikipedia !== false;
+  const provider = weatherCfg?.provider === 'openmeteo' ? 'openmeteo' : 'metno';
 
   async function getJson(url) {
     const res = await fetchImpl(url, { headers: { accept: 'application/json', 'user-agent': UA }, signal: AbortSignal.timeout(15_000) });
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     return res.json();
+  }
+
+  /** Text body (RSS, iCal) with a 2 MB cap. */
+  async function getText(url) {
+    const res = await fetchImpl(url, { headers: { accept: 'application/rss+xml, application/atom+xml, text/calendar, text/xml, */*', 'user-agent': UA }, signal: AbortSignal.timeout(15_000) });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const text = await res.text();
+    if (text.length > 2_000_000) throw new Error('Feed too large');
+    return text;
   }
 
   /** Cached remote value; refreshes in the background once stale. */
@@ -127,10 +166,13 @@ export function createWidgets({ config = {}, fetchImpl = fetch, log = console.er
     return e;
   }
 
+  const src = createSources({ remote, getJson, getText, tz, weatherCfg, trainsCfg: config.widgets?.trains, bodsCfg: config.widgets?.bods, partsIn, sample });
+
   // ---- weather
   // One 7-day fetch per location; slides take as many days as they show.
   function weatherEntry() {
     if (!weatherCfg || !Number.isFinite(Number(weatherCfg.latitude)) || !Number.isFinite(Number(weatherCfg.longitude))) return null;
+    if (provider === 'metno') return src.metForecast();
     const windUnit = weatherCfg.windUnit === 'kmh' ? 'kmh' : 'mph';
     const url = 'https://api.open-meteo.com/v1/forecast'
       + `?latitude=${Number(weatherCfg.latitude)}&longitude=${Number(weatherCfg.longitude)}`
@@ -165,7 +207,7 @@ export function createWidgets({ config = {}, fetchImpl = fetch, log = console.er
       const j = await getJson(`https://api.wikimedia.org/feed/v1/wikipedia/en/onthisday/selected/${pad(m)}/${pad(d)}`);
       return (j.selected ?? [])
         .filter((ev) => ev.text && Number.isFinite(Number(ev.year)))
-        .map((ev) => ({ date: mmdd(m, d), year: Number(ev.year), text: String(ev.text).trim(), sport: false }));
+        .map((ev) => ({ date: mmdd(m, d), year: Number(ev.year), text: String(ev.text).trim(), sport: false, tag: 'general' }));
     });
   }
 
@@ -185,7 +227,11 @@ export function createWidgets({ config = {}, fetchImpl = fetch, log = console.er
     const inWindow = (scope, item) => (scope === 'month' ? Number(item.date.slice(0, 2)) === m : windows[scope].includes(item.date));
     const order = ['day', 'week', 'month'];
     const wanted = order.includes(opts.scope) ? opts.scope : 'day';
-    const all = pack('sporting-history');
+    const topic = HISTORY_TOPICS.includes(opts.topic) ? opts.topic : 'sport';
+    const all = [
+      ...(topic !== 'entertainment' ? pack('sporting-history').map((it) => ({ ...it, tag: 'sport' })) : []),
+      ...(topic !== 'sport' ? pack('entertainment-history').map((it) => ({ ...it, tag: 'entertainment' })) : []),
+    ];
     let scopeUsed = wanted;
     let items = all.filter((it) => inWindow(wanted, it));
     // Nothing on this exact day? Widen to the week, then the month.
@@ -200,7 +246,7 @@ export function createWidgets({ config = {}, fetchImpl = fetch, log = console.er
       return Math.abs(Date.UTC(y, im - 1, id) - today.getTime());
     };
     items = items
-      .map((it) => ({ ...it, sport: true }))
+      .map((it) => ({ ...it, sport: it.tag === 'sport' }))
       .sort((a, b) => dist(a) - dist(b) || a.year - b.year)
       .slice(0, limit);
 
@@ -211,26 +257,80 @@ export function createWidgets({ config = {}, fetchImpl = fetch, log = console.er
       if (e.data) general = sample(e.data, Math.max(limit - items.length, 2), `wiki:${y}-${todayKey}`);
       generalError = e.error;
     }
+    const what = { sport: 'sporting history', entertainment: 'TV, film & music', all: 'history' }[topic];
     const label = {
       day: `On this day — ${d} ${MONTHS[m - 1]}`,
-      week: 'This week in sporting history',
-      month: `${MONTHS[m - 1]} in sporting history`,
+      week: `This week in ${what}`,
+      month: `${MONTHS[m - 1]} in ${what}`,
     }[scopeUsed];
     return {
+      topic,
+      month: m,
+      day: d,
       scope: wanted,
       scopeUsed,
       label,
       items: [...items, ...general].sort((a, b) => (a.date === b.date ? a.year - b.year : a.date < b.date ? -1 : 1)),
       generalError,
+      ...(general.length ? { credit: 'General history: Wikipedia · CC BY-SA 4.0' } : {}),
     };
+  }
+
+  /** Flag or capital-city questions generated from countries.json. */
+  function geoQuiz(mode, seed, count = 20) {
+    const all = pack('countries');
+    return sample(all, count, seed).map((c, i) => {
+      let kind = mode === 'mixed' ? (i % 2 ? 'capitals' : 'flags') : mode;
+      if (kind === 'capitals' && c.skipCapital) kind = 'flags';
+      const usable = all.filter((o) => o.code !== c.code && (kind === 'flags' || !o.skipCapital));
+      const near = usable.filter((o) => o.continent === c.continent);
+      const wrong = sample(near.length >= 3 ? near : usable, 3, `${seed}:w:${i}`);
+      const label = (o) => (kind === 'flags' ? o.name : o.capital);
+      const options = sample([c, ...wrong].map(label), 4, `${seed}:o:${i}`);
+      const all4 = [c, ...wrong];
+      return {
+        q: kind === 'flags' ? 'Which country does this flag belong to?' : `What is the capital of ${c.name}?`,
+        qtype: kind === 'flags' ? 'flag' : 'capital',
+        code: c.code,
+        flag: flagEmoji(c.code),
+        options,
+        // Country codes for flag questions, so screens can show names in their own language.
+        optionCodes: kind === 'flags' ? options.map((o) => all4.find((x) => x.name === o).code) : undefined,
+        answer: options.indexOf(label(c)),
+        topic: 'geography',
+      };
+    });
+  }
+
+  function packFor(kind, topic) {
+    if (!TOPIC_PACKS[kind]) return pack({ joke: 'jokes', phrase: 'phrases', emoji: 'emoji' }[kind]);
+    const t = TOPICS.includes(topic) ? topic : 'sport';
+    const names = t === 'mixed' ? Object.entries(TOPIC_PACKS[kind]) : [[t, TOPIC_PACKS[kind][t]]];
+    return names.flatMap(([tp, name]) => pack(name).map((it) => (typeof it === 'string' ? { text: it, topic: tp } : { ...it, topic: tp })));
   }
 
   function contentData(kind, opts, now) {
     const { y, m, d } = partsIn(now, tz);
-    const seed = `${kind}:${y}-${mmdd(m, d)}`;
+    const topic = TOPICS.includes(opts.topic) ? opts.topic : 'sport';
+    const seed = `${kind}:${topic}:${y}-${mmdd(m, d)}`;
     const extras = extraLines(opts.extra);
-    const packName = { joke: 'jokes', phrase: 'phrases', trivia: 'trivia', quiz: 'quiz' }[kind];
-    let base = opts.only && extras.length ? [] : pack(packName);
+    let base = opts.only && extras.length ? [] : packFor(kind, topic);
+    let credit;
+    let note;
+    if (kind === 'quiz' && opts.source === 'opentdb' && !(opts.only && extras.length)) {
+      const online = src.opentdb(topic);
+      if (online.items) {
+        base = online.items;
+        credit = 'Questions: Open Trivia Database · CC BY-SA 4.0';
+      } else {
+        note = online.error ? 'Online questions unavailable — showing built-in questions.' : 'Loading online questions…';
+      }
+    }
+    if (kind === 'quiz' && !credit && (topic === 'geography' || topic === 'mixed') && !(opts.only && extras.length)) {
+      base = [...base, ...geoQuiz('mixed', `${seed}:geo`, 10)];
+    }
+    if (kind === 'trivia') base = base.map((it) => it.text); // facts are plain strings on screen
+    if (kind === 'emoji' && ['Film', 'TV', 'Song'].includes(opts.category)) base = base.filter((it) => it.category === opts.category);
     let mine = [];
     if (kind === 'joke') {
       mine = extras.map((l) => {
@@ -246,12 +346,27 @@ export function createWidgets({ config = {}, fetchImpl = fetch, log = console.er
           const options = sample(cols.slice(1, 5), 4, `${seed}:mine:${i}`);
           return { q: cols[0], options, answer: options.indexOf(cols[1]) };
         });
+    } else if (kind === 'emoji') {
+      // "🦁👑 | The Lion King | Film"
+      mine = extras
+        .map((l) => l.split('|').map((s) => s.trim()))
+        .filter((cols) => cols[0] && cols[1])
+        .map(([emoji, answer, category]) => ({ emoji, answer, category: category || '' }));
     } else {
       mine = extras;
     }
     base = sample(base, 20, seed);
     // Club's own lines first in the rotation, mixed into the day's sample.
-    return { items: [...mine, ...base].slice(0, Math.max(20, mine.length)) };
+    return { topic, items: [...mine, ...base].slice(0, Math.max(20, mine.length)), ...(credit ? { credit } : {}), ...(note ? { note } : {}) };
+  }
+
+  function countryData(now) {
+    const { y, m, d } = partsIn(now, tz);
+    return {
+      items: sample(pack('countries'), 20, `country:${y}-${mmdd(m, d)}`).map((c) => ({
+        name: c.name, code: c.code, flag: flagEmoji(c.code), capital: c.capital, continent: c.continent, currency: c.currency,
+      })),
+    };
   }
 
   function compute(kind, opts = {}, now = new Date()) {
@@ -270,10 +385,33 @@ export function createWidgets({ config = {}, fetchImpl = fetch, log = console.er
           days: e.data.days.slice(0, days + 1),
           fetchedAt: new Date(e.fetchedAt).toISOString(),
           stale: Boolean(e.error),
+          credit: provider === 'metno' ? 'Weather: MET Norway · CC BY 4.0' : 'Weather: Open-Meteo.com · CC BY 4.0',
         };
       }
+      case 'transport':
+        return src.transport(opts, now);
+      case 'bankholiday':
+      case 'floods':
+      case 'carbon':
+      case 'quakes':
+      case 'currency':
+      case 'potd':
+      case 'births':
+      case 'sky':
+      case 'headlines':
+      case 'events':
+        return src[kind](opts, now);
       case 'history':
         return historyData(opts, now);
+      case 'worldclock':
+        return {};
+      case 'geoquiz': {
+        const { y, m, d } = partsIn(now, tz);
+        const mode = ['flags', 'capitals', 'mixed'].includes(opts.mode) ? opts.mode : 'mixed';
+        return { mode, items: geoQuiz(mode, `geoquiz:${mode}:${y}-${mmdd(m, d)}`) };
+      }
+      case 'country':
+        return countryData(now);
       default:
         return contentData(kind, opts, now);
     }
@@ -287,9 +425,21 @@ export function createWidgets({ config = {}, fetchImpl = fetch, log = console.er
     return compute(kind, opts, now);
   }
 
+  /** Place search: OpenStreetMap Nominatim (ODbL, commercial use allowed), Open-Meteo as a fallback. */
   async function geocode(q) {
     const name = String(q ?? '').trim();
     if (name.length < 2) return [];
+    try {
+      const list = await getJson(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(name)}&format=jsonv2&limit=6`);
+      if (Array.isArray(list) && list.length) {
+        return list.map((r) => {
+          const parts = String(r.display_name || '').split(',').map((x) => x.trim());
+          return { name: r.name || parts[0] || name, region: parts.slice(1).filter((x) => !/^\d/.test(x)).slice(-3).join(', '), latitude: Number(r.lat), longitude: Number(r.lon), source: 'OpenStreetMap' };
+        });
+      }
+    } catch (err) {
+      log(`[widgets] nominatim: ${err.message}`);
+    }
     const j = await getJson(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(name)}&count=6&language=en&format=json`);
     return (j.results ?? []).map((r) => ({
       name: r.name,

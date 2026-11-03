@@ -6,7 +6,7 @@ import { createRequestHandler } from '../src/http.js';
 import { createMcpHandler } from '../src/mcp.js';
 
 const quiet = () => {};
-const config = { timezone: 'Europe/London', weather: { place: 'Leeds', latitude: 53.8, longitude: -1.55 }, widgets: { wikipedia: true } };
+const config = { timezone: 'Europe/London', weather: { place: 'Leeds', latitude: 53.8, longitude: -1.55, provider: 'openmeteo' }, widgets: { wikipedia: true } };
 
 const openMeteo = {
   current: { temperature_2m: 11.6, weather_code: 61, wind_speed_10m: 9.2, is_day: 1 },
@@ -90,7 +90,7 @@ test('weather: live fetch, caching, update event, offline fallback', async () =>
   const down = createWidgets({ config, fetchImpl: async () => { throw new Error('offline'); }, log: quiet });
   assert.match((await down.get('weather')).error, /unavailable/);
 
-  assert.deepEqual(describeWeather(0, false), { text: 'Clear sky', icon: '🌙' });
+  assert.deepEqual(describeWeather(0, false), { text: 'Clear sky', icon: '🌙', cond: 'clear' });
   assert.deepEqual(await w.geocode('Leeds'), [{ name: 'Leeds', region: 'England, United Kingdom', latitude: 53.8, longitude: -1.55 }]);
 });
 
@@ -120,4 +120,63 @@ test('widget HTTP routes and MCP tool', async (t) => {
 
   const reply = await mcp({ jsonrpc: '2.0', id: 1, method: 'tools/call', params: { name: 'get_widget', arguments: { kind: 'weather' } } });
   assert.match(reply.result.content[0].text, /Leeds: 12°C, Light rain/);
+});
+
+test('topics: film & TV, music, geography, culture and mixed packs', () => {
+  const w = createWidgets({ config, fetchImpl: fakeFetch(), log: quiet });
+  const now = new Date('2026-11-03T12:00:00Z');
+  for (const topic of ['sport', 'film-tv', 'music', 'geography', 'culture']) {
+    const quiz = w.peek('quiz', { topic }, now);
+    assert.equal(quiz.topic, topic);
+    assert.equal(quiz.items.length, 20, `${topic} quiz`);
+    assert.ok(quiz.items.every((q) => q.options.length === 4 && q.options[q.answer] !== undefined), `${topic} answers valid`);
+    const facts = w.peek('trivia', { topic }, now);
+    assert.ok(facts.items.length >= 13 && facts.items.every((f) => typeof f === 'string' && f.length > 20), `${topic} trivia`);
+  }
+  const mixed = w.peek('quiz', { topic: 'mixed' }, now);
+  assert.ok(new Set(mixed.items.map((q) => q.topic)).size >= 3, 'mixed draws from several topics');
+  assert.notDeepEqual(w.peek('quiz', { topic: 'music' }, now).items, w.peek('quiz', { topic: 'culture' }, now).items);
+  assert.equal(w.peek('quiz', { topic: 'nonsense' }, now).topic, 'sport', 'unknown topic falls back to sport');
+});
+
+test('history topics: sport, TV/film/music and both', () => {
+  const w = createWidgets({ config, fetchImpl: fakeFetch(), log: quiet });
+  const nov23 = new Date('2026-11-23T12:00:00Z'); // Doctor Who 1963
+  const ent = w.peek('history', { scope: 'day', topic: 'entertainment' }, nov23);
+  assert.equal(ent.scopeUsed, 'day');
+  assert.ok(ent.items.some((i) => i.year === 1963 && /Doctor Who/.test(i.text)));
+  assert.ok(ent.items.every((i) => i.tag === 'entertainment'));
+  const both = w.peek('history', { scope: 'month', topic: 'all', limit: 12 }, nov23);
+  assert.equal(both.label, 'November in history');
+  assert.ok(both.items.some((i) => i.tag === 'sport') && both.items.some((i) => i.tag === 'entertainment'));
+  assert.equal(w.peek('history', { scope: 'week', topic: 'entertainment' }, nov23).label, 'This week in TV, film & music');
+});
+
+test('emoji quiz, flags & capitals, country of the day', () => {
+  const w = createWidgets({ config, fetchImpl: fakeFetch(), log: quiet });
+  const now = new Date('2026-11-03T12:00:00Z');
+  const emoji = w.peek('emoji', {}, now);
+  assert.equal(emoji.items.length, 20);
+  assert.ok(emoji.items.every((e) => e.emoji && e.answer && ['Film', 'TV', 'Song'].includes(e.category)));
+  assert.ok(w.peek('emoji', { category: 'Song' }, now).items.every((e) => e.category === 'Song'));
+  const mine = w.peek('emoji', { extra: '🏉🏆 | Rugby World Cup | Sport', only: true }, now);
+  assert.deepEqual(mine.items, [{ emoji: '🏉🏆', answer: 'Rugby World Cup', category: 'Sport' }]);
+
+  for (const mode of ['flags', 'capitals', 'mixed']) {
+    const geo = w.peek('geoquiz', { mode }, now);
+    assert.equal(geo.items.length, 20);
+    for (const q of geo.items) {
+      assert.equal(new Set(q.options).size, 4, 'four different options');
+      assert.ok(q.options[q.answer] !== undefined);
+      assert.match(q.flag, /^[\u{1F1E6}-\u{1F1FF}]{2}$/u);
+    }
+  }
+  const caps = w.peek('geoquiz', { mode: 'capitals' }, now).items.filter((q) => q.q.startsWith('What is the capital'));
+  assert.ok(caps.length > 10);
+  assert.ok(!caps.some((q) => /South Africa|Indonesia/.test(q.q)), 'ambiguous capitals are not asked');
+
+  const country = w.peek('country', {}, now);
+  assert.equal(country.items.length, 20);
+  assert.ok(country.items.every((c) => c.name && c.flag && c.capital && c.continent && c.currency));
+  assert.deepEqual(w.peek('country', {}, new Date('2026-11-03T22:00:00Z')).items, country.items, 'stable all day');
 });

@@ -1,0 +1,215 @@
+{
+  "about": "Arts, books, food and traditions quiz.",
+  "items": [
+    {
+      "q": "Who painted the Mona Lisa?",
+      "options": [
+        "Michelangelo",
+        "Raphael",
+        "Leonardo da Vinci",
+        "Botticelli"
+      ],
+      "answer": 2
+    },
+    {
+      "q": "Who wrote Romeo and Juliet?",
+      "options": [
+        "Christopher Marlowe",
+        "William Shakespeare",
+        "Ben Jonson",
+        "John Milton"
+      ],
+      "answer": 1
+    },
+    {
+      "q": "Which painter cut off part of his own ear?",
+      "options": [
+        "Claude Monet",
+        "Vincent van Gogh",
+        "Paul Cézanne",
+        "Edvard Munch"
+      ],
+      "answer": 1
+    },
+    {
+      "q": "In which city is the Louvre museum?",
+      "options": [
+        "Rome",
+        "Madrid",
+        "Paris",
+        "Vienna"
+      ],
+      "answer": 2
+    },
+    {
+      "q": "Who wrote Pride and Prejudice?",
+      "options": [
+        "Charlotte Brontë",
+        "Jane Austen",
+        "George Eliot",
+        "Mary Shelley"
+      ],
+      "answer": 1
+    },
+    {
+      "q": "Which fictional detective lived at 221B Baker Street?",
+      "options": [
+        "Hercule Poirot",
+        "Sherlock Holmes",
+        "Miss Marple",
+        "Inspector Morse"
+      ],
+      "answer": 1
+    },
+    {
+      "q": "What is the main ingredient of guacamole?",
+      "options": [
+        "Avocado",
+        "Tomato",
+        "Chickpeas",
+        "Pepper"
+      ],
+      "answer": 0
+    },
+    {
+      "q": "Haggis is the national dish of which country?",
+      "options": [
+        "Ireland",
+        "Wales",
+        "Scotland",
+        "England"
+      ],
+      "answer": 2
+    },
+    {
+      "q": "Which festival of lights is celebrated by Hindus, Sikhs and Jains?",
+      "options": [
+        "Holi",
+        "Diwali",
+        "Eid",
+        "Hanukkah"
+      ],
+      "answer": 1
+    },
+    {
+      "q": "On which date is Bonfire Night celebrated in the UK?",
+      "options": [
+        "31 October",
+        "1 November",
+        "5 November",
+        "11 November"
+      ],
+      "answer": 2
+    },
+    {
+      "q": "Who wrote A Christmas Carol?",
+      "options": [
+        "Charles Dickens",
+        "Thomas Hardy",
+        "Lewis Carroll",
+        "Oscar Wilde"
+      ],
+      "answer": 0
+    },
+    {
+      "q": "Which Spanish artist co-founded Cubism?",
+      "options": [
+        "Salvador Dalí",
+        "Pablo Picasso",
+        "Joan Miró",
+        "Francisco Goya"
+      ],
+      "answer": 1
+    },
+    {
+      "q": "Who wrote the novel 1984?",
+      "options": [
+        "Aldous Huxley",
+        "George Orwell",
+        "H. G. Wells",
+        "Ray Bradbury"
+      ],
+      "answer": 1
+    },
+    {
+      "q": "Which ballet features the Sugar Plum Fairy?",
+      "options": [
+        "Swan Lake",
+        "The Nutcracker",
+        "Giselle",
+        "Coppélia"
+      ],
+      "answer": 1
+    },
+    {
+      "q": "Which saint's day is celebrated on 17 March?",
+      "options": [
+        "St David",
+        "St George",
+        "St Andrew",
+        "St Patrick"
+      ],
+      "answer": 3
+    },
+    {
+      "q": "Which Italian city is famous for its canals and gondolas?",
+      "options": [
+        "Florence",
+        "Venice",
+        "Naples",
+        "Milan"
+      ],
+      "answer": 1
+    },
+    {
+      "q": "Who sculpted the statue of David in Florence (1501–1504)?",
+      "options": [
+        "Donatello",
+        "Michelangelo",
+        "Bernini",
+        "Rodin"
+      ],
+      "answer": 1
+    },
+    {
+      "q": "Which author created Paddington Bear?",
+      "options": [
+        "A. A. Milne",
+        "Michael Bond",
+        "Beatrix Potter",
+        "Roald Dahl"
+      ],
+      "answer": 1
+    },
+    {
+      "q": "In which country is the Taj Mahal?",
+      "options": [
+        "Pakistan",
+        "India",
+        "Nepal",
+        "Bangladesh"
+      ],
+      "answer": 1
+    },
+    {
+      "q": "Who painted the ceiling of the Sistine Chapel?",
+      "options": [
+        "Michelangelo",
+        "Leonardo da Vinci",
+        "Titian",
+        "Caravaggio"
+      ],
+      "answer": 0
+    },
+    {
+      "q": "Which children's author wrote Charlie and the Chocolate Factory?",
+      "options": [
+        "Enid Blyton",
+        "Roald Dahl",
+        "C. S. Lewis",
+        "J. K. Rowling"
+      ],
+      "answer": 1
+    }
+  ]
+}
