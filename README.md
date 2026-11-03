@@ -1,54 +1,131 @@
-# PitchTribe website
+# PitchTribe — website
 
-Landing page for PitchTribe — open-source Raspberry Pi 5 digital signage for sports and social clubs.
-Static HTML + Tailwind CSS v4, hosted on **Cloudflare Pages**.
+[![Deploy to Cloudflare Pages](https://github.com/pitchtribe/pitchtribe-display/actions/workflows/deploy.yml/badge.svg)](https://github.com/pitchtribe/pitchtribe-display/actions/workflows/deploy.yml)
+[![Licence: MIT](https://img.shields.io/badge/licence-MIT-2ce6a8.svg)](LICENSE)
 
-## Layout
+The marketing site for **PitchTribe** — open-source digital signage for sports and social clubs,
+running on a Raspberry Pi 5. Noticeboards, fixtures, bar menus and a guest Wi-Fi portal, managed
+from any device on the club's own network.
+
+**Live at [pitchtribe.media](https://pitchtribe.media).**
+
+This repository contains the **website only** — no signage application code lives here.
+
+## Hosting
+
+| Hostname | Behaviour |
+| --- | --- |
+| `pitchtribe.media` | Canonical. Served by Cloudflare Pages via a custom domain. |
+| `www.pitchtribe.media` | 301 → `pitchtribe.media` |
+| `pitchtribe.co.uk` | 301 → `pitchtribe.media` |
+| `www.pitchtribe.co.uk` | 301 → `pitchtribe.media` |
+| `pitchtribe-website.pages.dev` | Pages default domain; serves the same build. |
+
+The three redirects are Cloudflare **Single Redirect** rules in each zone's
+`http_request_dynamic_redirect` phase, not DNS changes — they fire at the edge, so each zone keeps
+its own apex record and its email routing (MX/SPF/DKIM) untouched.
+
+## Repository layout
 
 | Path | Purpose |
 | --- | --- |
-| `html/` | Static root: `index.html`, `404.html`, `_headers`, `robots.txt`, `sitemap.xml`, `assets/` |
-| `src/styles.css` | Tailwind entry point (theme tokens, components) — compiled to `dist/assets/app.css` |
-| `dist/` | Build output deployed to Pages (git-ignored) |
-| `wrangler.toml` | Cloudflare Pages project config (`pages_build_output_dir = "./dist"`) |
-| `.github/workflows/deploy.yml` | CI: build on PRs, build + deploy on push to `main` |
+| `html/` | Static root, copied verbatim into `dist/`. Add a page here. |
+| `html/index.html` | Landing page |
+| `html/buy.html` | `/buy` — parts list, ready-built units, installation |
+| `html/_headers` | Cloudflare Pages response headers (CSP and cache policy) |
+| `src/styles.css` | Tailwind v4 entry point: design tokens, component classes |
+| `scripts/fingerprint.mjs` | Content-hashes built assets and rewrites HTML references |
+| `wrangler.toml` | Pages project config (`pages_build_output_dir = "./dist"`) |
+| `.github/workflows/deploy.yml` | CI: build on pull requests, build and deploy on push to `main` |
+| `dist/` | Build output (git-ignored) |
 
 ## Local development
 
+Requires Node 22 (see `.nvmrc`).
+
 ```bash
 npm ci
-npm run build     # copy html/ → dist/ and compile Tailwind (minified)
-npm run preview   # build, then serve dist/ with Cloudflare's runtime at http://localhost:8788
-npm run dev       # build, then watch src/ + html/ classes and recompile CSS
+npm run build     # clean → copy html/ → compile Tailwind → fingerprint assets
+npm run dev       # build, then watch and recompile CSS on change
+npm run preview   # build, then serve dist/ on Cloudflare's runtime at http://localhost:8788
 ```
 
-Alternatively, `docker compose up` serves the built `dist/` with nginx at http://localhost:8088.
+`docker compose up` also serves a built `dist/` with nginx at http://localhost:8088.
 
-> Edits to `html/*.html` need `npm run build` (or re-run `npm run copy`) to show up in `dist/`.
+> Changes to `html/*.html` only reach `dist/` through a build — `npm run dev` watches CSS, not markup.
+
+### What the build does
+
+1. **clean** — removes `dist/`.
+2. **copy** — copies `html/` into `dist/` unchanged.
+3. **build:css** — compiles `src/styles.css` into `dist/assets/app.css`, minified.
+4. **fingerprint** — renames each asset to include a content hash (`app.248da1c0.css`) and rewrites
+   every reference in the built HTML, then fails the build if an unhashed reference survives.
+
+Step 4 exists because `_headers` caches `/assets/*` for a year while HTML is `must-revalidate`. With
+stable filenames a returning visitor could hold last week's stylesheet alongside today's markup and
+see the page render half-styled. Hashing the filename makes every build a new URL, so the long cache
+is safe and changes land immediately.
 
 ## Deployment
 
-Pushing to `main` runs `.github/workflows/deploy.yml`, which builds the site and runs
-`wrangler pages deploy dist --project-name=pitchtribe-website --branch=main`.
+Pushing to `main` builds the site and runs:
 
-One-time setup:
+```
+wrangler pages deploy dist --project-name=pitchtribe-website --branch=main
+```
 
-1. In Cloudflare, create a Pages project named **`pitchtribe-website`** using *Direct Upload*
-   (or run `npx wrangler pages project create pitchtribe-website --production-branch=main`).
-2. Create an API token with the **Cloudflare Pages: Edit** permission.
-3. In GitHub → *Settings → Secrets and variables → Actions*, add:
-   - `CLOUDFLARE_API_TOKEN`
-   - `CLOUDFLARE_ACCOUNT_ID`
-4. Attach custom domains (`pitchtribe.media`, `pitchtribe.co.uk`) under the Pages project's *Custom domains*.
+The Pages project uses **Direct Upload** rather than a Git integration — CI owns the build, and a
+Git integration would build the site a second time and fight it.
 
-Manual deploy from a workstation: `npx wrangler login && npm run deploy`.
+The deploy job runs in the **`cloudflare_api`** GitHub environment, because that is where
+`CLOUDFLARE_API_TOKEN` and `CLOUDFLARE_ACCOUNT_ID` are scoped. A job can only read repository-level
+secrets plus secrets scoped to its own environment, so moving those secrets to repository level
+means changing `environment:` in `deploy.yml` to match. The job fails fast and names the missing
+variable if either secret resolves empty.
 
-## Security headers
+The API token needs the **Cloudflare Pages: Edit** permission and nothing more.
 
-`html/_headers` sets a strict CSP. The single inline script in `index.html`
-(`document.documentElement.classList.add('js')`) is allow-listed by its SHA-256 hash — if you change
-that script, regenerate the hash:
+A deploy can also be run manually with `workflow_dispatch`, or from a workstation with
+`npx wrangler login && npm run deploy`.
+
+## Conventions worth knowing
+
+These are the three things that have caused real defects here.
+
+**Tailwind scans `html/` and nothing else.** `src/styles.css` imports Tailwind with `source(none)`
+and an explicit `@source "../html"`. Without that, Tailwind's automatic content detection scans
+every non-ignored file in the repo and harvests ordinary prose as class names — `README.md`,
+`package.json` and a workflow step name were each contributing phantom utilities (`.visible`,
+`.contents`, `.inline`, `.static`). Prose inside `html/` can still do this, so diff the generated
+CSS after a copy change and confirm the class set only gained utilities the markup actually uses.
+
+**The inline script is pinned by hash.** `html/_headers` sets a strict CSP, and the one inline
+script in each page is allow-listed by its SHA-256. Change that script and the CSP must be
+regenerated, or the `js` class is never added and every progressive enhancement silently stops:
 
 ```bash
 printf "%s" "document.documentElement.classList.add('js')" | openssl dgst -sha256 -binary | base64
 ```
+
+**Prices on the site carry a date.** The hardware costs in the FAQ and on `/buy` are a dated
+snapshot, because Raspberry Pi board prices moved three times during 2026. Re-check them when
+touching that copy, and keep the date stamp honest.
+
+## Licence
+
+[MIT](LICENSE) — © 2026 Daniel Newbury, trading as PitchTribe.
+
+## About
+
+PitchTribe is a UK sole trader, registered and covered by public liability insurance.
+
+- **Address:** 2 Jubilee Place, Shefford, Bedfordshire, SG17 5JP, United Kingdom
+- **Sales and installation enquiries:** sales@pitchtribe.media
+- **Press:** press@pitchtribe.media
+
+Ready-built units and on-site installation are quoted per job — see
+[pitchtribe.media/buy](https://pitchtribe.media/buy). The software itself is MIT-licensed and free,
+and building it yourself from the published parts list is a first-class option.
+
+Raspberry Pi is a trademark of Raspberry Pi Ltd. PitchTribe is not affiliated with Raspberry Pi Ltd.
