@@ -30,6 +30,7 @@ function emptyData() {
       sports: defaultSports(),
       widgets: { weather: null, wikipedia: true },
       language: 'en',
+      portal: null, // guest Wi-Fi settings; null = defaults (see lib/portal-page.js)
     },
     assets: [],
     playlists: [],

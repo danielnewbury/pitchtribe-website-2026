@@ -57,6 +57,7 @@
     drop: 'M12 3s6 6.5 6 11a6 6 0 0 1-12 0c0-4.5 6-11 6-11z',
     cake: 'M4 21h16 M5 21v-7h14v7 M5 16c2 1 3-1 5 0s3 1 5 0 3-1 4 0 M12 14v-3 M12 8a1.5 1.5 0 0 0 1.5-1.5C13.5 5 12 3.5 12 3.5S10.5 5 10.5 6.5A1.5 1.5 0 0 0 12 8z',
     widget: 'M4 4h7v7H4z M13 4h7v7h-7z M4 13h7v7H4z M16.5 13v7 M13 16.5h7',
+    wifi: 'M2 8.5a15 15 0 0 1 20 0 M5.5 12a10 10 0 0 1 13 0 M9 15.5a5 5 0 0 1 6 0 M12 19h.01',
     scores: 'M8 21h8 M12 17v4 M7 4h10v5a5 5 0 0 1-10 0z M7 6H4v1a3 3 0 0 0 3 3 M17 6h3v1a3 3 0 0 1-3 3',
     content: 'M4 4h7v7H4z M13 4h7v7h-7z M4 13h7v7H4z M13 13h7v7h-7z',
     playlist: 'M4 6h12 M4 12h12 M4 18h8 M17 15l4 2.5-4 2.5z',
@@ -309,6 +310,7 @@
     ['content', 'Content', 'content'],
     ['playlists', 'Playlists', 'playlist'],
     ['screens', 'Screens', 'screen'],
+    ['wifi', 'Wi-Fi', 'wifi'],
     ['settings', 'Settings', 'settings'],
   ];
 
@@ -1354,6 +1356,110 @@ ${d(18, '14:00')} | Riverside FC v Northdale Athletic | County Cup | Home`;
         cards.length ? h('div', { class: 'screens' }, cards) : h('div', { class: 'card empty' }, h('h2', {}, 'No screens yet'), h('p', {}, 'Follow the steps above — your first screen will appear here.'))));
   }
 
+  // ============================================================ guest wi-fi
+  let portal = null; // GET /api/portal
+  let portalLoading = false;
+  async function loadPortal() {
+    if (portalLoading) return;
+    portalLoading = true;
+    try { portal = await api('GET', '/portal'); } catch (err) { toast(err.message, 'error'); }
+    portalLoading = false;
+    if (currentView === 'wifi') render();
+  }
+
+  function viewWifi() {
+    if (!portal) {
+      loadPortal();
+      return shell('wifi', h('div', { class: 'page-head' }, h('div', {}, h('h1', {}, 'Guest Wi-Fi'))), h('p', { class: 'muted' }, 'Loading…'));
+    }
+    const p = portal.settings;
+    const st = portal.stats;
+    const running = st.serviceSeenAt && Date.now() - Date.parse(st.serviceSeenAt) < 3 * 60_000;
+    const f = {
+      enabled: h('input', { type: 'checkbox', checked: p.enabled }),
+      ssid: h('input', { type: 'text', value: p.ssid, maxlength: 32, required: true }),
+      channel: h('select', {}, [1, 6, 11].map((c) => h('option', { value: c, selected: p.channel === c }, `Channel ${c}`))),
+      sessionMinutes: h('select', {}, [[30, '30 minutes'], [60, '1 hour'], [120, '2 hours'], [240, '4 hours'], [480, '8 hours'], [1440, '24 hours']].map(([v, l]) => h('option', { value: v, selected: p.sessionMinutes === v }, l))),
+      downMbps: h('input', { type: 'number', min: 1, max: 200, value: p.downMbps }),
+      upMbps: h('input', { type: 'number', min: 1, max: 100, value: p.upMbps }),
+      headline: h('input', { type: 'text', value: p.headline, maxlength: 120, required: true }),
+      message: h('textarea', { maxlength: 1000 }, p.message),
+      terms: h('textarea', { maxlength: 6000, required: true }, p.terms),
+      accent: h('input', { type: 'color', value: p.accent }),
+      logoAssetId: h('select', {}, h('option', { value: '' }, 'Club initial'), state.assets.filter((a) => a.type === 'image').map((a) => h('option', { value: a.id, selected: a.id === p.logoAssetId }, a.name))),
+      redirectUrl: h('input', { type: 'url', value: p.redirectUrl, placeholder: 'https://yourclub.example (optional)' }),
+      collectEmail: h('select', {}, [['off', 'Don’t ask'], ['optional', 'Ask (optional)'], ['required', 'Required to connect']].map(([v, l]) => h('option', { value: v, selected: p.collectEmail === v }, l))),
+      consentText: h('input', { type: 'text', value: p.consentText, maxlength: 300 }),
+    };
+    f.terms.style.minHeight = '180px';
+    const frame = h('iframe', { class: 'portal-preview', title: 'Splash page preview', src: `/api/portal/preview?accent=${encodeURIComponent(p.accent)}&t=${Date.now()}` });
+    f.accent.addEventListener('input', () => { frame.src = `/api/portal/preview?accent=${encodeURIComponent(f.accent.value)}&t=${Date.now()}`; });
+
+    const form = h('form', {
+      class: 'card panel-box form-grid',
+      onsubmit: async (e) => {
+        e.preventDefault();
+        if (!form.reportValidity()) return;
+        const body = Object.fromEntries(Object.entries(f).map(([k, el]) => [k, el.type === 'checkbox' ? el.checked : el.value]));
+        for (const k of ['channel', 'sessionMinutes', 'downMbps', 'upMbps']) body[k] = Number(body[k]);
+        try {
+          const r = await api('PUT', '/portal', body);
+          portal.settings = r.settings;
+          render();
+          toast(r.settings.enabled ? 'Saved — the Wi-Fi updates in a few seconds' : 'Saved — guest Wi-Fi is off');
+        } catch (err) { toast(err.message, 'error'); }
+      },
+    },
+      h('h2', {}, 'Network'),
+      h('label', { class: 'switch' }, f.enabled, 'Guest Wi-Fi on'),
+      h('div', { class: 'row-2' }, h('label', { class: 'field' }, 'Network name (SSID)', f.ssid), h('label', { class: 'field' }, 'Radio channel', f.channel, h('span', { class: 'hint' }, 'Try another if the signal is poor.'))),
+      h('div', { class: 'row-2' },
+        h('label', { class: 'field' }, 'Session length', f.sessionMinutes, h('span', { class: 'hint' }, 'Guests tap “Connect” again afterwards.')),
+        h('div', { class: 'row-2' }, h('label', { class: 'field' }, 'Download limit (Mbit/s)', f.downMbps), h('label', { class: 'field' }, 'Upload (Mbit/s)', f.upMbps))),
+      h('p', { class: 'small muted' }, 'Limits are per device. Guests can reach the internet only — never the club’s own computers, tills or this dashboard.'),
+      h('h2', { style: 'margin-top:8px' }, 'Splash page'),
+      h('label', { class: 'field' }, 'Headline', f.headline, h('span', { class: 'hint' }, '{club} is replaced with your club’s name.')),
+      h('label', { class: 'field' }, 'Message', f.message),
+      h('div', { class: 'row-2' }, h('label', { class: 'field' }, 'Logo', f.logoAssetId, h('span', { class: 'hint' }, 'From your content library — upload a PNG with a transparent background for best results.')), h('label', { class: 'field' }, 'Colour', f.accent)),
+      h('label', { class: 'field' }, 'Terms of use', f.terms, h('span', { class: 'hint' }, 'A sensible starting point is filled in. Have someone at the club check it suits you.')),
+      h('label', { class: 'field' }, 'After connecting, offer a link to', f.redirectUrl),
+      h('h2', { style: 'margin-top:8px' }, 'Email addresses'),
+      h('div', { class: 'row-2' }, h('label', { class: 'field' }, 'Ask guests for their email', f.collectEmail), h('label', { class: 'field' }, 'Marketing consent wording', f.consentText)),
+      h('p', { class: 'small muted' }, 'Guests choose separately whether you may email them — the consent box is never pre-ticked. Only contact people who said yes, and delete the list when you no longer need it.'),
+      h('div', {}, h('button', { class: 'btn primary', type: 'submit' }, 'Save')));
+
+    const stats = h('div', { class: 'card panel-box stack', style: 'gap:12px' },
+      h('h2', {}, 'Status'),
+      h('dl', { class: 'kv' },
+        h('dt', {}, 'Portal service'), h('dd', {}, running ? 'Running' : p.enabled ? 'Not seen yet — is the Wi-Fi add-on installed?' : 'Off'),
+        h('dt', {}, 'Connected now'), h('dd', {}, String(st.active)),
+        h('dt', {}, 'Connections today'), h('dd', {}, String(st.today)),
+        h('dt', {}, 'Last 7 days'), h('dd', {}, String(st.week))),
+      p.collectEmail !== 'off' || portal.guests.count
+        ? h('div', { class: 'stack', style: 'gap:8px' },
+          h('p', { class: 'small' }, `${portal.guests.count} email address${portal.guests.count === 1 ? '' : 'es'} collected, ${portal.guests.consented} agreed to hear from you.`),
+          h('div', { class: 'actions' },
+            h('a', { class: 'btn sm', href: '/api/portal/guests.csv', download: 'wifi-guests.csv' }, icon('upload'), 'Download CSV'),
+            h('button', { class: 'btn sm danger', type: 'button', onclick: async () => {
+              if (!(await confirmDialog('Delete all collected email addresses?', 'This can’t be undone. Download the CSV first if you need it.'))) return;
+              await api('DELETE', '/portal/guests');
+              portal = null;
+              render();
+              toast('Guest list deleted');
+            } }, icon('trash'), 'Delete list')))
+        : null,
+      h('details', { class: 'help' }, h('summary', {}, 'How to switch the hardware on'),
+        h('p', { style: 'margin-top:8px' }, 'The guest network runs on the Pi’s built-in Wi-Fi while its network cable stays plugged into the club router. Install the add-on once:'),
+        h('pre', {}, 'sudo PITCHTRIBE_PORTAL=1 pitchtribe/deploy/install.sh'),
+        h('p', {}, 'After that, the settings on this page apply by themselves.')));
+
+    return shell('wifi',
+      h('div', { class: 'page-head' }, h('div', {}, h('h1', {}, 'Guest Wi-Fi'), h('p', {}, 'Free Wi-Fi for visitors, with your own sign-in page.'))),
+      h('div', { class: 'editor-layout wifi-layout' },
+        form,
+        h('aside', { class: 'stack' }, h('div', { class: 'card panel-box' }, h('h2', {}, 'Preview'), frame), stats)));
+  }
+
   // ============================================================== settings
   function viewSettings() {
     const club = h('input', { type: 'text', value: state.settings.clubName, maxlength: 80, required: true });
@@ -1480,11 +1586,13 @@ ${d(18, '14:00')} | Riverside FC v Northdale Athletic | County Cup | Home`;
     const r = parseRoute();
     currentView = r.view;
     if (r.view !== 'playlists' || !r.id) draft = null;
+    if (r.view !== 'wifi') portal = null; // fresh stats each visit
     let nodes;
     if (r.view === 'playlists' && r.id) nodes = viewPlaylist(r.id);
     else if (r.view === 'playlists') nodes = viewPlaylists();
     else if (r.view === 'screens') nodes = viewScreens();
     else if (r.view === 'settings') nodes = viewSettings();
+    else if (r.view === 'wifi') nodes = viewWifi();
     else nodes = viewContent();
     const y = window.scrollY;
     appEl.replaceChildren(...nodes);

@@ -381,3 +381,8 @@ input[type="range"] { width: 100%; accent-color: var(--accent); }
 
 .widget-group { font-size: 12px; text-transform: uppercase; letter-spacing: 0.1em; color: var(--muted); margin: 4px 0 8px; }
 .form-grid .sub, .sub { padding-left: 12px; border-left: 2px solid var(--line-hi); }
+
+.wifi-layout { grid-template-columns: minmax(0, 1fr) 380px; }
+@media (max-width: 1000px) { .wifi-layout { grid-template-columns: 1fr; } }
+.portal-preview { width: 100%; height: 560px; border: 1px solid var(--line); border-radius: 12px; background: #060c16; }
+input[type="color"] { width: 100%; height: 40px; padding: 2px; border: 1px solid var(--line-hi); border-radius: 9px; background: var(--bg); }

@@ -16,6 +16,8 @@
 #   PITCHTRIBE_NO_KIOSK=1         server only (e.g. a headless "hub" Pi)
 #   PITCHTRIBE_SERVER=http://hub.local   kiosk only: show a screen from another PitchTribe server
 #   PITCHTRIBE_PORT=80            dashboard port
+#   PITCHTRIBE_PORTAL=1           also set up the guest Wi-Fi captive portal on wlan0
+#                                 (the Pi must be connected to the club router by cable)
 set -euo pipefail
 
 APP_DIR=/opt/pitchtribe
@@ -76,6 +78,35 @@ if [[ -z "$SERVER" ]]; then
   systemctl enable pitchtribe.service
   systemctl restart pitchtribe.service
   SERVER="http://localhost$([[ "$PORT" == 80 ]] || echo ":$PORT")"
+fi
+
+if [[ "${PITCHTRIBE_PORTAL:-0}" == 1 ]]; then
+  # ------------------------------------------------------------ guest Wi-Fi
+  log "Installing the guest Wi-Fi captive portal (hostapd, dnsmasq, nftables)"
+  if ! ip -o link show eth0 >/dev/null 2>&1; then
+    die "the guest Wi-Fi needs the Pi's network cable (eth0) for its internet connection"
+  fi
+  apt-get install -y -q hostapd dnsmasq nftables
+  # NetworkManager must leave wlan0 alone: it becomes the guest access point.
+  if [[ -d /etc/NetworkManager/conf.d ]]; then
+    cat >/etc/NetworkManager/conf.d/99-pitchtribe-portal.conf <<'NMCONF'
+[keyfile]
+unmanaged-devices=interface-name:wlan0
+NMCONF
+    systemctl reload NetworkManager 2>/dev/null || true
+  fi
+  rfkill unblock wlan 2>/dev/null || true
+  # The default dnsmasq config must not grab every interface.
+  grep -q '^conf-dir=/etc/dnsmasq.d' /etc/dnsmasq.conf 2>/dev/null || echo 'conf-dir=/etc/dnsmasq.d/,*.conf' >>/etc/dnsmasq.conf
+  install -m 0755 "$SRC_DIR/deploy/portal/portal-apply.sh" /usr/local/bin/pitchtribe-portal-apply
+  install -m 0644 "$SRC_DIR/deploy/portal/pitchtribe-portal.service" /etc/systemd/system/
+  install -m 0644 "$SRC_DIR/deploy/portal/pitchtribe-portal-apply.service" /etc/systemd/system/
+  install -m 0644 "$SRC_DIR/deploy/portal/pitchtribe-portal-apply.path" /etc/systemd/system/
+  systemctl daemon-reload
+  systemctl enable pitchtribe-portal.service pitchtribe-portal-apply.service pitchtribe-portal-apply.path
+  systemctl start pitchtribe-portal-apply.path
+  systemctl start pitchtribe-portal-apply.service || true
+  log "Guest Wi-Fi installed — switch it on and design the sign-in page under Guest Wi-Fi in the dashboard"
 fi
 
 if [[ "${PITCHTRIBE_NO_KIOSK:-0}" != 1 ]]; then

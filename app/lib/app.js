@@ -9,6 +9,8 @@ const express = require('express');
 
 const { Store, newId } = require('./store');
 const { Hub } = require('./hub');
+const { DEFAULT_PORTAL, renderSplash, themeCss } = require('./portal-page');
+const { readPortalFiles } = require('./portal');
 const { Feeds, LEAGUE_KEY_RE, SHOW_OPTIONS } = require('./feeds');
 const auth = require('./auth');
 const v = require('./validate');
@@ -709,6 +711,92 @@ function createApp(opts = {}) {
     })
   );
 
+  // Guest Wi-Fi portal -------------------------------------------------------
+  const portalSettings = () => ({ ...DEFAULT_PORTAL, ...(data().settings.portal || {}) });
+  const SSID_RE = /^[\x20-\x7e]{1,32}$/;
+
+  /** Network bits for the root helper (pitchtribe-portal-apply), which a systemd
+      path unit runs whenever this file changes. */
+  function writePortalNetwork(p) {
+    const file = path.join(dataDir, 'portal-network.json');
+    const net = { enabled: p.enabled, ssid: p.ssid, channel: p.channel, downMbps: p.downMbps, upMbps: p.upMbps };
+    let old = null;
+    try { old = fs.readFileSync(file, 'utf8'); } catch { /* first time */ }
+    const next = `${JSON.stringify(net, null, 2)}\n`;
+    if (old !== next) {
+      fs.writeFileSync(`${file}.tmp`, next);
+      fs.renameSync(`${file}.tmp`, file);
+    }
+  }
+
+  api.get('/portal', (req, res) => {
+    const files = readPortalFiles(dataDir);
+    res.set('Cache-Control', 'no-store').json({
+      settings: portalSettings(),
+      stats: { active: files.active, today: files.today, week: files.week, serviceSeenAt: files.serviceSeenAt, days: files.days },
+      guests: { count: files.guests.length, consented: files.guests.filter((g) => g.consent).length },
+    });
+  });
+
+  api.put(
+    '/portal',
+    route((req, res) => {
+      const b = req.body || {};
+      const cur = portalSettings();
+      const ssid = v.str(b.ssid ?? cur.ssid, { max: 32, required: true, field: 'Network name' });
+      if (!SSID_RE.test(ssid)) throw v.bad('Use plain letters, numbers and punctuation for the network name (up to 32)');
+      const accent = /^#[0-9a-f]{6}$/i.test(b.accent || '') ? b.accent : cur.accent;
+      const logo = b.logoAssetId ? data().assets.find((a) => a.id === b.logoAssetId && a.type === 'image') : null;
+      if (b.logoAssetId && !logo) throw v.bad('Choose a logo from your images');
+      const next = {
+        enabled: v.bool(b.enabled, cur.enabled),
+        ssid,
+        channel: v.oneOf(Number(b.channel ?? cur.channel), [1, 6, 11], 6),
+        sessionMinutes: v.int(b.sessionMinutes ?? cur.sessionMinutes, { min: 15, max: 1440, fallback: 120 }),
+        downMbps: v.int(b.downMbps ?? cur.downMbps, { min: 1, max: 200, fallback: 10 }),
+        upMbps: v.int(b.upMbps ?? cur.upMbps, { min: 1, max: 100, fallback: 3 }),
+        headline: v.str(b.headline ?? cur.headline, { max: 120, required: true, field: 'Headline' }),
+        message: v.str(b.message ?? cur.message, { max: 1000, field: 'Message' }),
+        terms: v.str(b.terms ?? cur.terms, { max: 6000, required: true, field: 'Terms of use' }),
+        accent,
+        logoAssetId: logo ? logo.id : null,
+        redirectUrl: b.redirectUrl ? v.httpUrl(b.redirectUrl) : '',
+        collectEmail: v.oneOf(b.collectEmail ?? cur.collectEmail, ['off', 'optional', 'required'], 'off'),
+        consentText: v.str(b.consentText ?? cur.consentText, { max: 300, required: true, field: 'Consent wording' }),
+      };
+      store.touch((d) => { d.settings.portal = next; }, { immediate: true });
+      writePortalNetwork(next);
+      res.json({ settings: next });
+    })
+  );
+
+  api.get('/portal/guests.csv', (req, res) => {
+    const { guests } = readPortalFiles(dataDir);
+    const q = (x) => `"${String(x).replace(/"/g, '""')}"`;
+    const rows = [['connected_at', 'email', 'marketing_consent'], ...guests.map((g) => [g.at, g.email, g.consent ? 'yes' : 'no'])];
+    res.set({ 'Content-Type': 'text/csv; charset=utf-8', 'Content-Disposition': 'attachment; filename="wifi-guests.csv"', 'Cache-Control': 'no-store' })
+      .send(`${rows.map((r) => r.map(q).join(',')).join('\r\n')}\r\n`);
+  });
+
+  api.delete('/portal/guests', (req, res) => {
+    fs.rmSync(path.join(dataDir, 'portal-guests.jsonl'), { force: true });
+    res.json({ ok: true });
+  });
+
+  // Splash preview for the dashboard (same renderer the portal uses).
+  api.get('/portal/preview', (req, res) => {
+    const p = { ...portalSettings(), ...(req.query.accent && /^#[0-9a-f]{6}$/i.test(req.query.accent) ? { accent: req.query.accent } : {}) };
+    const logo = p.logoAssetId ? data().assets.find((a) => a.id === p.logoAssetId) : null;
+    res.set('Cache-Control', 'no-store').type('html').send(renderSplash({
+      club: data().settings.clubName,
+      portal: p,
+      logoUrl: logo ? mediaUrl(logo) : null,
+      css: ['/portal-assets/portal.css', `/api/portal/theme.css?accent=${encodeURIComponent(p.accent)}`],
+      preview: true,
+    }));
+  });
+  api.get('/portal/theme.css', (req, res) => res.type('text/css').send(themeCss(req.query.accent || portalSettings().accent)));
+
   // Assets ------------------------------------------------------------------
   api.post(
     '/assets/upload',
@@ -915,6 +1003,7 @@ function createApp(opts = {}) {
   app.use('/shared', express.static(path.join(PUBLIC_DIR, 'shared'), { maxAge: 0 }));
   app.use('/player', express.static(path.join(PUBLIC_DIR, 'player'), { maxAge: 0 }));
   app.use('/admin', express.static(path.join(PUBLIC_DIR, 'admin'), { maxAge: 0 }));
+  app.use('/portal-assets', express.static(path.join(PUBLIC_DIR, 'portal'), { maxAge: 0 }));
   app.get('/favicon.svg', (req, res) => res.sendFile(path.join(PUBLIC_DIR, 'shared', 'favicon.svg')));
   app.get('/', (req, res) => res.redirect('/admin/'));
   app.get('/healthz', (req, res) => res.json({ ok: true, version: pkg.version }));
