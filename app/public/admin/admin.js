@@ -49,6 +49,13 @@
     film: 'M4 4h16v16H4z M8 4v16 M16 4v16 M4 9h4 M4 15h4 M16 9h4 M16 15h4',
     flag: 'M5 21V4 M5 4h11l-2 4 2 4H5',
     globe: 'M12 3a9 9 0 1 0 0 18a9 9 0 1 0 0-18 M3 12h18 M12 3c3 3 3 15 0 18 M12 3c-3 3-3 15 0 18',
+    bus: 'M6 4h12a2 2 0 0 1 2 2v11H4V6a2 2 0 0 1 2-2z M4 11h16 M7 20v-3 M17 20v-3 M7.5 14h.01 M16.5 14h.01',
+    bolt: 'M13 3L5 14h6l-1 7 8-11h-6z',
+    coin: 'M12 3a9 9 0 1 0 0 18a9 9 0 1 0 0-18 M15 9.5a3 3 0 0 0-3-1.5c-1.7 0-3 .9-3 2s1.3 1.6 3 2 3 .9 3 2-1.3 2-3 2a3 3 0 0 1-3-1.5 M12 6v12',
+    moon: 'M20 14.5A8 8 0 1 1 9.5 4a6.5 6.5 0 0 0 10.5 10.5z',
+    rss: 'M5 19h.01 M5 12a7 7 0 0 1 7 7 M5 5a14 14 0 0 1 14 14',
+    drop: 'M12 3s6 6.5 6 11a6 6 0 0 1-12 0c0-4.5 6-11 6-11z',
+    cake: 'M4 21h16 M5 21v-7h14v7 M5 16c2 1 3-1 5 0s3 1 5 0 3-1 4 0 M12 14v-3 M12 8a1.5 1.5 0 0 0 1.5-1.5C13.5 5 12 3.5 12 3.5S10.5 5 10.5 6.5A1.5 1.5 0 0 0 12 8z',
     widget: 'M4 4h7v7H4z M13 4h7v7h-7z M4 13h7v7H4z M16.5 13v7 M13 16.5h7',
     scores: 'M8 21h8 M12 17v4 M7 4h10v5a5 5 0 0 1-10 0z M7 6H4v1a3 3 0 0 0 3 3 M17 6h3v1a3 3 0 0 1-3 3',
     content: 'M4 4h7v7H4z M13 4h7v7h-7z M4 13h7v7H4z M13 13h7v7h-7z',
@@ -110,7 +117,25 @@
     country: { name: 'Country of the day', icon: 'globe', blurb: 'A country’s flag, capital, continent and currency.' },
     history: { name: 'On this day', icon: 'history', blurb: 'This day, week or month in sporting or TV, film & music history.' },
     spotball: { name: 'Spot the ball', icon: 'ball', blurb: 'Your photo, a grid and a blurred ball — answer revealed when you choose.' },
+    transport: { name: 'Transport hub', icon: 'bus', blurb: 'Live bus tracker, train departures, London buses, tube status, roads and planes overhead.' },
+    sky: { name: 'Sunrise, sunset & moon', icon: 'moon', blurb: 'Sun times and moon phase for your ground. Works offline.' },
+    floods: { name: 'Flood warnings', icon: 'drop', blurb: 'Environment Agency warnings near your ground (England).' },
+    bankholiday: { name: 'Bank holidays', icon: 'fixtures', blurb: 'The next UK bank holidays, from GOV.UK.' },
+    carbon: { name: 'Grid carbon', icon: 'bolt', blurb: 'How green Britain’s electricity is right now, with the fuel mix.' },
+    currency: { name: 'Exchange rates', icon: 'coin', blurb: 'Daily European Central Bank reference rates.' },
+    quakes: { name: 'Earthquakes', icon: 'globe', blurb: 'Recent earthquakes worldwide, from the USGS.' },
+    potd: { name: 'Picture of the day', icon: 'image', blurb: 'Wikimedia Commons’ picture of the day, full screen.' },
+    births: { name: 'Born on this day', icon: 'cake', blurb: 'Famous birthdays today, from Wikipedia.' },
+    headlines: { name: 'News headlines', icon: 'rss', blurb: 'Headlines from any RSS or Atom feed — your club, league or local news.' },
+    events: { name: 'Calendar', icon: 'fixtures', blurb: 'Upcoming events from any iCal (.ics) calendar, e.g. Google Calendar.' },
   };
+  const WIDGET_GROUPS = [
+    ['Time & weather', ['clock', 'worldclock', 'weather', 'sky']],
+    ['Out and about', ['transport', 'floods', 'bankholiday', 'carbon']],
+    ['Quizzes & fun', ['quiz', 'emoji', 'geoquiz', 'joke', 'spotball', 'phrase']],
+    ['Knowledge', ['trivia', 'history', 'births', 'country', 'potd', 'quakes', 'currency']],
+    ['Your feeds', ['headlines', 'events']],
+  ];
   const typeLabel = (a) => (a && a.type === 'widget' ? WIDGETS[a.content?.kind]?.name || 'Widget' : TYPE_LABEL[a?.type] || '');
   const STATUS_LABEL = { live: 'Live now', scheduled: 'Scheduled', expired: 'Expired', 'off-hours': 'Off-hours', disabled: 'Off' };
   const NOTICE_STYLES = [
@@ -460,7 +485,7 @@
     const isNew = !asset.id;
     const type = asset.type;
     const c = asset.content || {};
-    const defaults = { url: 30, notice: 12, menu: 20, fixtures: 15, scores: 15, widget: { clock: 15, worldclock: 15, weather: 15, joke: 14, phrase: 10, trivia: 12, quiz: 20, history: 18, emoji: 16, geoquiz: 16, country: 14, spotball: 20 }[c.kind] };
+    const defaults = { url: 30, notice: 12, menu: 20, fixtures: 15, scores: 15, widget: { clock: 15, worldclock: 15, weather: 15, joke: 14, phrase: 10, trivia: 12, quiz: 20, history: 18, emoji: 16, geoquiz: 16, country: 14, spotball: 20, transport: 20, bankholiday: 12, floods: 12, carbon: 14, quakes: 14, currency: 12, potd: 15, births: 15, sky: 12, headlines: 18, events: 18 }[c.kind] };
     const f = {}; // field elements
     const body = h('form', { class: 'form-grid', onsubmit: (e) => { e.preventDefault(); save(); } });
 
@@ -661,9 +686,13 @@ ${d(18, '14:00')} | Riverside FC v Northdale Athletic | County Cup | Home`;
     const m = modal({
       title: 'Add a widget',
       wide: true,
-      body: h('div', { class: 'widget-grid' }, Object.entries(WIDGETS).map(([kind, w]) =>
-        h('button', { class: 'card widget-card', type: 'button', onclick: () => { m.close(); editAsset({ type: 'widget', content: { kind } }); } },
-          icon(w.icon), h('strong', {}, w.name), h('span', {}, w.blurb)))),
+      body: h('div', { class: 'stack' }, WIDGET_GROUPS.map(([group, kinds]) => h('section', {},
+        h('h3', { class: 'widget-group' }, group),
+        h('div', { class: 'widget-grid' }, kinds.map((kind) => {
+          const w = WIDGETS[kind];
+          return h('button', { class: 'card widget-card', type: 'button', onclick: () => { m.close(); editAsset({ type: 'widget', content: { kind } }); } },
+            icon(w.icon), h('strong', {}, w.name), h('span', {}, w.blurb));
+        }))))),
       footer: (close) => [h('button', { class: 'btn', type: 'button', onclick: close }, 'Cancel')],
     });
   }
@@ -671,7 +700,7 @@ ${d(18, '14:00')} | Riverside FC v Northdale Athletic | County Cup | Home`;
   /** Kind-specific fields for the widget editor. Sets f.widget() to collect the content. */
   function widgetFields(c, body, f, getModal) {
     const kind = c.kind;
-    const title = h('input', { type: 'text', value: c.title || '', maxlength: 200, placeholder: { clock: 'Optional heading', worldclock: 'World clocks', weather: 'Weather at the ground', joke: 'Joke time', phrase: 'Optional heading', trivia: 'Automatic (e.g. “Music: did you know?”)', quiz: 'Automatic (e.g. “Music quiz”)', emoji: 'Emoji quiz', geoquiz: 'Flags & capitals', country: 'Country of the day', history: 'Automatic (e.g. “On this day — 3 November”)', spotball: 'Spot the ball' }[kind] });
+    const title = h('input', { type: 'text', value: c.title || '', maxlength: 200, placeholder: { clock: 'Optional heading', worldclock: 'World clocks', weather: 'Weather at the ground', joke: 'Joke time', phrase: 'Optional heading', trivia: 'Automatic (e.g. “Music: did you know?”)', quiz: 'Automatic (e.g. “Music quiz”)', emoji: 'Emoji quiz', geoquiz: 'Flags & capitals', country: 'Country of the day', history: 'Automatic (e.g. “On this day — 3 November”)', spotball: 'Spot the ball', transport: 'Getting here', sky: 'Automatic', floods: 'Flood warnings', bankholiday: 'Automatic', carbon: 'Automatic', currency: 'Automatic', quakes: 'Recent earthquakes', potd: 'Picture of the day', births: 'Automatic', headlines: 'Latest news', events: 'Coming up' }[kind] });
     body.append(h('p', { class: 'small muted' }, WIDGETS[kind].blurb));
     body.append(h('label', { class: 'field' }, 'Heading on screen', title));
     const collect = { kind, title: () => title.value };
@@ -702,6 +731,12 @@ ${d(18, '14:00')} | Riverside FC v Northdale Athletic | County Cup | Home`;
         .map(([v, l]) => h('option', { value: v, selected: (c.topic || 'sport') === v }, l)));
       body.append(h('label', { class: 'field' }, 'Topic', topic));
       collect.topic = () => topic.value;
+      if (kind === 'quiz') {
+        const source = h('select', {}, [['bundled', 'Built-in questions (works offline)'], ['opentdb', 'Online question bank — Open Trivia DB (thousands of questions)']]
+          .map(([v, l]) => h('option', { value: v, selected: (c.source || 'bundled') === v }, l)));
+        body.append(h('label', { class: 'field' }, 'Questions from', source, h('span', { class: 'hint' }, 'Online questions are community-written (CC BY-SA) and mostly English. If the internet is down the built-in questions are used.')));
+        collect.source = () => source.value;
+      }
     }
     if (kind === 'emoji') {
       const category = h('select', {}, [['all', 'Films, TV shows and songs'], ['Film', 'Films only'], ['TV', 'TV shows only'], ['Song', 'Songs only']]
@@ -765,6 +800,99 @@ ${d(18, '14:00')} | Riverside FC v Northdale Athletic | County Cup | Home`;
       body.append(h('p', { class: 'small muted' }, 'Sporting and TV, film & music moments are built in. If nothing happened on the day, the slide shows the week or month instead. Wikipedia needs an internet connection.'));
       Object.assign(collect, { scope: () => scope.value, limit: () => Number(limit.value), general: () => general.checked });
     }
+    const needsPlace = ['sky', 'floods'].includes(kind) || (kind === 'transport');
+    if (needsPlace && !state.widgets.weather) {
+      body.append(h('p', { class: 'help' }, 'This uses your ground’s location. ', h('a', { href: '#/settings', onclick: () => getModal().close() }, 'Set it in Settings → Widgets'), '.'));
+    }
+    const num = (value, min, max) => h('input', { type: 'number', min, max, value });
+    const pick = (value, options) => h('select', {}, options.map(([v, l]) => h('option', { value: v, selected: String(value) === String(v) }, l)));
+    if (kind === 'transport') {
+      const sec = new Set(c.sections || ['tracker']);
+      const SECTIONS = [['tracker', '🚌 Live bus tracker (anywhere in England)'], ['trains', '🚆 Train departures (National Rail)'], ['buses', '🚌 Bus arrivals at a London stop'], ['lines', '🚇 Tube & London rail status'], ['roads', '🚗 London main roads'], ['planes', '✈️ Planes overhead']];
+      const boxes = SECTIONS.map(([k, l]) => {
+        const cb = h('input', { type: 'checkbox', checked: sec.has(k), onchange: () => { cb.checked ? sec.add(k) : sec.delete(k); sync(); } });
+        return h('label', { class: 'switch' }, cb, l);
+      });
+      const trackLines = h('input', { type: 'text', value: (c.trackLines || []).join(', '), placeholder: '73, 74' });
+      const trackTitle = h('input', { type: 'text', value: c.trackTitle || '', maxlength: 80, placeholder: 'e.g. Buses to Bedford' });
+      const trackOperator = h('input', { type: 'text', value: c.trackOperator || '', maxlength: 8, placeholder: 'Optional, e.g. SCEM' });
+      const trackRadius = num(c.trackRadius || 20, 2, 60);
+      const station = h('input', { type: 'text', value: c.station || '', maxlength: 3, placeholder: 'BIW', style: 'text-transform:uppercase' });
+      const busStop = h('input', { type: 'text', value: c.busStop || '', maxlength: 20, placeholder: '490008660N' });
+      const busStopName = h('input', { type: 'text', value: c.busStopName || '', maxlength: 60, placeholder: 'Stop name (optional)' });
+      const planesRadius = num(c.planesRadius || 15, 2, 100);
+      const groups = {
+        tracker: h('div', { class: 'form-grid sub' },
+          h('div', { class: 'row-2' }, h('label', { class: 'field' }, 'Bus routes to track', trackLines, h('span', { class: 'hint' }, 'Route numbers, comma-separated (up to 6).')), h('label', { class: 'field' }, 'Heading', trackTitle)),
+          h('div', { class: 'row-2' }, h('label', { class: 'field' }, 'Within (km of the ground)', trackRadius), h('label', { class: 'field' }, 'Operator code', trackOperator, h('span', { class: 'hint' }, 'Only if another company runs the same route numbers nearby.'))),
+          !state.widgets.bods?.apiKey && h('p', { class: 'help' }, 'Needs a free Bus Open Data Service API key — ', h('a', { href: '#/settings', onclick: () => getModal().close() }, 'add it in Settings → Widgets'), '.')),
+        trains: h('label', { class: 'field sub' }, 'Station code', station, h('span', { class: 'hint' }, 'The 3-letter National Rail code, e.g. BIW Biggleswade, BDM Bedford, KGX King’s Cross.')),
+        buses: h('div', { class: 'row-2 sub' }, h('label', { class: 'field' }, 'TfL stop ID', busStop, h('span', { class: 'hint' }, 'From the stop’s page on tfl.gov.uk.')), h('label', { class: 'field' }, 'Stop name', busStopName)),
+        planes: h('label', { class: 'field sub' }, 'Within (km of the ground)', planesRadius),
+      };
+      const sync = () => { for (const [k, el] of Object.entries(groups)) el.hidden = !sec.has(k); };
+      body.append(h('div', { class: 'field' }, 'Show', ...boxes), ...Object.values(groups));
+      sync();
+      Object.assign(collect, {
+        sections: () => SECTIONS.map(([k]) => k).filter((k) => sec.has(k)),
+        trackLines: () => trackLines.value, trackTitle: () => trackTitle.value, trackOperator: () => trackOperator.value, trackRadius: () => Number(trackRadius.value),
+        station: () => station.value.trim(), busStop: () => busStop.value.trim(), busStopName: () => busStopName.value, planesRadius: () => Number(planesRadius.value),
+      });
+    }
+    if (kind === 'bankholiday') {
+      const division = pick(c.division || 'england-and-wales', [['england-and-wales', 'England and Wales'], ['scotland', 'Scotland'], ['northern-ireland', 'Northern Ireland']]);
+      const limit = num(c.limit || 4, 1, 8);
+      body.append(h('div', { class: 'row-2' }, h('label', { class: 'field' }, 'Nation', division), h('label', { class: 'field' }, 'How many', limit)));
+      Object.assign(collect, { division: () => division.value, limit: () => Number(limit.value) });
+    }
+    if (kind === 'floods') {
+      const radius = num(c.radius || 15, 1, 100);
+      body.append(h('label', { class: 'field' }, 'Within (km of the ground)', radius, h('span', { class: 'hint' }, 'England only. Shows a reassuring “no warnings” slide when all is clear.')));
+      collect.radius = () => Number(radius.value);
+    }
+    if (kind === 'carbon') {
+      const postcode = h('input', { type: 'text', value: c.postcode || '', maxlength: 4, placeholder: 'e.g. SG18 (optional)' });
+      body.append(h('label', { class: 'field' }, 'Postcode area', postcode, h('span', { class: 'hint' }, 'First half of your postcode for your region; leave empty for all of Great Britain.')));
+      collect.postcode = () => postcode.value.trim();
+    }
+    if (kind === 'quakes') {
+      const feed = pick(c.feed || '4.5_week', [['significant_week', 'Significant — past week'], ['4.5_week', 'Magnitude 4.5+ — past week'], ['4.5_day', 'Magnitude 4.5+ — past day'], ['2.5_day', 'Magnitude 2.5+ — past day']]);
+      const limit = num(c.limit || 6, 1, 10);
+      body.append(h('div', { class: 'row-2' }, h('label', { class: 'field' }, 'Feed', feed), h('label', { class: 'field' }, 'How many', limit)));
+      Object.assign(collect, { feed: () => feed.value, limit: () => Number(limit.value) });
+    }
+    if (kind === 'currency') {
+      const CODES = ['GBP', 'EUR', 'USD', 'JPY', 'AUD', 'CAD', 'CHF', 'CNY', 'INR', 'NZD', 'SEK', 'NOK', 'DKK', 'PLN', 'CZK', 'HUF', 'TRY', 'ZAR', 'HKD', 'SGD', 'MXN', 'BRL', 'ISK', 'KRW', 'THB'];
+      const base = pick(c.base || 'GBP', CODES.map((x) => [x, x]));
+      const chosen = new Set(c.symbols || ['EUR', 'USD']);
+      const chips = h('div', { class: 'chips' });
+      const draw = () => chips.replaceChildren(...CODES.filter((x) => x !== base.value).map((x) => h('button', { class: 'chip', type: 'button', 'aria-pressed': String(chosen.has(x)), onclick: () => { chosen.has(x) ? chosen.delete(x) : chosen.size < 8 && chosen.add(x); draw(); } }, x)));
+      base.addEventListener('change', () => { chosen.delete(base.value); draw(); });
+      draw();
+      body.append(h('label', { class: 'field' }, 'One unit of', base), h('div', { class: 'field' }, 'Show (up to 8)', chips));
+      Object.assign(collect, { base: () => base.value, symbols: () => [...chosen].filter((x) => x !== base.value) });
+    }
+    if (kind === 'births') {
+      const limit = num(c.limit || 5, 1, 10);
+      body.append(h('label', { class: 'field' }, 'How many people', limit, h('span', { class: 'hint' }, 'A different selection each day. Needs an internet connection.')));
+      collect.limit = () => Number(limit.value);
+    }
+    if (kind === 'headlines' || kind === 'events') {
+      const url = h('input', { type: 'url', value: c.url || '', required: true, placeholder: kind === 'headlines' ? 'https://yourclub.example/news/feed' : 'https://calendar.google.com/calendar/ical/…/basic.ics' });
+      const limit = num(c.limit || 6, 1, 10);
+      body.append(h('label', { class: 'field' }, kind === 'headlines' ? 'Feed address (RSS or Atom)' : 'Calendar address (iCal / .ics)', url,
+        h('span', { class: 'hint' }, kind === 'headlines'
+          ? 'Only use feeds you’re allowed to show publicly — your own club’s, your league’s, or ones whose terms allow it.'
+          : 'In Google Calendar: Settings → your calendar → “Public address in iCal format”. Repeating events show their first date only.')));
+      if (kind === 'events') {
+        const days = num(c.days || 60, 1, 365);
+        body.append(h('div', { class: 'row-2' }, h('label', { class: 'field' }, 'How many', limit), h('label', { class: 'field' }, 'Look ahead (days)', days)));
+        collect.days = () => Number(days.value);
+      } else {
+        body.append(h('label', { class: 'field' }, 'How many headlines', limit));
+      }
+      Object.assign(collect, { url: () => url.value.trim(), limit: () => Number(limit.value) });
+    }
     if (kind === 'spotball') {
       const images = state.assets.filter((a) => a.type === 'image');
       let pos = c.x != null ? { x: c.x, y: c.y } : null;
@@ -826,6 +954,11 @@ ${d(18, '14:00')} | Riverside FC v Northdale Athletic | County Cup | Home`;
     const chosen = h('p', { class: 'small' });
     const wind = h('select', {}, [['mph', 'mph'], ['kmh', 'km/h']].map(([v, l]) => h('option', { value: v, selected: (w.weather?.windUnit || 'mph') === v }, l)));
     const wiki = h('input', { type: 'checkbox', checked: w.wikipedia !== false });
+    const provider = h('select', {}, [['metno', 'MET Norway (free, commercial use allowed)'], ['openmeteo', 'Open-Meteo (free for non-commercial use only)']]
+      .map(([v, l]) => h('option', { value: v, selected: (w.weather?.provider || 'metno') === v }, l)));
+    const railUrl = h('input', { type: 'url', value: w.trains?.url || '', placeholder: 'https://huxley2.azurewebsites.net (default)' });
+    const railToken = h('input', { type: 'password', value: w.trains?.token || '', autocomplete: 'off', placeholder: 'Only if your Huxley2 server needs one' });
+    const bodsKey = h('input', { type: 'password', value: w.bods?.apiKey || '', autocomplete: 'off', placeholder: 'Free key from data.bus-data.dft.gov.uk' });
     const showChosen = () => { chosen.textContent = place ? `Weather for: ${place.place || 'custom location'} (${place.latitude}, ${place.longitude})` : 'No weather location set.'; };
     showChosen();
     const search = async () => {
@@ -847,7 +980,12 @@ ${d(18, '14:00')} | Riverside FC v Northdale Athletic | County Cup | Home`;
       onsubmit: async (e) => {
         e.preventDefault();
         try {
-          state.widgets = await api('PUT', '/settings/widgets', { weather: place ? { ...place, windUnit: wind.value } : null, wikipedia: wiki.checked });
+          state.widgets = await api('PUT', '/settings/widgets', {
+            weather: place ? { ...place, windUnit: wind.value, provider: provider.value } : null,
+            wikipedia: wiki.checked,
+            trains: { url: railUrl.value.trim(), token: railToken.value.trim() },
+            bods: { apiKey: bodsKey.value.trim() },
+          });
           render();
           toast('Widget settings saved');
         } catch (err) { toast(err.message, 'error'); }
@@ -861,7 +999,14 @@ ${d(18, '14:00')} | Riverside FC v Northdale Athletic | County Cup | Home`;
       h('div', { class: 'row-2' },
         h('label', { class: 'field' }, 'Wind speed in', wind),
         h('div', { class: 'field' }, ' ', place && h('button', { class: 'btn sm ghost', type: 'button', onclick: () => { place = null; showChosen(); } }, 'Clear location'))),
+      h('p', { class: 'small muted' }, 'Place search © OpenStreetMap contributors (ODbL).'),
+      h('label', { class: 'field' }, 'Weather data from', provider),
       h('label', { class: 'switch' }, wiki, 'Allow general history from Wikipedia'),
+      h('h3', { class: 'widget-group' }, 'Transport'),
+      h('label', { class: 'field' }, 'Bus Open Data Service API key', bodsKey, h('span', { class: 'hint' }, 'For the live bus tracker anywhere in England. Free: register at data.bus-data.dft.gov.uk. Kept on this server; never sent to screens.')),
+      h('div', { class: 'row-2' },
+        h('label', { class: 'field' }, 'Train departures server (Huxley2)', railUrl, h('span', { class: 'hint' }, 'A JSON proxy for National Rail’s Darwin feed. Run your own with a free Darwin token for reliability.')),
+        h('label', { class: 'field' }, 'Darwin access token', railToken)),
       h('div', {}, h('button', { class: 'btn primary', type: 'submit' }, 'Save')));
   }
 
@@ -1170,6 +1315,9 @@ ${d(18, '14:00')} | Riverside FC v Northdale Athletic | County Cup | Home`;
           h('label', { class: 'field' }, 'Playlist', h('select', { onchange: (e) => patch(s, { playlistId: e.target.value }, 'Playlist changed — the screen updates now') }, playlistOptions(s.playlistId))),
           h('label', { class: 'field' }, 'Rotation', h('select', { onchange: (e) => patch(s, { rotation: Number(e.target.value) }, 'Rotation changed') },
             [[0, 'Landscape'], [90, 'Portrait (90°)'], [180, 'Upside down'], [270, 'Portrait (270°)']].map(([v, l]) => h('option', { value: v, selected: (s.rotation || 0) === v }, l))))),
+        h('label', { class: 'field' }, 'Language on screen', h('select', { onchange: (e) => patch(s, { language: e.target.value }, 'Language changed — the screen updates now') },
+          h('option', { value: '', selected: !s.language }, `Club default (${(state.languages.find((l) => l.code === state.settings.language) || { name: 'English' }).name})`),
+          state.languages.map((l) => h('option', { value: l.code, selected: s.language === l.code }, l.name)))),
         h('div', { class: 'actions' },
           h('button', { class: 'btn sm', type: 'button', onclick: () => command(s, 'identify') }, icon('target'), 'Identify'),
           h('button', { class: 'btn sm', type: 'button', onclick: () => command(s, 'reload') }, icon('refresh'), 'Reload'),
@@ -1209,6 +1357,7 @@ ${d(18, '14:00')} | Riverside FC v Northdale Athletic | County Cup | Home`;
   // ============================================================== settings
   function viewSettings() {
     const club = h('input', { type: 'text', value: state.settings.clubName, maxlength: 80, required: true });
+    const lang = h('select', {}, state.languages.map((l) => h('option', { value: l.code, selected: (state.settings.language || 'en') === l.code }, l.name)));
     const def = h('select', {},
       h('option', { value: '', selected: !state.settings.defaultPlaylistId }, '— None —'),
       state.playlists.map((p) => h('option', { value: p.id, selected: p.id === state.settings.defaultPlaylistId }, p.name)));
@@ -1217,7 +1366,7 @@ ${d(18, '14:00')} | Riverside FC v Northdale Athletic | County Cup | Home`;
       onsubmit: async (e) => {
         e.preventDefault();
         try {
-          await api('PUT', '/settings', { clubName: club.value, defaultPlaylistId: def.value || null });
+          await api('PUT', '/settings', { clubName: club.value, defaultPlaylistId: def.value || null, language: lang.value });
           await refresh();
           render();
           toast('Settings saved');
@@ -1227,6 +1376,7 @@ ${d(18, '14:00')} | Riverside FC v Northdale Athletic | County Cup | Home`;
       h('h2', {}, 'Club'),
       h('label', { class: 'field' }, 'Club name', club, h('span', { class: 'hint' }, 'Shown on notices, menus and fixture slides.')),
       h('label', { class: 'field' }, 'Playlist for new screens', def),
+      h('label', { class: 'field' }, 'Screen language', lang, h('span', { class: 'hint' }, 'Built-in labels, dates and times on your screens. Your own notices and menus show as you write them; built-in quizzes and jokes stay in English. Individual screens can override this on the Screens page.')),
       h('div', {}, h('button', { class: 'btn primary', type: 'submit' }, 'Save')));
 
     const cur = h('input', { type: 'password', autocomplete: 'current-password', required: true });

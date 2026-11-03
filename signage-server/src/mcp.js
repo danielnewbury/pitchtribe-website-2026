@@ -47,7 +47,9 @@ const TOOLS = [
     inputSchema: {
       type: 'object',
       properties: {
-        kind: { type: 'string', enum: ['weather', 'joke', 'phrase', 'trivia', 'quiz', 'history', 'emoji', 'geoquiz', 'country'] },
+        kind: { type: 'string', enum: ['weather', 'joke', 'phrase', 'trivia', 'quiz', 'history', 'emoji', 'geoquiz', 'country', 'transport', 'bankholiday', 'floods', 'carbon', 'quakes', 'currency', 'potd', 'births', 'sky', 'headlines', 'events'] },
+        sections: { type: 'array', items: { type: 'string', enum: ['trains', 'buses', 'lines', 'roads', 'planes'] }, description: 'For transport.' },
+        station: { type: 'string', description: 'For transport trains: 3-letter National Rail station code.' },
         topic: { type: 'string', enum: ['sport', 'film-tv', 'music', 'geography', 'culture', 'mixed', 'entertainment', 'all'], description: 'For quiz/trivia: sport, film-tv, music, geography, culture or mixed. For history: sport, entertainment or all.' },
         mode: { type: 'string', enum: ['flags', 'capitals', 'mixed'], description: 'For geoquiz.' },
         scope: { type: 'string', enum: ['day', 'week', 'month'], description: 'For history.' },
@@ -128,7 +130,8 @@ export function createMcpHandler({ store, config, push, widgets }) {
       else if (a.kind === 'quiz' || a.kind === 'geoquiz') text = data.items.slice(0, 5).map((q) => `${q.flag && a.kind === 'geoquiz' ? `${q.flag} ` : ''}${q.q} (${q.options[q.answer]})`).join('\n');
       else if (a.kind === 'emoji') text = data.items.slice(0, 5).map((e) => `${e.emoji} — ${e.answer}${e.category ? ` (${e.category})` : ''}`).join('\n');
       else if (a.kind === 'country') text = data.items.slice(0, 3).map((c) => `${c.flag} ${c.name}: capital ${c.capital}, ${c.continent}, ${c.currency}`).join('\n');
-      else text = (data.items || []).slice(0, 5).join('\n');
+      else if (Array.isArray(data.items) && typeof data.items[0] === 'string') text = data.items.slice(0, 5).join('\n');
+      else text = JSON.stringify(data, null, 1).slice(0, 4000);
       return { content: [{ type: 'text', text }], structuredContent: data };
     },
     async get_display_url(a) {

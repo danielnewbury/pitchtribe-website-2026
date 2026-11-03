@@ -58,7 +58,7 @@ class Feeds extends EventEmitter {
       apiToken: '', // the app checks credentials before requests reach the engine
       publicUrl: this.publicUrl,
       weather: widgets.weather || null,
-      widgets: { wikipedia: widgets.wikipedia !== false },
+      widgets: { wikipedia: widgets.wikipedia !== false, trains: widgets.trains || null, bods: widgets.bods || null },
     });
     const opts = { config, log: (...a) => this.log('[feeds]', ...a) };
     if (this.fetchImpl) opts.fetchImpl = this.fetchImpl;

@@ -6,7 +6,7 @@ import { createRequestHandler } from '../src/http.js';
 import { createMcpHandler } from '../src/mcp.js';
 
 const quiet = () => {};
-const config = { timezone: 'Europe/London', weather: { place: 'Leeds', latitude: 53.8, longitude: -1.55 }, widgets: { wikipedia: true } };
+const config = { timezone: 'Europe/London', weather: { place: 'Leeds', latitude: 53.8, longitude: -1.55, provider: 'openmeteo' }, widgets: { wikipedia: true } };
 
 const openMeteo = {
   current: { temperature_2m: 11.6, weather_code: 61, wind_speed_10m: 9.2, is_day: 1 },
@@ -90,7 +90,7 @@ test('weather: live fetch, caching, update event, offline fallback', async () =>
   const down = createWidgets({ config, fetchImpl: async () => { throw new Error('offline'); }, log: quiet });
   assert.match((await down.get('weather')).error, /unavailable/);
 
-  assert.deepEqual(describeWeather(0, false), { text: 'Clear sky', icon: '🌙' });
+  assert.deepEqual(describeWeather(0, false), { text: 'Clear sky', icon: '🌙', cond: 'clear' });
   assert.deepEqual(await w.geocode('Leeds'), [{ name: 'Leeds', region: 'England, United Kingdom', latitude: 53.8, longitude: -1.55 }]);
 });
 

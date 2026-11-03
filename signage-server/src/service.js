@@ -8,6 +8,7 @@ import { createMcpHandler } from './mcp.js';
 import { createRequestHandler, createHttpServer } from './http.js';
 import { loadConfig, resolveConfig, exampleConfig } from './config.js';
 import { renderDisplay } from './render.js';
+import * as sources from './sources.js';
 import { createWidgets, WIDGET_KINDS, TOPICS, HISTORY_TOPICS, TOPIC_LABELS, describeWeather, flagEmoji } from './widgets.js';
 
 /**
@@ -64,6 +65,7 @@ export {
   TOPIC_LABELS,
   describeWeather,
   flagEmoji,
+  sources,
 };
 
 /** Clearer name now the service does more than sports. */

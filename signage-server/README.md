@@ -1,6 +1,6 @@
 # PitchTribe signage server
 
-This server collects sports fixtures, live scores and results on a schedule. It shows them as a
+This server collects sports fixtures, live scores and results on a schedule, and serves content for screen widgets (see [Widgets](#widgets) and [DATA_SOURCES.md](DATA_SOURCES.md)). It shows them as a
 full-screen, auto-rotating display page for club screens. It also pushes the data to other
 signage systems through **webhooks**, a **JSON API** and **MCP**.
 
@@ -40,6 +40,7 @@ The server also provides content for screen widgets:
 | `country` | `data/widgets/countries.json` | Flag, capital, continent and currency. |
 | `history` | `data/widgets/sporting-history.json`, `entertainment-history.json` + Wikipedia "On this day" | `scope=day\|week\|month`, `topic=sport\|entertainment\|all`. Widens automatically if the day has no entry. `general=true` adds Wikipedia's selected events (`config.widgets.wikipedia`). |
 | `clock`, `worldclock` | — | Drawn by the screen. |
+| `transport`, `bankholiday`, `floods`, `carbon`, `quakes`, `currency`, `potd`, `births`, `sky`, `headlines`, `events` | See [DATA_SOURCES.md](DATA_SOURCES.md) | Live sources, cached, with credit lines. Weather defaults to MET Norway (`weather.provider: "metno" \| "openmeteo"`). Train and bus keys go in `widgets.trains` / `widgets.bods`. |
 
 - `GET /api/widgets` lists them, and `GET /api/widgets/:kind?…` returns the data.
 - `GET /api/geocode?q=` searches for places.

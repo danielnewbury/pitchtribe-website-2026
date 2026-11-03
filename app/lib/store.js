@@ -29,6 +29,7 @@ function emptyData() {
       defaultPlaylistId: null,
       sports: defaultSports(),
       widgets: { weather: null, wikipedia: true },
+      language: 'en',
     },
     assets: [],
     playlists: [],

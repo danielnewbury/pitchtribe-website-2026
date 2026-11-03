@@ -12,6 +12,7 @@ import { resolve } from 'node:path';
 import { EventEmitter } from 'node:events';
 import { createHash } from 'node:crypto';
 import { ROOT } from './config.js';
+import { createSources, BANK_HOLIDAY_DIVISIONS } from './sources.js';
 
 export const WIDGET_KINDS = [
   { kind: 'clock', name: 'Clock', description: 'Digital or analogue clock, or a countdown to kick-off', source: 'screen' },
@@ -25,6 +26,17 @@ export const WIDGET_KINDS = [
   { kind: 'geoquiz', name: 'Flags & capitals', description: 'Geography quiz: name the country from its flag, or its capital city', source: 'bundled' },
   { kind: 'country', name: 'Country of the day', description: 'A country’s flag, capital, continent and currency', source: 'bundled' },
   { kind: 'worldclock', name: 'World clocks', description: 'The time in cities around the world', source: 'screen' },
+  { kind: 'transport', name: 'Transport hub', description: 'Live bus tracker (England), train departures (National Rail), London buses, tube/rail line status, London roads and planes overhead', source: 'live' },
+  { kind: 'bankholiday', name: 'Bank holidays', description: 'Upcoming UK bank holidays (GOV.UK)', source: 'live' },
+  { kind: 'floods', name: 'Flood warnings', description: 'Environment Agency flood warnings near the ground (England)', source: 'live' },
+  { kind: 'carbon', name: 'Grid carbon', description: 'How green the electricity is right now (Carbon Intensity API)', source: 'live' },
+  { kind: 'quakes', name: 'Earthquakes', description: 'Recent earthquakes worldwide (USGS)', source: 'live' },
+  { kind: 'currency', name: 'Exchange rates', description: 'Daily reference exchange rates (European Central Bank)', source: 'live' },
+  { kind: 'potd', name: 'Picture of the day', description: 'Wikimedia Commons picture of the day', source: 'live' },
+  { kind: 'births', name: 'Born on this day', description: 'Famous birthdays today (Wikipedia)', source: 'live' },
+  { kind: 'sky', name: 'Sunrise, sunset & moon', description: 'Sun times and moon phase for the ground (calculated, no internet needed)', source: 'screen' },
+  { kind: 'headlines', name: 'News headlines', description: 'Headlines from any RSS or Atom feed, e.g. your club or league website', source: 'live' },
+  { kind: 'events', name: 'Calendar', description: 'Upcoming events from any iCal (.ics) calendar, e.g. Google Calendar or your league', source: 'live' },
 ];
 
 export const TOPICS = ['sport', 'film-tv', 'music', 'geography', 'culture', 'mixed'];
@@ -99,9 +111,12 @@ const WMO = {
   85: ['Snow showers', '🌨️', '🌨️'], 86: ['Heavy snow showers', '❄️', '❄️'],
   95: ['Thunderstorm', '⛈️', '⛈️'], 96: ['Thunderstorm with hail', '⛈️', '⛈️'], 99: ['Thunderstorm with hail', '⛈️', '⛈️'],
 };
+const WMO_COND = { 0: 'clear', 1: 'fair', 2: 'partly', 3: 'cloudy', 45: 'fog', 48: 'fog', 51: 'drizzle', 53: 'drizzle', 55: 'drizzle', 56: 'drizzle', 57: 'drizzle',
+  61: 'lightrain', 63: 'rain', 65: 'heavyrain', 66: 'rain', 67: 'rain', 71: 'snow', 73: 'snow', 75: 'snow', 77: 'snow', 80: 'showers', 81: 'showers', 82: 'heavyrain',
+  85: 'snowshowers', 86: 'snowshowers', 95: 'thunder', 96: 'thunder', 99: 'thunder' };
 export function describeWeather(code, isDay = true) {
   const [text, day, night] = WMO[code] ?? ['Unknown', '🌡️', '🌡️'];
-  return { text, icon: isDay ? day : night };
+  return { text, icon: isDay ? day : night, cond: WMO_COND[code] || '' };
 }
 
 // ----------------------------------------------------------------- widget set
@@ -111,11 +126,21 @@ export function createWidgets({ config = {}, fetchImpl = fetch, log = console.er
   const tz = config.timezone || 'Europe/London';
   const weatherCfg = config.weather || null;
   const wikipedia = config.widgets?.wikipedia !== false;
+  const provider = weatherCfg?.provider === 'openmeteo' ? 'openmeteo' : 'metno';
 
   async function getJson(url) {
     const res = await fetchImpl(url, { headers: { accept: 'application/json', 'user-agent': UA }, signal: AbortSignal.timeout(15_000) });
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     return res.json();
+  }
+
+  /** Text body (RSS, iCal) with a 2 MB cap. */
+  async function getText(url) {
+    const res = await fetchImpl(url, { headers: { accept: 'application/rss+xml, application/atom+xml, text/calendar, text/xml, */*', 'user-agent': UA }, signal: AbortSignal.timeout(15_000) });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const text = await res.text();
+    if (text.length > 2_000_000) throw new Error('Feed too large');
+    return text;
   }
 
   /** Cached remote value; refreshes in the background once stale. */
@@ -141,10 +166,13 @@ export function createWidgets({ config = {}, fetchImpl = fetch, log = console.er
     return e;
   }
 
+  const src = createSources({ remote, getJson, getText, tz, weatherCfg, trainsCfg: config.widgets?.trains, bodsCfg: config.widgets?.bods, partsIn, sample });
+
   // ---- weather
   // One 7-day fetch per location; slides take as many days as they show.
   function weatherEntry() {
     if (!weatherCfg || !Number.isFinite(Number(weatherCfg.latitude)) || !Number.isFinite(Number(weatherCfg.longitude))) return null;
+    if (provider === 'metno') return src.metForecast();
     const windUnit = weatherCfg.windUnit === 'kmh' ? 'kmh' : 'mph';
     const url = 'https://api.open-meteo.com/v1/forecast'
       + `?latitude=${Number(weatherCfg.latitude)}&longitude=${Number(weatherCfg.longitude)}`
@@ -237,11 +265,14 @@ export function createWidgets({ config = {}, fetchImpl = fetch, log = console.er
     }[scopeUsed];
     return {
       topic,
+      month: m,
+      day: d,
       scope: wanted,
       scopeUsed,
       label,
       items: [...items, ...general].sort((a, b) => (a.date === b.date ? a.year - b.year : a.date < b.date ? -1 : 1)),
       generalError,
+      ...(general.length ? { credit: 'General history: Wikipedia · CC BY-SA 4.0' } : {}),
     };
   }
 
@@ -256,10 +287,15 @@ export function createWidgets({ config = {}, fetchImpl = fetch, log = console.er
       const wrong = sample(near.length >= 3 ? near : usable, 3, `${seed}:w:${i}`);
       const label = (o) => (kind === 'flags' ? o.name : o.capital);
       const options = sample([c, ...wrong].map(label), 4, `${seed}:o:${i}`);
+      const all4 = [c, ...wrong];
       return {
         q: kind === 'flags' ? 'Which country does this flag belong to?' : `What is the capital of ${c.name}?`,
+        qtype: kind === 'flags' ? 'flag' : 'capital',
+        code: c.code,
         flag: flagEmoji(c.code),
         options,
+        // Country codes for flag questions, so screens can show names in their own language.
+        optionCodes: kind === 'flags' ? options.map((o) => all4.find((x) => x.name === o).code) : undefined,
         answer: options.indexOf(label(c)),
         topic: 'geography',
       };
@@ -279,7 +315,18 @@ export function createWidgets({ config = {}, fetchImpl = fetch, log = console.er
     const seed = `${kind}:${topic}:${y}-${mmdd(m, d)}`;
     const extras = extraLines(opts.extra);
     let base = opts.only && extras.length ? [] : packFor(kind, topic);
-    if (kind === 'quiz' && (topic === 'geography' || topic === 'mixed') && !(opts.only && extras.length)) {
+    let credit;
+    let note;
+    if (kind === 'quiz' && opts.source === 'opentdb' && !(opts.only && extras.length)) {
+      const online = src.opentdb(topic);
+      if (online.items) {
+        base = online.items;
+        credit = 'Questions: Open Trivia Database · CC BY-SA 4.0';
+      } else {
+        note = online.error ? 'Online questions unavailable — showing built-in questions.' : 'Loading online questions…';
+      }
+    }
+    if (kind === 'quiz' && !credit && (topic === 'geography' || topic === 'mixed') && !(opts.only && extras.length)) {
       base = [...base, ...geoQuiz('mixed', `${seed}:geo`, 10)];
     }
     if (kind === 'trivia') base = base.map((it) => it.text); // facts are plain strings on screen
@@ -310,14 +357,14 @@ export function createWidgets({ config = {}, fetchImpl = fetch, log = console.er
     }
     base = sample(base, 20, seed);
     // Club's own lines first in the rotation, mixed into the day's sample.
-    return { topic, items: [...mine, ...base].slice(0, Math.max(20, mine.length)) };
+    return { topic, items: [...mine, ...base].slice(0, Math.max(20, mine.length)), ...(credit ? { credit } : {}), ...(note ? { note } : {}) };
   }
 
   function countryData(now) {
     const { y, m, d } = partsIn(now, tz);
     return {
       items: sample(pack('countries'), 20, `country:${y}-${mmdd(m, d)}`).map((c) => ({
-        name: c.name, flag: flagEmoji(c.code), capital: c.capital, continent: c.continent, currency: c.currency,
+        name: c.name, code: c.code, flag: flagEmoji(c.code), capital: c.capital, continent: c.continent, currency: c.currency,
       })),
     };
   }
@@ -338,8 +385,22 @@ export function createWidgets({ config = {}, fetchImpl = fetch, log = console.er
           days: e.data.days.slice(0, days + 1),
           fetchedAt: new Date(e.fetchedAt).toISOString(),
           stale: Boolean(e.error),
+          credit: provider === 'metno' ? 'Weather: MET Norway · CC BY 4.0' : 'Weather: Open-Meteo.com · CC BY 4.0',
         };
       }
+      case 'transport':
+        return src.transport(opts, now);
+      case 'bankholiday':
+      case 'floods':
+      case 'carbon':
+      case 'quakes':
+      case 'currency':
+      case 'potd':
+      case 'births':
+      case 'sky':
+      case 'headlines':
+      case 'events':
+        return src[kind](opts, now);
       case 'history':
         return historyData(opts, now);
       case 'worldclock':
@@ -364,9 +425,21 @@ export function createWidgets({ config = {}, fetchImpl = fetch, log = console.er
     return compute(kind, opts, now);
   }
 
+  /** Place search: OpenStreetMap Nominatim (ODbL, commercial use allowed), Open-Meteo as a fallback. */
   async function geocode(q) {
     const name = String(q ?? '').trim();
     if (name.length < 2) return [];
+    try {
+      const list = await getJson(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(name)}&format=jsonv2&limit=6`);
+      if (Array.isArray(list) && list.length) {
+        return list.map((r) => {
+          const parts = String(r.display_name || '').split(',').map((x) => x.trim());
+          return { name: r.name || parts[0] || name, region: parts.slice(1).filter((x) => !/^\d/.test(x)).slice(-3).join(', '), latitude: Number(r.lat), longitude: Number(r.lon), source: 'OpenStreetMap' };
+        });
+      }
+    } catch (err) {
+      log(`[widgets] nominatim: ${err.message}`);
+    }
     const j = await getJson(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(name)}&count=6&language=en&format=json`);
     return (j.results ?? []).map((r) => ({
       name: r.name,

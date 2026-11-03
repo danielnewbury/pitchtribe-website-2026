@@ -13,6 +13,7 @@ const { Feeds, LEAGUE_KEY_RE, SHOW_OPTIONS } = require('./feeds');
 const auth = require('./auth');
 const v = require('./validate');
 const pkg = require('../package.json');
+const i18n = require('../public/shared/i18n.js');
 
 const PUBLIC_DIR = path.join(__dirname, '..', 'public');
 
@@ -31,9 +32,12 @@ const MEDIA_TYPES = {
 
 const ASSET_TYPES = ['image', 'video', 'url', 'notice', 'menu', 'fixtures', 'scores', 'widget'];
 const TEXT_TYPES = ['url', 'notice', 'menu', 'fixtures', 'scores', 'widget'];
-const WIDGET_KINDS = ['clock', 'worldclock', 'weather', 'joke', 'phrase', 'trivia', 'quiz', 'history', 'emoji', 'geoquiz', 'country', 'spotball'];
+const WIDGET_KINDS = ['clock', 'worldclock', 'weather', 'joke', 'phrase', 'trivia', 'quiz', 'history', 'emoji', 'geoquiz', 'country', 'spotball',
+  'transport', 'bankholiday', 'floods', 'carbon', 'quakes', 'currency', 'potd', 'births', 'sky', 'headlines', 'events'];
+const CURRENCIES = ['AUD', 'BGN', 'BRL', 'CAD', 'CHF', 'CNY', 'CZK', 'DKK', 'EUR', 'GBP', 'HKD', 'HUF', 'IDR', 'ILS', 'INR', 'ISK', 'JPY', 'KRW', 'MXN', 'MYR', 'NOK', 'NZD', 'PHP', 'PLN', 'RON', 'SEK', 'SGD', 'THB', 'TRY', 'USD', 'ZAR'];
 const TOPICS = ['sport', 'film-tv', 'music', 'geography', 'culture', 'mixed'];
-const WIDGET_DURATION = { clock: 15, worldclock: 15, weather: 15, joke: 14, phrase: 10, trivia: 12, quiz: 20, history: 18, emoji: 16, geoquiz: 16, country: 14, spotball: 20 };
+const WIDGET_DURATION = { clock: 15, worldclock: 15, weather: 15, joke: 14, phrase: 10, trivia: 12, quiz: 20, history: 18, emoji: 16, geoquiz: 16, country: 14, spotball: 20,
+  transport: 20, bankholiday: 12, floods: 12, carbon: 14, quakes: 14, currency: 12, potd: 15, births: 15, sky: 12, headlines: 18, events: 18 };
 const DATETIME_RE = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/;
 const GRID = { cols: 10, rows: 8 };
 const DEFAULT_DURATION = { image: 10, video: 0, url: 30, notice: 12, menu: 20, fixtures: 15, scores: 15, widget: 15 };
@@ -166,7 +170,7 @@ function createApp(opts = {}) {
 
   const publicSettings = () => {
     const s = data().settings;
-    return { clubName: s.clubName, defaultPlaylistId: s.defaultPlaylistId };
+    return { clubName: s.clubName, defaultPlaylistId: s.defaultPlaylistId, language: s.language || 'en' };
   };
 
   function sportsView() {
@@ -184,7 +188,7 @@ function createApp(opts = {}) {
 
   function widgetsView() {
     const w = data().settings.widgets;
-    return { weather: w.weather, wikipedia: w.wikipedia, kinds: feeds.widgetKinds };
+    return { weather: w.weather, wikipedia: w.wikipedia, trains: w.trains || null, bods: w.bods || null, kinds: feeds.widgetKinds };
   }
 
   const screenView = (s) => ({
@@ -265,6 +269,50 @@ function createApp(opts = {}) {
     }
     if (kind === 'weather') w.days = v.int(c.days, { min: 0, max: 6, fallback: 3 });
     if (kind === 'quiz' || kind === 'trivia') w.topic = v.oneOf(c.topic, TOPICS, 'sport');
+    if (kind === 'quiz') w.source = v.oneOf(c.source, ['bundled', 'opentdb'], 'bundled');
+    if (kind === 'transport') {
+      const sections = (Array.isArray(c.sections) ? c.sections : []).filter((x) => ['tracker', 'trains', 'buses', 'lines', 'roads', 'planes'].includes(x));
+      if (!sections.length) throw v.bad('Choose at least one thing to show');
+      w.sections = [...new Set(sections)];
+      w.station = /^[A-Za-z]{3}$/.test(c.station || '') ? c.station.toUpperCase() : '';
+      if (w.sections.includes('trains') && !w.station) throw v.bad('Enter the 3-letter station code (e.g. BIW for Biggleswade)');
+      w.busStop = /^[A-Za-z0-9]{4,20}$/.test(c.busStop || '') ? c.busStop : '';
+      if (w.sections.includes('buses') && !w.busStop) throw v.bad('Enter the TfL bus stop ID');
+      w.busStopName = v.str(c.busStopName, { max: 60, field: 'Stop name' });
+      w.modes = (Array.isArray(c.modes) ? c.modes : ['tube', 'elizabeth-line', 'overground', 'dlr']).filter((m) => ['tube', 'overground', 'dlr', 'elizabeth-line'].includes(m));
+      w.planesRadius = v.int(c.planesRadius, { min: 2, max: 100, fallback: 15 });
+      w.trackLines = [...new Set((Array.isArray(c.trackLines) ? c.trackLines : String(c.trackLines || '').split(/[\s,]+/))
+        .map((l) => String(l).trim().toUpperCase()).filter((l) => /^[A-Z0-9]{1,8}$/.test(l)))].slice(0, 6);
+      if (w.sections.includes('tracker') && !w.trackLines.length) throw v.bad('Enter the bus route numbers to track');
+      w.trackOperator = /^[A-Za-z0-9]{2,8}$/.test(c.trackOperator || '') ? c.trackOperator.toUpperCase() : '';
+      w.trackRadius = v.int(c.trackRadius, { min: 2, max: 60, fallback: 20 });
+      w.trackTitle = v.str(c.trackTitle, { max: 80, field: 'Tracker heading' });
+    }
+    if (kind === 'bankholiday') {
+      w.division = v.oneOf(c.division, ['england-and-wales', 'scotland', 'northern-ireland'], 'england-and-wales');
+      w.limit = v.int(c.limit, { min: 1, max: 8, fallback: 4 });
+    }
+    if (kind === 'floods') w.radius = v.int(c.radius, { min: 1, max: 100, fallback: 15 });
+    if (kind === 'carbon') {
+      const pc = String(c.postcode || '').toUpperCase().replace(/\s+/g, '');
+      if (pc && !/^[A-Z]{1,2}\d[A-Z\d]?$/.test(pc)) throw v.bad('Use the first half of a postcode, e.g. SG18');
+      w.postcode = pc;
+    }
+    if (kind === 'quakes') {
+      w.feed = v.oneOf(c.feed, ['significant_week', '4.5_week', '4.5_day', '2.5_day'], '4.5_week');
+      w.limit = v.int(c.limit, { min: 1, max: 10, fallback: 6 });
+    }
+    if (kind === 'currency') {
+      w.base = v.oneOf(c.base, CURRENCIES, 'GBP');
+      w.symbols = [...new Set((Array.isArray(c.symbols) ? c.symbols : ['EUR', 'USD']).filter((x) => CURRENCIES.includes(x) && x !== w.base))].slice(0, 8);
+      if (!w.symbols.length) throw v.bad('Choose at least one currency');
+    }
+    if (kind === 'births') w.limit = v.int(c.limit, { min: 1, max: 10, fallback: 5 });
+    if (kind === 'headlines' || kind === 'events') {
+      w.url = v.httpUrl(String(c.url || '').trim().replace(/^webcal:\/\//i, 'https://'));
+      w.limit = v.int(c.limit, { min: 1, max: 10, fallback: 6 });
+      if (kind === 'events') w.days = v.int(c.days, { min: 1, max: 365, fallback: 60 });
+    }
     if (kind === 'emoji') w.category = v.oneOf(c.category, ['all', 'Film', 'TV', 'Song'], 'all');
     if (kind === 'geoquiz') w.mode = v.oneOf(c.mode, ['flags', 'capitals', 'mixed'], 'mixed');
     if (kind === 'worldclock') {
@@ -342,10 +390,8 @@ function createApp(opts = {}) {
     const c = asset.content;
     if (c.kind === 'spotball') return spotballData(asset, assets);
     if (c.kind === 'clock' || c.kind === 'worldclock') return undefined;
-    return feeds.widget(c.kind, {
-      days: c.days, extra: c.extra, only: c.only, scope: c.scope, general: c.general, limit: c.limit,
-      topic: c.topic, mode: c.mode, category: c.category,
-    });
+    const { kind, title, ...opts } = c; // every widget option goes to the engine
+    return feeds.widget(kind, opts);
   }
 
   function sanitizePlaylist(body, existing) {
@@ -399,6 +445,7 @@ function createApp(opts = {}) {
       revision: d.revision,
       generatedAt: new Date().toISOString(),
       clubName: d.settings.clubName || 'PitchTribe',
+      language: (screen && screen.language) || d.settings.language || 'en',
       screen: screen ? { id: screen.id, name: screen.name, rotation: screen.rotation || 0 } : null,
       playlist: playlist
         ? { id: playlist.id, name: playlist.name, showClock: playlist.showClock, ticker: playlist.ticker }
@@ -544,6 +591,7 @@ function createApp(opts = {}) {
       screens: d.screens.map(screenView),
       dashboardUrls: lanUrls(port),
       maxUploadMb: Math.round(maxUploadBytes / 1024 / 1024),
+      languages: i18n.LANGUAGES.map(({ code, name }) => ({ code, name })),
       sports: sportsView(),
       widgets: widgetsView(),
     });
@@ -555,11 +603,14 @@ function createApp(opts = {}) {
       const clubName = v.str(req.body.clubName, { max: 80, required: true, field: 'Club name' });
       const defaultPlaylistId = req.body.defaultPlaylistId || null;
       if (defaultPlaylistId) findOr404(data().playlists, defaultPlaylistId, 'Playlist');
+      const language = req.body.language === undefined ? data().settings.language : v.oneOf(req.body.language, i18n.codes, 'en');
+      const retitle = clubName !== data().settings.clubName;
       store.mutate((d) => {
         d.settings.clubName = clubName;
         d.settings.defaultPlaylistId = defaultPlaylistId;
+        d.settings.language = language;
       });
-      configureFeeds();
+      if (retitle) configureFeeds(); // the engine only uses the club name; keep its caches otherwise
       res.json(publicSettings());
     })
   );
@@ -614,10 +665,17 @@ function createApp(opts = {}) {
           latitude,
           longitude,
           windUnit: v.oneOf(wb.windUnit, ['mph', 'kmh'], 'mph'),
+          provider: v.oneOf(wb.provider, ['metno', 'openmeteo'], 'metno'),
         };
       }
+      // Keys stay on the server: they never appear in screen manifests.
+      const tb = req.body.trains || {};
+      const trains = tb.url || tb.token
+        ? { url: tb.url ? v.httpUrl(tb.url) : '', token: v.str(tb.token, { max: 200, field: 'Rail token' }) }
+        : null;
+      const bodsKey = v.str(req.body.bods && req.body.bods.apiKey, { max: 200, field: 'Bus Open Data key' });
       store.mutate((d) => {
-        d.settings.widgets = { weather, wikipedia: v.bool(req.body.wikipedia, true) };
+        d.settings.widgets = { weather, wikipedia: v.bool(req.body.wikipedia, true), trains, bods: bodsKey ? { apiKey: bodsKey } : null };
       });
       configureFeeds();
       res.json(widgetsView());
@@ -800,6 +858,7 @@ function createApp(opts = {}) {
         if (update.playlistId) findOr404(data().playlists, update.playlistId, 'Playlist');
       }
       if (req.body.rotation !== undefined) update.rotation = v.oneOf(Number(req.body.rotation), ROTATIONS, 0);
+      if (req.body.language !== undefined) update.language = v.oneOf(req.body.language, i18n.codes, '');
       store.mutate(() => Object.assign(screen, update));
       res.json(screenView(screen));
     })

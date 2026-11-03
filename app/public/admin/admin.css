@@ -378,3 +378,6 @@ dialog::backdrop { background: rgb(2 6 12 / 0.65); backdrop-filter: blur(3px); }
 .sb-marker { position: absolute; aspect-ratio: 1; transform: translate(-50%, -50%); border: 3px solid #ff3b3b; border-radius: 50%; box-shadow: 0 0 0 2px rgb(0 0 0 / 0.5); pointer-events: none; }
 
 input[type="range"] { width: 100%; accent-color: var(--accent); }
+
+.widget-group { font-size: 12px; text-transform: uppercase; letter-spacing: 0.1em; color: var(--muted); margin: 4px 0 8px; }
+.form-grid .sub, .sub { padding-left: 12px; border-left: 2px solid var(--line-hi); }
