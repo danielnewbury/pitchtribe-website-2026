@@ -6,9 +6,9 @@
 <h2 id="how">How it works</h2>
 <ul>
   <li>The Pi’s <strong>network cable</strong> goes to the club router and provides the internet.</li>
-  <li>The Pi’s <strong>built-in Wi-Fi</strong> becomes the guest network. It no longer connects to the club Wi-Fi.</li>
+  <li>The Pi’s <strong>built-in Wi-Fi</strong> becomes the guest network. It no longer connects to the club Wi-Fi. For a bigger venue, a <a href="#usb-aerial">USB aerial</a> or <a href="#access-points">ceiling access points</a> reach much further.</li>
   <li>Guests can reach the internet <strong>only</strong> — never the club’s own computers, tills, cameras or the PitchTribe dashboard.</li>
-  <li>Each device gets a speed limit and a session length that you choose. Up to 60 devices can be connected at once.</li>
+  <li>Each device gets a speed limit and a session length that you choose. Up to 60 devices can join the Pi’s own radio at once, and about 1,000 across the whole guest network with access points.</li>
 </ul>
 <div class="callout warn">
   <p class="callout-title">You need a network cable</p>
@@ -52,6 +52,55 @@
 </table>
 <p>Tap <strong>Save</strong>, and the Pi applies the settings by itself within a few seconds. The <strong>Status</strong> box shows whether the guest network is running and how many devices are connected now, today and over the last week.</p>
 
+<h2 id="bigger-venues">Covering a bigger venue</h2>
+<p>The Pi’s built-in Wi-Fi is a small radio, good for about one room. There are two upgrades, and you can use either or both. The <a href="/buy#wifi">Buy page lists the parts with prices</a>.</p>
+<table>
+  <thead><tr><th>Venue</th><th>Use</th><th>Roughly</th></tr></thead>
+  <tbody>
+    <tr><td>A bar or small clubhouse</td><td>The built-in Wi-Fi</td><td>Nothing</td></tr>
+    <tr><td>Clubhouse plus a terrace or car park</td><td>A <a href="#usb-aerial">USB Wi-Fi aerial</a> (Alfa AWUS036ACM)</td><td>£54</td></tr>
+    <tr><td>Several rooms, a stand, a pitchside bar</td><td><a href="#access-points">Ceiling access points</a></td><td>£275 for three, plus fitting</td></tr>
+  </tbody>
+</table>
+<p>Whichever you use, guests see one network with one name and sign in once. The dashboard’s Wi-Fi page has a <strong>Hardware</strong> box that shows what the Pi has found and what it’s using, and it updates by itself when you plug something in or take it out.</p>
+
+<h3 id="usb-aerial">A USB Wi-Fi aerial</h3>
+<ol>
+  <li>Plug the Alfa adapter into one of the Pi’s <strong>blue</strong> USB ports (the blue ones are the fast USB 3 ports). Use a 2 m extension lead so the adapter can sit up high, clear of the TV and any metal. Point the aerials straight up.</li>
+  <li>In the dashboard, open <strong>Wi-Fi</strong>. Under <strong>Coverage</strong>, leave <strong>Broadcast from</strong> on <em>Automatic</em> — it uses the USB aerial whenever one is plugged in — or choose <em>USB Wi-Fi aerial</em>.</li>
+  <li>Choose the <strong>Band</strong>: <em>2.4 GHz</em> reaches further and through walls; <em>5 GHz</em> is faster but shorter range. Most clubs want 2.4 GHz for a terrace or car park.</li>
+  <li>Tap <strong>Save</strong>. After a few seconds, the Hardware box shows the USB aerial as <em>Broadcasting guest Wi-Fi</em>.</li>
+</ol>
+<p>Other USB Wi-Fi adapters may work if Linux supports them as a hotspot (“AP mode”), but the Alfa AWUS036ACM is the one we recommend.</p>
+
+<h3 id="access-points">Ceiling access points</h3>
+<p>Access points are small Wi-Fi radios for ceilings and walls, each cabled back to the Pi. Phones hop from one to the next as people walk around, without signing in again. You need a USB network adapter for the Pi, a PoE switch (it powers the access points through their network cables, so they need no socket), and the access points.</p>
+<ol class="steps">
+  <li>
+    <h3>Set up each access point first</h3>
+    <p>Before connecting them to the Pi, plug each access point into the club router (with the PoE switch, or the power adapter if it came with one) and set it up with the maker’s app — for TP-Link Omada, the free Omada app in <em>standalone</em> mode, no subscription. Give each one:</p>
+    <ul>
+      <li>a Wi-Fi network with <strong>exactly the same name</strong> as in the PitchTribe dashboard, and <strong>no password</strong> (open) — the sign-in page is the gate;</li>
+      <li><strong>client isolation</strong> switched on, so guests can’t see each other’s phones. On Omada this is under the network’s advanced settings. If the model has a “Guest network” switch instead, try that, but if guests then can’t get the sign-in page, turn it off and use client isolation;</li>
+      <li>a different <strong>channel</strong> from its neighbours on 2.4 GHz — 1, 6 and 11 — so they don’t interfere;</li>
+      <li>its own router and DHCP features <strong>off</strong> (plain access point mode). The Pi hands out the addresses.</li>
+    </ul>
+  </li>
+  <li>
+    <h3>Cable it up</h3>
+    <p>Plug the USB network adapter into a <strong>blue</strong> USB port on the Pi, and run a cable from it to the switch’s ordinary port (on the TL-SG1005P, port 5). Plug the access points into the powered ports (1–4). The Pi’s own network port stays connected to the club router — that’s the internet.</p>
+    <div class="callout warn">
+      <p class="callout-title">Keep the two networks apart</p>
+      <p>Nothing from the club’s own network should be plugged into the access points’ switch, and the switch must not be connected to the club router. The Pi sits between them and is the only way through.</p>
+    </div>
+  </li>
+  <li>
+    <h3>Switch them on in the dashboard</h3>
+    <p>On the dashboard’s Wi-Fi page, under <strong>Coverage</strong>, tick <strong>Ceiling access points</strong> and tap <strong>Save</strong>. The Hardware box shows the USB network adapter as <em>Access points — cable connected</em>.</p>
+    <p>The Pi’s own radio keeps broadcasting too, which is handy for the room it’s in. If the access points cover everything already, set <strong>Broadcast from</strong> to <em>None — access points only</em>.</p>
+  </li>
+</ol>
+
 <h2 id="emails">Collecting email addresses</h2>
 <p>If you ask for emails, guests also see a separate box asking whether you may contact them. It is <strong>never ticked in advance</strong>, as UK and EU law requires. On the Wi-Fi page you can download the list as a spreadsheet (CSV), which shows who agreed, or delete it.</p>
 <ul>
@@ -62,7 +111,9 @@
 
 <h2 id="problems">If guests can’t connect</h2>
 <ul>
-  <li><strong>The network doesn’t appear:</strong> check <em>Guest Wi-Fi on</em> is ticked and the Status box says the service is running. Try a different radio channel.</li>
+  <li><strong>The network doesn’t appear:</strong> check <em>Guest Wi-Fi on</em> is ticked and the Status box says the service is running. Look at the Hardware box for warnings — for example a USB aerial chosen but not plugged in. Try a different radio channel.</li>
+  <li><strong>Fine near the Pi, nothing further away:</strong> that’s the built-in radio’s range. See <a href="#bigger-venues">Covering a bigger venue</a>.</li>
+  <li><strong>Phones on an access point get no sign-in page:</strong> check the access point’s own router/DHCP is off and its “guest network” setting isn’t blocking the Pi (use client isolation instead), and that the Hardware box says the cable is connected.</li>
   <li><strong>It connects but the sign-in page doesn’t appear:</strong> open any web page — <code>http://neverssl.com</code> is a good one — and the sign-in page should load.</li>
   <li><strong>Signed in but no internet:</strong> check the Pi’s network cable, and that the club router itself is online.</li>
 </ul>

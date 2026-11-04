@@ -475,6 +475,120 @@
   </div>
 </section>
 
+<!-- ===================== GUEST WI-FI COVERAGE ===================== -->
+<section id="wifi" class="bg-surface py-20">
+  <div class="mx-auto w-full max-w-3xl px-4 sm:px-6">
+    <div class="reveal mb-8">
+      <p class="eyebrow">Guest Wi-Fi, further</p>
+      <h2 class="section-title mb-3">Wi-Fi for the whole venue</h2>
+      <p class="text-[1.0625rem] text-muted">
+        PitchTribe’s guest Wi-Fi runs on the Pi’s built-in radio, which covers about one room. For a
+        clubhouse with a terrace, or a ground with a stand and a pitchside bar, add one of the two
+        upgrades below. Guests get the same sign-in page, time limits and speed limits wherever they
+        are, and you switch it all on from the dashboard. UK prices including VAT, checked
+        4 November 2026.
+      </p>
+    </div>
+
+    <div class="grid gap-4 md:grid-cols-3">
+      <div class="reveal flex flex-col rounded-[18px] border border-line bg-bg p-6">
+        <p class="eyebrow">One room</p>
+        <h3 class="mb-1 font-head text-xl font-extrabold text-fg">Built-in Wi-Fi</h3>
+        <p class="mb-3 font-mono text-sm tabular-nums text-accent">Included</p>
+        <p class="text-[0.9375rem] text-muted">The Pi’s own radio. Fine for a bar or a small clubhouse with the Pi in the middle of it. Nothing to buy.</p>
+      </div>
+      <div class="reveal flex flex-col rounded-[18px] border border-line bg-bg p-6">
+        <p class="eyebrow">Clubhouse and terrace</p>
+        <h3 class="mb-1 font-head text-xl font-extrabold text-fg">A USB aerial</h3>
+        <p class="mb-3 font-mono text-sm tabular-nums text-accent">About £54</p>
+        <p class="text-[0.9375rem] text-muted">An Alfa Wi-Fi adapter with two screw-on aerials, on a short lead so it can sit high up and away from the TV. Reaches much further, through walls and out of a window, on 2.4 or 5 GHz.</p>
+      </div>
+      <div class="reveal flex flex-col rounded-[18px] border border-line bg-bg p-6">
+        <p class="eyebrow">The whole ground</p>
+        <h3 class="mb-1 font-head text-xl font-extrabold text-fg">Ceiling access points</h3>
+        <p class="mb-3 font-mono text-sm tabular-nums text-accent">About £275 for three</p>
+        <p class="text-[0.9375rem] text-muted">Access points on the ceiling or an outside wall, cabled back to the Pi. Phones move between them without signing in again. The way to cover a stand, a function room and a pitchside bar at once.</p>
+      </div>
+    </div>
+
+    <h3 class="reveal mb-2 mt-12 font-head text-xl font-extrabold text-fg">The USB aerial</h3>
+    <p class="reveal mb-4 text-[0.9375rem] text-muted">
+      Plug it into one of the Pi’s blue USB ports and PitchTribe uses it in place of the built-in
+      radio, by itself. We chose Alfa’s AC1200 because its chip has worked as a hotspot in standard Linux for years — no
+      extra drivers.
+    </p>
+    <div class="reveal overflow-hidden rounded-[18px] border border-line bg-bg px-5 py-4 sm:px-6">
+      <dl class="divide-y divide-line text-[0.9375rem]">
+        <div class="flex items-baseline justify-between gap-3 py-3">
+          <dt><a class="text-fg underline decoration-line-hi underline-offset-4 transition hover:decoration-accent" href="https://alfa-network.eu/awus036acm" target="_blank" rel="noopener noreferrer">Alfa AWUS036ACM dual-band USB Wi-Fi adapter</a> <span class="text-dim">— two 5 dBi aerials, Amazon UK</span></dt>
+          <dd class="shrink-0 font-mono tabular-nums">£47.29</dd>
+        </div>
+        <div class="flex items-baseline justify-between gap-3 py-3">
+          <dt><a class="text-fg underline decoration-line-hi underline-offset-4 transition hover:decoration-accent" href="https://uk.ugreen.com/products/10494p-amz" target="_blank" rel="noopener noreferrer">USB 3 extension lead, 2&nbsp;m</a> <span class="text-dim">— half a two-pack</span></dt>
+          <dd class="shrink-0 font-mono tabular-nums">£6.72</dd>
+        </div>
+        <div class="flex items-baseline justify-between gap-3 py-3 font-semibold text-fg">
+          <dt>Total</dt>
+          <dd class="shrink-0 font-mono tabular-nums text-accent">£54.01</dd>
+        </div>
+      </dl>
+    </div>
+    <p class="reveal mt-3 text-[0.875rem] text-dim">
+      Keep the extension lead to 2 or 3 metres; longer USB leads lose the connection. Point the
+      aerials straight up, and put the adapter as high and as central as you can.
+    </p>
+
+    <h3 class="reveal mb-2 mt-12 font-head text-xl font-extrabold text-fg">Ceiling access points</h3>
+    <p class="reveal mb-4 text-[0.9375rem] text-muted">
+      A small network of its own for guests: a USB network adapter on the Pi, a switch that powers
+      the access points down their network cables (PoE), and as many access points as the building
+      needs. This example covers a clubhouse with two indoor points and one on an outside wall
+      facing the pitch.
+    </p>
+    <div class="reveal overflow-hidden rounded-[18px] border border-line bg-bg px-5 py-4 sm:px-6">
+      <dl class="divide-y divide-line text-[0.9375rem]">
+        <div class="flex items-baseline justify-between gap-3 py-3">
+          <dt><a class="text-fg underline decoration-line-hi underline-offset-4 transition hover:decoration-accent" href="https://www.currys.co.uk/product/10148411.html" target="_blank" rel="noopener noreferrer">TP-Link UE300 USB network adapter</a> <span class="text-dim">— the access points’ port on the Pi</span></dt>
+          <dd class="shrink-0 font-mono tabular-nums">£8.97</dd>
+        </div>
+        <div class="flex items-baseline justify-between gap-3 py-3">
+          <dt><a class="text-fg underline decoration-line-hi underline-offset-4 transition hover:decoration-accent" href="https://www.broadbandbuyer.com/products/31142-tp-link-tl-sg1005p/" target="_blank" rel="noopener noreferrer">TP-Link TL-SG1005P PoE switch, 4 powered ports</a></dt>
+          <dd class="shrink-0 font-mono tabular-nums">£40.99</dd>
+        </div>
+        <div class="flex items-baseline justify-between gap-3 py-3">
+          <dt><a class="text-fg underline decoration-line-hi underline-offset-4 transition hover:decoration-accent" href="https://www.senetic.co.uk/product/EAP225" target="_blank" rel="noopener noreferrer">TP-Link Omada EAP225 ceiling access point ×2</a> <span class="text-dim">— £63.19 each</span></dt>
+          <dd class="shrink-0 font-mono tabular-nums">£126.38</dd>
+        </div>
+        <div class="flex items-baseline justify-between gap-3 py-3">
+          <dt><a class="text-fg underline decoration-line-hi underline-offset-4 transition hover:decoration-accent" href="https://msdist.co.uk/products/tp-link-eap225-outdoor" target="_blank" rel="noopener noreferrer">TP-Link Omada EAP225-Outdoor access point</a> <span class="text-dim">— weatherproof, for a wall or pole</span></dt>
+          <dd class="shrink-0 font-mono tabular-nums">£62.00</dd>
+        </div>
+        <div class="flex items-baseline justify-between gap-3 py-3">
+          <dt><a class="text-fg underline decoration-line-hi underline-offset-4 transition hover:decoration-accent" href="https://www.kenable.co.uk/en/networking/network-patch-cables/ethernet-cat6-patch-cables/ethernet-cat6-copper-cables/9518-ethernet-network-cable-cat6-gigabit-rj45-copper-internet-patch-lead-white-15m-009518-5055781229831.html" target="_blank" rel="noopener noreferrer">Cat6 network lead, 15&nbsp;m ×3</a> <span class="text-dim">— £11.60 each</span></dt>
+          <dd class="shrink-0 font-mono tabular-nums">£34.80</dd>
+        </div>
+        <div class="flex items-baseline justify-between gap-3 py-3 font-semibold text-fg">
+          <dt>Total for three access points</dt>
+          <dd class="shrink-0 font-mono tabular-nums text-accent">£273.14</dd>
+        </div>
+      </dl>
+    </div>
+    <div class="reveal mt-4 space-y-3 text-[0.9375rem] text-muted">
+      <p>
+        Each extra indoor access point is about £75 with its cable. The switch powers four; a bigger
+        ground needs an 8-port PoE switch instead. Omada access points are set up once from their own
+        free app without any subscription — the
+        <a class="font-semibold text-accent underline decoration-accent/40 underline-offset-4 transition hover:decoration-accent" href="/docs/guest-wifi#bigger-venues">guest Wi-Fi guide</a>
+        lists the settings.
+      </p>
+      <p class="text-[0.875rem] text-dim">
+        Running cables through ceilings and outside walls is the real cost of this option, and it is
+        a job for someone used to it. We quote for it with the rest of an installation.
+      </p>
+    </div>
+  </div>
+</section>
+
 <!-- ===================== ENQUIRY ===================== -->
 <section id="enquire" class="py-20 text-center">
   <div class="mx-auto w-full max-w-6xl px-4 sm:px-6">
