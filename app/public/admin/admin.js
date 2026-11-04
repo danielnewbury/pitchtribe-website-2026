@@ -204,6 +204,34 @@
     return state;
   }
 
+  /** Sends a backup file (.tar.gz) as the request body. */
+  async function uploadBackup(url, file) {
+    const res = await fetch(`/api${url}`, {
+      method: 'POST',
+      credentials: 'same-origin',
+      headers: { 'x-pitchtribe': '1', 'Content-Type': 'application/gzip' },
+      body: file,
+    });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) throw new Error(data.error || `Restore failed (${res.status})`);
+    return data;
+  }
+
+  const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+  const fmtWhen = (iso) => new Date(iso).toLocaleString([], { weekday: 'short', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
+
+  /** Waits for the backup helper to finish a request; returns its result. */
+  async function waitForBackup(requestId, getStatus) {
+    for (let i = 0; i < 1800; i++) {
+      await sleep(i < 10 ? 1000 : 2000);
+      let s = null;
+      try { s = await getStatus(); } catch { continue; } // the server restarts during a restore
+      if (s && s.lastRequestId === requestId && !s.running) return s.last || { ok: true };
+      if (s && s.done) return { ok: true };
+    }
+    return { ok: false, message: 'This is taking a long time. Check the stick, then reload this page.' };
+  }
+
   function guessMime(file) {
     if (file.type) return file.type;
     const ext = file.name.split('.').pop().toLowerCase();
@@ -372,7 +400,92 @@
           h('div', {},
             h('h1', {}, setup ? 'Set up PitchTribe' : `Sign in${status.clubName ? ` to ${status.clubName}` : ''}`),
             h('p', { class: 'muted', style: 'margin-top:6px' }, setup ? 'Create the dashboard for your club’s screens.' : 'Manage what’s on your club’s screens.')),
-          form)));
+          form,
+          setup ? restoreOnSetup(status) : null)));
+  }
+
+  /** First-run screen: bring a club back from a USB stick or a backup file instead of starting again. */
+  function restoreOnSetup(status) {
+    const box = h('div', { class: 'stack', style: 'gap:12px;border-top:1px solid var(--line);padding-top:18px' });
+    const msg = h('p', { class: 'small', role: 'status' });
+    let busy = false;
+    let poll = null;
+
+    const finish = async (text) => {
+      clearInterval(poll);
+      msg.textContent = text;
+      await sleep(1500);
+      boot(); // the club's own sign-in screen, with its old password
+    };
+
+    function draw(info) {
+      const options = [];
+      for (const stick of info.usb || []) {
+        for (const b of stick.backups) {
+          for (const snap of b.snapshots) options.push({ stick, host: b.host, snap });
+        }
+      }
+      options.sort((x, y) => (x.snap.at < y.snap.at ? 1 : -1));
+      const pick = h('select', {}, options.map((o, i) => h('option', { value: String(i) },
+        `${o.snap.club || o.host} — ${fmtWhen(o.snap.at)}${(info.usb || []).length > 1 ? ` (${o.stick.label || 'USB stick'})` : ''}`)));
+      const usbBtn = h('button', { class: 'btn', type: 'button', disabled: busy, onclick: async () => {
+        const o = options[Number(pick.value)];
+        busy = true;
+        draw(info);
+        msg.textContent = 'Restoring from the USB stick… The screen goes blank for a moment. Big video collections take a few minutes.';
+        try {
+          const r = await api('POST', '/setup/restore-usb', { uuid: o.stick.uuid, host: o.host, snapshot: o.snap.id });
+          const result = await waitForBackup(r.requestId, async () => {
+            const st = await fetch('/api/auth/status', { credentials: 'same-origin', cache: 'no-store' }).then((x) => x.json());
+            return st.setupRequired ? { ...st.restore } : { done: true };
+          });
+          if (result.ok) return finish('Restored. Sign in with the club’s usual password.');
+          throw new Error(result.message);
+        } catch (err) {
+          busy = false;
+          draw(info);
+          msg.textContent = err.message;
+        }
+      } }, icon('upload'), 'Restore from USB stick');
+
+      const fileInput = h('input', { type: 'file', accept: '.gz,.tgz,application/gzip', hidden: true, onchange: async () => {
+        const f = fileInput.files[0];
+        if (!f) return;
+        busy = true;
+        draw(info);
+        msg.textContent = `Restoring from ${f.name}…`;
+        try {
+          await uploadBackup('/setup/restore-file', f);
+          return finish('Restored. Sign in with the club’s usual password.');
+        } catch (err) {
+          busy = false;
+          draw(info);
+          msg.textContent = err.message;
+        }
+      } });
+
+      box.replaceChildren(
+        h('h2', { style: 'font-size:1.05rem' }, 'Restoring after a new memory card?'),
+        h('p', { class: 'small muted' }, 'If this Pi had PitchTribe before, bring back your content, screens, settings and password instead of starting again.'),
+        options.length
+          ? h('div', { class: 'stack', style: 'gap:8px' }, h('label', { class: 'field' }, 'Backup on the USB stick', pick), h('div', {}, usbBtn))
+          : h('p', { class: 'small muted' }, 'Plug in the USB stick with your backups — it appears here within a few seconds.'),
+        h('div', {}, h('button', { class: 'btn ghost sm', type: 'button', disabled: busy, onclick: () => fileInput.click() }, 'Restore from a backup file…'), fileInput),
+        msg);
+    }
+
+    draw(status.restore || {});
+    // Notice a stick being plugged in while this screen is open.
+    poll = setInterval(async () => {
+      if (busy || !document.body.contains(box)) { if (!document.body.contains(box)) clearInterval(poll); return; }
+      try {
+        const st = await fetch('/api/auth/status', { credentials: 'same-origin', cache: 'no-store' }).then((x) => x.json());
+        if (!st.setupRequired) return finish('This dashboard has been set up.');
+        const before = JSON.stringify(status.restore?.usb || []);
+        if (JSON.stringify(st.restore?.usb || []) !== before) { status.restore = st.restore; draw(st.restore); }
+      } catch { /* try again */ }
+    }, 5000);
+    return box;
     (setup ? club : pw).focus();
   }
 
@@ -1566,6 +1679,7 @@ ${d(18, '14:00')} | Riverside FC v Northdale Athletic | County Cup | Home`;
 
     const sports = sportsCard();
     const widgetSettings = widgetsCard();
+    const backupsBox = backupCard();
 
     const about = h('div', { class: 'card panel-box stack', style: 'gap:10px' },
       h('h2', {}, 'About'),
@@ -1577,7 +1691,131 @@ ${d(18, '14:00')} | Riverside FC v Northdale Athletic | County Cup | Home`;
 
     return shell('settings',
       h('div', { class: 'page-head' }, h('div', {}, h('h1', {}, 'Settings'))),
-      h('div', { class: 'stack', style: 'max-width:640px' }, general, sports, widgetSettings, pw, about));
+      h('div', { class: 'stack', style: 'max-width:640px' }, general, sports, widgetSettings, backupsBox, pw, about));
+  }
+
+  // Settings → Backups --------------------------------------------------------------
+  let backupInfo = null; // GET /api/backup
+  let backupBusy = '';
+
+  async function loadBackup() {
+    try { backupInfo = await api('GET', '/backup'); } catch (err) { toast(err.message, 'error'); }
+    if (currentView === 'settings') render();
+  }
+
+  async function backupAction(body, busyText, okText) {
+    backupBusy = busyText;
+    render();
+    try {
+      const r = await api('POST', '/backup/request', body);
+      // Not api(): after a restore the old session is gone, and a 401 must end the wait, not loop back to sign-in.
+      const last = await waitForBackup(r.requestId, async () => {
+        const res = await fetch('/api/backup', { credentials: 'same-origin', cache: 'no-store' });
+        if (res.status === 401) return { done: true };
+        return res.ok ? (await res.json()).status : null;
+      });
+      if (body.action === 'restore' && last.ok) {
+        toast(okText);
+        await sleep(1500);
+        backupBusy = '';
+        backupInfo = null;
+        return boot(); // restored data has its own password
+      }
+      toast(last.ok ? okText : last.message, last.ok ? undefined : 'error');
+    } catch (err) {
+      toast(err.message, 'error');
+    }
+    backupBusy = '';
+    await loadBackup();
+  }
+
+  function backupCard() {
+    const head = [
+      h('h2', {}, 'Backups'),
+      h('p', { class: 'small muted' }, 'A copy of everything — content, photos and videos, playlists, screens, settings and the password — so a failed memory card is a quick fix, not a fresh start.'),
+    ];
+    if (!backupInfo) {
+      loadBackup();
+      return h('div', { class: 'card panel-box stack', style: 'gap:10px' }, ...head, h('p', { class: 'small muted' }, 'Loading…'));
+    }
+    const st = backupInfo.status || {};
+    const cfg = backupInfo.config;
+    const sticks = st.sticks || [];
+    const size = (k) => `${fmtBytes(k.free)} free of ${fmtBytes(k.size)}`;
+    const usb = [h('h3', { style: 'font-size:1rem;margin-top:6px' }, 'USB stick')];
+
+    if (!backupInfo.available) {
+      usb.push(h('p', { class: 'small muted' }, 'USB backups work on a Raspberry Pi with PitchTribe installed. Use “Download backup” below meanwhile.'));
+    } else if (backupBusy || st.running) {
+      usb.push(h('p', { class: 'small' }, backupBusy || (st.running === 'restore' ? 'Restoring…' : 'Backing up…')));
+    } else if (cfg) {
+      const stick = sticks.find((k) => k.uuid === cfg.uuid);
+      const mine = stick?.backups?.find((b) => b.snapshots.length) || null;
+      const name = cfg.label || 'the USB stick';
+      usb.push(stick
+        ? h('p', { class: 'small' }, `Backing up every night to “${name}” (${size(stick)}).`)
+        : h('p', { class: 'small', style: 'color:var(--danger)' }, `⚠ The backup stick “${name}” isn’t plugged in. Plug it back into the Pi.`));
+      if (st.last) {
+        usb.push(h('p', { class: 'small', style: st.last.ok ? '' : 'color:var(--danger)' },
+          st.last.ok ? `Last: ${st.last.message.toLowerCase()} ${fmtWhen(st.last.at)} ✓` : `⚠ ${st.last.message} (${fmtWhen(st.last.at)})`));
+      }
+      if (mine) usb.push(h('p', { class: 'small muted' }, `${mine.snapshots.length} backup${mine.snapshots.length === 1 ? '' : 's'} on the stick — the last 30 are kept.`));
+      usb.push(h('div', { class: 'actions' },
+        h('button', { class: 'btn sm primary', type: 'button', disabled: !stick, onclick: () => backupAction({ action: 'now' }, 'Backing up now…', 'Backed up to the USB stick') }, 'Back up now'),
+        h('button', { class: 'btn sm', type: 'button', onclick: async () => {
+          if (!(await confirmDialog('Stop backing up to this stick?', 'Backups already on it are kept.', { confirmLabel: 'Stop backups', danger: false }))) return;
+          backupAction({ action: 'stop' }, 'Switching off…', 'USB backups switched off');
+        } }, 'Stop using this stick')));
+    } else if (sticks.length) {
+      usb.push(h('p', { class: 'small' }, 'Choose the stick to back up to. PitchTribe keeps its backups in a folder of their own and leaves everything else on the stick alone.'));
+      for (const k of sticks) {
+        usb.push(h('div', { class: 'actions', style: 'align-items:center' },
+          h('span', { class: 'small', style: 'flex:1' }, `${k.label || 'USB stick'} · ${size(k)}`),
+          h('button', { class: 'btn sm primary', type: 'button', disabled: Boolean(k.error), onclick: () => backupAction({ action: 'use', uuid: k.uuid }, 'Making the first backup…', 'Backups switched on — first backup done') }, 'Use this stick for backups')));
+      }
+    } else {
+      usb.push(h('p', { class: 'small muted' }, 'Plug a USB stick into the Pi and it appears here within a few seconds. Most sticks work as they come (FAT32 or exFAT). 32 GB is plenty for most clubs.'));
+      setTimeout(() => { if (currentView === 'settings' && !backupBusy) loadBackup(); }, 6000);
+    }
+
+    // Restore from the stick, while signed in (e.g. to undo a big mistake).
+    const restorable = sticks.flatMap((k) => (k.backups || []).flatMap((b) => b.snapshots.map((snap) => ({ k, host: b.host, snap }))))
+      .sort((x, y) => (x.snap.at < y.snap.at ? 1 : -1));
+    if (backupInfo.available && restorable.length && !backupBusy && !st.running) {
+      const pick = h('select', {}, restorable.map((o, i) => h('option', { value: String(i) }, `${o.snap.club || o.host} — ${fmtWhen(o.snap.at)}`)));
+      usb.push(h('details', { class: 'help' }, h('summary', {}, 'Restore from the USB stick'),
+        h('div', { class: 'stack', style: 'gap:8px;margin-top:8px' },
+          h('p', { class: 'small muted' }, 'Puts everything back as it was at that time, including the password. Changes made since are lost.'),
+          pick,
+          h('div', {}, h('button', { class: 'btn sm danger', type: 'button', onclick: async () => {
+            const o = restorable[Number(pick.value)];
+            if (!(await confirmDialog(`Restore the backup from ${fmtWhen(o.snap.at)}?`, 'Everything changes back to how it was then, and everyone is signed out.', { confirmLabel: 'Restore' }))) return;
+            backupAction({ action: 'restore', uuid: o.k.uuid, host: o.host, snapshot: o.snap.id }, 'Restoring… the screens go blank for a moment.', 'Restored — sign in again');
+          } }, 'Restore')))));
+    }
+
+    const fileInput = h('input', { type: 'file', accept: '.gz,.tgz,application/gzip', hidden: true, onchange: async () => {
+      const f = fileInput.files[0];
+      fileInput.value = '';
+      if (!f) return;
+      if (!(await confirmDialog(`Restore from ${f.name}?`, 'Everything is replaced with what’s in the file, including the password, and everyone is signed out.', { confirmLabel: 'Restore' }))) return;
+      try {
+        toast('Restoring…');
+        await uploadBackup('/backup/restore-file', f);
+        toast('Restored — sign in again');
+        await sleep(1200);
+        boot();
+      } catch (err) { toast(err.message, 'error'); }
+    } });
+    const file = [
+      h('h3', { style: 'font-size:1rem;margin-top:10px' }, 'Backup file'),
+      h('p', { class: 'small muted' }, 'Download everything as one file to keep on the club laptop or shared drive. Big video collections make a big file.'),
+      h('div', { class: 'actions' },
+        h('a', { class: 'btn sm', href: '/api/backup/download', download: '' }, 'Download backup'),
+        h('button', { class: 'btn sm', type: 'button', onclick: () => fileInput.click() }, 'Restore from file…'),
+        fileInput),
+    ];
+    return h('div', { class: 'card panel-box stack', style: 'gap:10px' }, ...head, ...usb, ...file);
   }
 
   function sportsCard() {

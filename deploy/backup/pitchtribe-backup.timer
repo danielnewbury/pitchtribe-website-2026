@@ -1,0 +1,12 @@
+[Unit]
+Description=Nightly PitchTribe backup to the USB stick
+
+[Timer]
+OnCalendar=*-*-* 03:30
+RandomizedDelaySec=20min
+# A Pi that was off at 03:30 backs up soon after it next starts.
+Persistent=true
+Unit=pitchtribe-backup@nightly.service
+
+[Install]
+WantedBy=timers.target

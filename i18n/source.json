@@ -501,5 +501,10 @@
  "Each extra indoor access point is about £75 with its cable. The switch powers four; a bigger ground needs an 8-port PoE switch instead. Omada access points are set up once from their own free app without any subscription — the",
  "guest Wi-Fi guide",
  "lists the settings.",
- "Running cables through ceilings and outside walls is the real cost of this option, and it is a job for someone used to it. We quote for it with the rest of an installation."
+ "Running cables through ceilings and outside walls is the real cost of this option, and it is a job for someone used to it. We quote for it with the rest of an installation.",
+ "A spare memory card, and a backup stick",
+ "Cards are the usual failure on an always-on Pi, and a dead one at 2pm on a Saturday is the version of that you will meet. A second imaged card is cheap insurance. Add a small USB stick left in the Pi — a",
+ "64&nbsp;GB SanDisk Ultra Fit",
+ "was £10.49 on 4 November 2026 — and PitchTribe backs everything up to it every night, so the spare card is",
+ "back to normal in ten minutes"
 ]

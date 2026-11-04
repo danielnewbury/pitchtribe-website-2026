@@ -1,0 +1,9 @@
+[Unit]
+Description=Watch for backup requests from the PitchTribe dashboard
+
+[Path]
+PathChanged=/var/lib/pitchtribe/backup-request.json
+Unit=pitchtribe-backup@request.service
+
+[Install]
+WantedBy=multi-user.target

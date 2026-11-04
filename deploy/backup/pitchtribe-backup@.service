@@ -1,0 +1,19 @@
+[Unit]
+# %i is scan (boot and plug-in), nightly (pitchtribe-backup.timer) or request
+# (pitchtribe-backup.path: the dashboard asked for something).
+Description=PitchTribe USB backup (%i)
+After=local-fs.target
+
+[Service]
+Type=oneshot
+Environment=DATA_DIR=/var/lib/pitchtribe
+Environment=BACKUP_MOUNT_DIR=/run/pitchtribe-backup
+ExecStart=/usr/bin/env node /opt/pitchtribe/app/bin/backup.js %i
+# Root, because it mounts the stick and restores files for the pitchtribe user.
+# Keep out of the screen's way while copying.
+Nice=10
+IOSchedulingClass=idle
+TimeoutStartSec=2h
+
+[Install]
+WantedBy=multi-user.target

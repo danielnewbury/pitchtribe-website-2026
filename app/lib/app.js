@@ -11,6 +11,7 @@ const { Store, newId } = require('./store');
 const { Hub } = require('./hub');
 const { DEFAULT_PORTAL, renderSplash, themeCss } = require('./portal-page');
 const { readPortalFiles } = require('./portal');
+const { mountBackupRoutes } = require('./backup-routes');
 const { Feeds, LEAGUE_KEY_RE, SHOW_OPTIONS } = require('./feeds');
 const auth = require('./auth');
 const v = require('./validate');
@@ -512,10 +513,13 @@ function createApp(opts = {}) {
 
   // ---------- Auth ----------
   app.get('/api/auth/status', (req, res) => {
-    res.json({
-      setupRequired: !data().settings.adminHash,
+    const setupRequired = !data().settings.adminHash;
+    res.set('Cache-Control', 'no-store').json({
+      setupRequired,
       authenticated: isAuthed(req),
       clubName: data().settings.clubName,
+      // A freshly flashed card: offer to restore a backup instead of starting again.
+      ...(setupRequired ? { restore: backups.setupInfo() } : {}),
     });
   });
 
@@ -581,6 +585,13 @@ function createApp(opts = {}) {
   // ---------- Dashboard API ----------
   const api = express.Router();
   api.use(requireAuth);
+
+  // Backups: USB stick (via the root helper) and download/restore a file.
+  const backups = mountBackupRoutes({
+    app, api, dataDir, mediaDir, store, version: pkg.version,
+    setupRequired: () => !data().settings.adminHash,
+    onRestored: () => configureFeeds(),
+  });
 
   api.get('/state', (req, res) => {
     const d = data();

@@ -93,6 +93,16 @@ class Store extends EventEmitter {
     return result;
   }
 
+  /** Replace everything with a restored database (from a backup file). */
+  replace(next) {
+    const revision = Math.max(this.data.revision || 0, next.revision || 0) + 1;
+    clearTimeout(this.saveTimer);
+    this.saveTimer = null;
+    this.writeNow({ ...next, revision });
+    this.data = this.load();
+    this.emit('change', this.data.revision);
+  }
+
   flush() {
     clearTimeout(this.saveTimer);
     this.saveTimer = null;
