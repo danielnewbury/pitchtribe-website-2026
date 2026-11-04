@@ -719,7 +719,10 @@ function createApp(opts = {}) {
       path unit runs whenever this file changes. */
   function writePortalNetwork(p) {
     const file = path.join(dataDir, 'portal-network.json');
-    const net = { enabled: p.enabled, ssid: p.ssid, channel: p.channel, downMbps: p.downMbps, upMbps: p.upMbps };
+    const net = {
+      enabled: p.enabled, ssid: p.ssid, radio: p.radio, band: p.band, channel: p.channel,
+      accessPoints: p.accessPoints, downMbps: p.downMbps, upMbps: p.upMbps,
+    };
     let old = null;
     try { old = fs.readFileSync(file, 'utf8'); } catch { /* first time */ }
     const next = `${JSON.stringify(net, null, 2)}\n`;
@@ -729,10 +732,16 @@ function createApp(opts = {}) {
     }
   }
 
+  /** What pitchtribe-portal-apply found the last time it ran (portal-hw.js status). */
+  function portalHardware() {
+    try { return JSON.parse(fs.readFileSync(path.join(dataDir, 'portal-hardware.json'), 'utf8')); } catch { return null; }
+  }
+
   api.get('/portal', (req, res) => {
     const files = readPortalFiles(dataDir);
     res.set('Cache-Control', 'no-store').json({
       settings: portalSettings(),
+      hardware: portalHardware(),
       stats: { active: files.active, today: files.today, week: files.week, serviceSeenAt: files.serviceSeenAt, days: files.days },
       guests: { count: files.guests.length, consented: files.guests.filter((g) => g.consent).length },
     });
@@ -748,10 +757,19 @@ function createApp(opts = {}) {
       const accent = /^#[0-9a-f]{6}$/i.test(b.accent || '') ? b.accent : cur.accent;
       const logo = b.logoAssetId ? data().assets.find((a) => a.id === b.logoAssetId && a.type === 'image') : null;
       if (b.logoAssetId && !logo) throw v.bad('Choose a logo from your images');
+      const band = v.oneOf(String(b.band ?? cur.band), ['2.4', '5'], '2.4');
+      const channels = band === '5' ? [36, 40, 44, 48] : [1, 6, 11];
+      const radio = v.oneOf(b.radio ?? cur.radio, ['auto', 'builtin', 'usb', 'off'], 'auto');
+      const accessPoints = v.bool(b.accessPoints, cur.accessPoints);
+      const enabled = v.bool(b.enabled, cur.enabled);
+      if (enabled && radio === 'off' && !accessPoints) throw v.bad('Choose a Wi-Fi radio, or switch on ceiling access points — otherwise there is nothing to broadcast the guest Wi-Fi');
       const next = {
-        enabled: v.bool(b.enabled, cur.enabled),
+        enabled,
         ssid,
-        channel: v.oneOf(Number(b.channel ?? cur.channel), [1, 6, 11], 6),
+        radio,
+        band,
+        channel: v.oneOf(Number(b.channel ?? cur.channel), channels, channels[band === '5' ? 0 : 1]),
+        accessPoints,
         sessionMinutes: v.int(b.sessionMinutes ?? cur.sessionMinutes, { min: 15, max: 1440, fallback: 120 }),
         downMbps: v.int(b.downMbps ?? cur.downMbps, { min: 1, max: 200, fallback: 10 }),
         upMbps: v.int(b.upMbps ?? cur.upMbps, { min: 1, max: 100, fallback: 3 }),

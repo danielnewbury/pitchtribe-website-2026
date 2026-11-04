@@ -110,21 +110,17 @@ if [[ "${PITCHTRIBE_PORTAL:-0}" == 1 ]]; then
     die "the guest Wi-Fi needs the Pi's network cable (eth0) for its internet connection"
   fi
   apt-get install -y -q hostapd dnsmasq nftables
-  # NetworkManager must leave wlan0 alone: it becomes the guest access point.
-  if [[ -d /etc/NetworkManager/conf.d ]]; then
-    cat >/etc/NetworkManager/conf.d/99-pitchtribe-portal.conf <<'NMCONF'
-[keyfile]
-unmanaged-devices=interface-name:wlan0
-NMCONF
-    start_now reload NetworkManager 2>/dev/null || true
-  fi
-  rfkill unblock wlan 2>/dev/null || true
+  # pitchtribe-portal-apply tells NetworkManager to leave the guest radio, the
+  # access-point port and the guest bridge alone, whichever ones are in use.
   # The default dnsmasq config must not grab every interface.
   grep -q '^conf-dir=/etc/dnsmasq.d' /etc/dnsmasq.conf 2>/dev/null || echo 'conf-dir=/etc/dnsmasq.d/,*.conf' >>/etc/dnsmasq.conf
   install -m 0755 "$SRC_DIR/deploy/portal/portal-apply.sh" /usr/local/bin/pitchtribe-portal-apply
   install -m 0644 "$SRC_DIR/deploy/portal/pitchtribe-portal.service" /etc/systemd/system/
   install -m 0644 "$SRC_DIR/deploy/portal/pitchtribe-portal-apply.service" /etc/systemd/system/
   install -m 0644 "$SRC_DIR/deploy/portal/pitchtribe-portal-apply.path" /etc/systemd/system/
+  # Re-apply when a USB Wi-Fi adapter or USB network adapter is plugged in or out.
+  install -m 0644 "$SRC_DIR/deploy/portal/90-pitchtribe-portal.rules" /etc/udev/rules.d/
+  [[ "$IMAGE_BUILD" == 1 ]] || udevadm control --reload 2>/dev/null || true
   start_now daemon-reload
   systemctl enable pitchtribe-portal.service pitchtribe-portal-apply.service pitchtribe-portal-apply.path
   start_now start pitchtribe-portal-apply.path

@@ -14,7 +14,10 @@ const DEFAULT_TERMS = [
 const DEFAULT_PORTAL = {
   enabled: false,
   ssid: 'Club-Guest',
+  radio: 'auto', // auto | builtin | usb | off — which Wi-Fi radio broadcasts the guest network
+  band: '2.4', // 2.4 | 5
   channel: 6,
+  accessPoints: false, // ceiling access points on a USB network adapter
   sessionMinutes: 120,
   downMbps: 10,
   upMbps: 3,
