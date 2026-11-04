@@ -1,8 +1,7 @@
 <!-- {"title": "Updates and backups", "description": "How to update PitchTribe and Raspberry Pi OS, back up your club’s content and settings, and move everything to a new memory card or Pi."} -->
 <p class="eyebrow">Looking after it</p>
 <h1>Updates and backups</h1>
-<p class="lede">A PitchTribe screen can run for months untouched. Two things are worth doing now and then: updating the software, and keeping a copy of your content in case the memory card fails.</p>
-<p>Both need a terminal on the Pi — see <a href="/docs/install-raspberry-pi-os#ssh">connecting with SSH</a>. That’s why the setup guide suggests setting a username and switching on SSH in Imager.</p>
+<p class="lede">A PitchTribe screen can run for months untouched. Two things look after it: keeping a backup of your content, so a failed memory card is a ten-minute fix, and updating the software now and then.</p>
 
 <h2 id="update">Updating PitchTribe</h2>
 <p>Check which version you have in the dashboard under <strong>Settings → About</strong>, and what’s new on the <a href="https://github.com/pitchtribe/pitchtribe-display/releases" target="_blank" rel="noopener noreferrer">releases page</a>. To update, connect to the Pi and run the installer again:</p>
@@ -18,44 +17,59 @@
 <pre data-copy><code>sudo apt update &amp;&amp; sudo apt full-upgrade -y &amp;&amp; sudo reboot</code></pre>
 <p>The Pi restarts and the screen comes back by itself after a minute or two.</p>
 
-<h2 id="backup">Backing up</h2>
-<p>Everything that makes your PitchTribe yours — content, uploaded photos and videos, playlists, screens, settings and the password — is in one folder on the Pi, <code>/var/lib/pitchtribe</code>. Copy it somewhere safe after any big change.</p>
+<h2 id="backup">Backing up to a USB stick</h2>
+<p>Everything that makes your PitchTribe yours — content, photos and videos, playlists, screens, settings, guest Wi-Fi sign-ups and the password — can be copied to a USB stick plugged into the Pi, automatically, every night. If the memory card ever fails, you flash a new one, plug the stick in, and tap <strong>Restore</strong>.</p>
 <ol class="steps">
   <li>
-    <h3>Pack it into one file, on the Pi</h3>
-    <p>Connect to the Pi and run:</p>
-    <pre data-copy><code>sudo tar czf ~/pitchtribe-backup.tar.gz -C /var/lib pitchtribe &amp;&amp; sudo chown $USER ~/pitchtribe-backup.tar.gz</code></pre>
+    <h3>Plug a USB stick into the Pi</h3>
+    <p>Any stick works as it comes (FAT32 or exFAT; ext4 too). 32 GB is plenty for most clubs; go bigger if you upload a lot of video. A small “flush” stick that barely sticks out, like a SanDisk Ultra Fit, is hard to knock out by accident. PitchTribe keeps its backups in a folder of their own, <code>PitchTribe-backups</code>, and leaves anything else on the stick alone.</p>
   </li>
   <li>
-    <h3>Copy the file to your computer</h3>
-    <p>Type <code>exit</code> to leave the Pi. Then, in the same terminal on your own computer (Windows, Mac or Linux), run this with your own username and Pi name:</p>
-    <pre data-copy><code>scp yourname@pitchtribe.local:pitchtribe-backup.tar.gz .</code></pre>
-    <p>The file lands in the folder the terminal is in — usually your home folder. Keep it somewhere safe, like the club’s shared drive.</p>
+    <h3>Choose it in the dashboard</h3>
+    <p>Open <strong>Settings → Backups</strong>. The stick appears within a few seconds. Tap <strong>Use this stick for backups</strong> — the first backup starts straight away.</p>
+  </li>
+  <li>
+    <h3>Leave it there</h3>
+    <p>From now on PitchTribe backs up every night at about half past three, and keeps the last 30 nights. Photos and videos are copied once, not every night, so the stick fills up slowly. The Backups card shows when the last backup ran, how much space is left, and warns you if the stick has been taken out or is full. <strong>Back up now</strong> makes an extra one any time — handy before a big change.</p>
   </li>
 </ol>
+<div class="callout">
+  <p class="callout-title">Don’t see Backups in Settings?</p>
+  <p>USB backups arrived in PitchTribe 0.2. Check your version under <strong>Settings → About</strong>, and <a href="#update">update</a> if it’s older.</p>
+</div>
 
-<h2 id="restore">Restoring, or moving to a new card or Pi</h2>
+<h2 id="restore">Restoring after a memory card fails</h2>
 <ol class="steps">
   <li>
-    <h3>Set up the new card</h3>
-    <p>Follow the <a href="/docs/setup">beginner’s guide</a> up to step 5, using the same hostname as before and a username with SSH on. You don’t need to set up the dashboard.</p>
+    <h3>Write a new memory card</h3>
+    <p>Follow the <a href="/docs/setup">beginner’s guide</a> steps 1–5 with a new card. Use <strong>the same hostname</strong> as before (or leave it blank if you did last time), so the dashboard keeps its address and the screen keeps its name.</p>
   </li>
   <li>
-    <h3>Copy the backup to the Pi</h3>
-    <p>From the folder with your backup file:</p>
-    <pre data-copy><code>scp pitchtribe-backup.tar.gz yourname@pitchtribe.local:</code></pre>
+    <h3>Plug in the backup stick and open the dashboard</h3>
+    <p>Open the dashboard on your phone as usual. Instead of setting it up, look under <strong>Restoring after a new memory card?</strong>: the backups on the stick are listed, newest first.</p>
   </li>
   <li>
-    <h3>Unpack it</h3>
-    <p>Connect to the Pi and run:</p>
-    <pre data-copy><code>sudo systemctl stop pitchtribe
-sudo tar xzf ~/pitchtribe-backup.tar.gz -C /var/lib
-sudo chown -R pitchtribe:pitchtribe /var/lib/pitchtribe
-sudo systemctl start pitchtribe</code></pre>
-    <p>Open the dashboard: your content and password are back, and the TV picks up its playlist again.</p>
+    <h3>Tap Restore from USB stick</h3>
+    <p>Everything comes back as it was at that backup — content, screens, settings and the old password — and the Pi carries on backing up to the same stick. The screen goes blank for a moment; with a lot of video, allow a few minutes. Then sign in with the club’s usual password.</p>
   </li>
 </ol>
+<p>You can also restore an older backup while signed in, from <strong>Settings → Backups → Restore from the USB stick</strong> — useful to undo a big mistake. Changes made since that backup are lost.</p>
+
+<h2 id="backup-file">A backup file, for safe keeping</h2>
+<p>A USB stick in the same Pi won’t help if the Pi itself is lost, stolen or fried by a power surge. Every so often, keep a copy somewhere else too:</p>
+<ul>
+  <li><strong>Settings → Backups → Download backup</strong> saves everything as one <code>.tar.gz</code> file. Keep it on the club laptop or shared drive. With a lot of video it can be large.</li>
+  <li>To put it back — on a new card, or a replacement Pi — use <strong>Restore from a backup file…</strong> on the dashboard’s first-run screen, or <strong>Restore from file…</strong> in Settings.</li>
+</ul>
+
+<details>
+  <summary>Doing it from a terminal instead</summary>
+  <p>Everything lives in one folder on the Pi, <code>/var/lib/pitchtribe</code>. To copy it by hand, connect with <a href="/docs/install-raspberry-pi-os#ssh">SSH</a> and run:</p>
+  <pre data-copy><code>sudo tar czf ~/pitchtribe-backup.tar.gz -C /var/lib/pitchtribe db.json media</code></pre>
+  <p>That file can be restored from the dashboard like any downloaded backup. The USB backups themselves are plain folders, readable on any computer: <code>PitchTribe-backups/&lt;hostname&gt;/snapshots/</code> holds each night’s settings, and <code>media/</code> the photos and videos.</p>
+</details>
+
 <div class="callout tip">
   <p class="callout-title">Memory cards wear out</p>
-  <p>A good-quality A2 card in a Pi that runs all day usually lasts years, but cheap cards can fail sooner. A spare card with PitchTribe already on it, kept in the club office, gets you back up in minutes.</p>
+  <p>A good-quality A2 card in a Pi that runs all day usually lasts years, but cheap cards can fail sooner. With a USB backup, a spare card with the PitchTribe image already on it, kept in the club office, gets you back up in ten minutes.</p>
 </div>

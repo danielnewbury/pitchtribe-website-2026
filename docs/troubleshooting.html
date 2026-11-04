@@ -80,7 +80,15 @@
 <p>Check the file type (JPG, PNG, GIF, WebP, SVG, MP4 or WebM). Videos from iPhones are sometimes in a format the screen can’t play; export them as MP4 (“Most Compatible” in the iPhone’s camera settings) or convert them first. Very large videos can also take a long time over Wi-Fi — try from a computer on a cable.</p>
 
 <h2 id="start-again">Starting again from scratch</h2>
-<p>If all else fails, write the PitchTribe image to the card again with the <a href="/docs/setup">beginner’s guide</a>. That wipes the card, including your content — <a href="/docs/updates-backups#backup">take a backup first</a> if you can.</p>
+<p>If all else fails, write the PitchTribe image to the card again with the <a href="/docs/setup">beginner’s guide</a>. That wipes the card, including your content — but if you’ve been <a href="/docs/updates-backups#backup">backing up to a USB stick</a>, plug it in and the first-run screen offers to <a href="/docs/updates-backups#restore">restore everything</a>, password included.</p>
+
+<h3 id="backup-problems">Backups aren’t working</h3>
+<ul>
+  <li><strong>The stick doesn’t appear in Settings → Backups:</strong> try another USB port, and give it ten seconds. Sticks formatted NTFS (common on sticks prepared on Windows) aren’t supported — reformat it as exFAT on a computer first.</li>
+  <li><strong>“The backup stick isn’t plugged in”:</strong> someone has taken it out. Plug it back in and tap <strong>Back up now</strong>.</li>
+  <li><strong>“The USB stick is full”:</strong> use a bigger stick, or delete other files from it. PitchTribe keeps 30 nights of backups but each photo or video only once, so it’s usually video that fills a stick.</li>
+  <li><strong>No backups offered on a new card:</strong> check it’s the right stick, and that the old Pi was backing up to it — Settings → Backups showed a recent “Last: backed up” time.</li>
+</ul>
 
 <h2 id="still-stuck">Still stuck?</h2>
 <p><a href="https://github.com/pitchtribe/pitchtribe-display/issues" target="_blank" rel="noopener noreferrer">Open an issue on GitHub</a>. Say which Pi you have, how you installed PitchTribe, and exactly what the TV shows — a photo of the screen helps a lot. If you’re comfortable with a terminal, the last lines of <code>sudo journalctl -u pitchtribe -u pitchtribe-kiosk -n 100</code> are very useful too.</p>
