@@ -148,7 +148,32 @@ test('dashboard: portal settings, network file for the root helper, guest export
   assert.equal(r.status, 200);
   assert.equal(r.body.settings.channel, 6, 'only channels 1, 6 and 11');
   const net = JSON.parse(fs.readFileSync(path.join(dataDir, 'portal-network.json'), 'utf8'));
-  assert.deepEqual(net, { enabled: true, ssid: 'Riverside-Guest', channel: 6, downMbps: 20, upMbps: 5 });
+  assert.deepEqual(net, {
+    enabled: true, ssid: 'Riverside-Guest', radio: 'auto', band: '2.4', channel: 6, accessPoints: false, downMbps: 20, upMbps: 5,
+  });
+
+  // Coverage: radio, band and channel, and ceiling access points.
+  r = await call('PUT', '/api/portal', { radio: 'usb', band: '5', channel: 44, accessPoints: true });
+  assert.equal(r.status, 200);
+  assert.deepEqual([r.body.settings.radio, r.body.settings.band, r.body.settings.channel, r.body.settings.accessPoints], ['usb', '5', 44, true]);
+  r = await call('PUT', '/api/portal', { band: '5', channel: 6 });
+  assert.equal(r.body.settings.channel, 36, '5 GHz takes only channels 36, 40, 44 and 48');
+  r = await call('PUT', '/api/portal', { band: '2.4', channel: 44 });
+  assert.equal(r.body.settings.channel, 6);
+  r = await call('PUT', '/api/portal', { radio: 'nonsense' });
+  assert.equal(r.body.settings.radio, 'auto');
+  r = await call('PUT', '/api/portal', { radio: 'off', accessPoints: false });
+  assert.equal(r.status, 400, 'guest Wi-Fi on with nothing to broadcast it is refused');
+  assert.match(r.body.error, /access points/);
+  r = await call('PUT', '/api/portal', { radio: 'off', accessPoints: true });
+  assert.equal(r.status, 200);
+  assert.equal(JSON.parse(fs.readFileSync(path.join(dataDir, 'portal-network.json'), 'utf8')).radio, 'off');
+
+  // The hardware the root helper found is passed through to the dashboard.
+  assert.equal((await call('GET', '/api/portal')).body.hardware, null);
+  const hw = { checkedAt: '2026-11-07T14:00:00Z', devices: [{ name: 'wlan1', kind: 'wifi', bus: 'usb', product: '802.11ac NIC' }], wifi: 'wlan1', wired: null, problems: [] };
+  fs.writeFileSync(path.join(dataDir, 'portal-hardware.json'), JSON.stringify(hw));
+  assert.deepEqual((await call('GET', '/api/portal')).body.hardware, hw);
 
   r = await call('GET', '/api/portal/preview');
   assert.match(r.body, /Welcome to Riverside FC/);

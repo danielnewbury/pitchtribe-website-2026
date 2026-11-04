@@ -40,7 +40,7 @@ function macFor(ip) {
 function createPortalApp({
   dataDir,
   portalHost = process.env.PORTAL_HOST || '10.42.0.1',
-  subnet = process.env.PORTAL_SUBNET || '10.42.0.',
+  subnet = process.env.PORTAL_SUBNET || '10.42.', // 10.42.0.0/22, see portal-apply.sh
   allow = nftAllow,
   mac = macFor,
   now = () => Date.now(),

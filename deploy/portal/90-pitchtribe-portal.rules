@@ -1,0 +1,4 @@
+# Re-apply the guest Wi-Fi settings when a USB Wi-Fi adapter (e.g. an Alfa) or a
+# USB network adapter for ceiling access points is plugged in or taken out, so
+# the guest network moves to it (or back) without a restart.
+ACTION=="add|remove", SUBSYSTEM=="net", KERNEL=="wlan*|eth*|enx*|wlx*", RUN+="/usr/bin/systemctl --no-block restart pitchtribe-portal-apply.service"

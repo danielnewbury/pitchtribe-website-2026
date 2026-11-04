@@ -1378,7 +1378,16 @@ ${d(18, '14:00')} | Riverside FC v Northdale Athletic | County Cup | Home`;
     const f = {
       enabled: h('input', { type: 'checkbox', checked: p.enabled }),
       ssid: h('input', { type: 'text', value: p.ssid, maxlength: 32, required: true }),
-      channel: h('select', {}, [1, 6, 11].map((c) => h('option', { value: c, selected: p.channel === c }, `Channel ${c}`))),
+      radio: h('select', {}, [
+        ['auto', 'Automatic — the USB aerial if one is plugged in, otherwise built-in'],
+        ['builtin', 'The Pi’s built-in Wi-Fi'],
+        ['usb', 'USB Wi-Fi aerial (e.g. Alfa)'],
+        ['off', 'None — ceiling access points only'],
+      ].map(([v, l]) => h('option', { value: v, selected: p.radio === v }, l))),
+      band: h('select', {}, [['2.4', '2.4 GHz — reaches further, through walls'], ['5', '5 GHz — faster, shorter range']]
+        .map(([v, l]) => h('option', { value: v, selected: p.band === v }, l))),
+      channel: h('select', {}),
+      accessPoints: h('input', { type: 'checkbox', checked: p.accessPoints }),
       sessionMinutes: h('select', {}, [[30, '30 minutes'], [60, '1 hour'], [120, '2 hours'], [240, '4 hours'], [480, '8 hours'], [1440, '24 hours']].map(([v, l]) => h('option', { value: v, selected: p.sessionMinutes === v }, l))),
       downMbps: h('input', { type: 'number', min: 1, max: 200, value: p.downMbps }),
       upMbps: h('input', { type: 'number', min: 1, max: 100, value: p.upMbps }),
@@ -1392,6 +1401,18 @@ ${d(18, '14:00')} | Riverside FC v Northdale Athletic | County Cup | Home`;
       consentText: h('input', { type: 'text', value: p.consentText, maxlength: 300 }),
     };
     f.terms.style.minHeight = '180px';
+    const fillChannels = (keep) => {
+      const list = f.band.value === '5' ? [36, 40, 44, 48] : [1, 6, 11];
+      const pick = list.includes(keep) ? keep : list[f.band.value === '5' ? 0 : 1];
+      f.channel.replaceChildren(...list.map((c) => h('option', { value: c, selected: c === pick }, `Channel ${c}`)));
+    };
+    fillChannels(p.channel);
+    f.band.addEventListener('change', () => fillChannels(Number(f.channel.value)));
+    const bandRow = h('div', { class: 'row-2' },
+      h('label', { class: 'field' }, 'Band', f.band),
+      h('label', { class: 'field' }, 'Radio channel', f.channel, h('span', { class: 'hint' }, 'Try another if the signal is poor.')));
+    const syncRadio = () => { bandRow.hidden = f.radio.value === 'off'; };
+    f.radio.addEventListener('change', syncRadio);
     const frame = h('iframe', { class: 'portal-preview', title: 'Splash page preview', src: `/api/portal/preview?accent=${encodeURIComponent(p.accent)}&t=${Date.now()}` });
     f.accent.addEventListener('input', () => { frame.src = `/api/portal/preview?accent=${encodeURIComponent(f.accent.value)}&t=${Date.now()}`; });
 
@@ -1402,17 +1423,29 @@ ${d(18, '14:00')} | Riverside FC v Northdale Athletic | County Cup | Home`;
         if (!form.reportValidity()) return;
         const body = Object.fromEntries(Object.entries(f).map(([k, el]) => [k, el.type === 'checkbox' ? el.checked : el.value]));
         for (const k of ['channel', 'sessionMinutes', 'downMbps', 'upMbps']) body[k] = Number(body[k]);
+        if (body.enabled && body.radio === 'off' && !body.accessPoints) {
+          toast('Choose a Wi-Fi radio, or switch on ceiling access points', 'error');
+          return;
+        }
         try {
           const r = await api('PUT', '/portal', body);
           portal.settings = r.settings;
           render();
           toast(r.settings.enabled ? 'Saved — the Wi-Fi updates in a few seconds' : 'Saved — guest Wi-Fi is off');
+          setTimeout(() => { if (currentView === 'wifi') { portal = null; render(); } }, 8000); // pick up the hardware check
         } catch (err) { toast(err.message, 'error'); }
       },
     },
       h('h2', {}, 'Network'),
       h('label', { class: 'switch' }, f.enabled, 'Guest Wi-Fi on'),
-      h('div', { class: 'row-2' }, h('label', { class: 'field' }, 'Network name (SSID)', f.ssid), h('label', { class: 'field' }, 'Radio channel', f.channel, h('span', { class: 'hint' }, 'Try another if the signal is poor.'))),
+      h('label', { class: 'field' }, 'Network name (SSID)', f.ssid),
+      h('h2', { style: 'margin-top:8px' }, 'Coverage'),
+      h('label', { class: 'field' }, 'Broadcast from', f.radio,
+        h('span', { class: 'hint' }, 'A USB Wi-Fi adapter with aerials reaches much further than the built-in Wi-Fi. Plug it into a blue USB port; it’s picked up by itself.')),
+      bandRow,
+      h('label', { class: 'switch' }, f.accessPoints, 'Ceiling access points, on a USB network adapter'),
+      h('p', { class: 'small muted' }, 'For bigger venues: access points around the building, cabled to a PoE switch plugged into the Pi’s USB network adapter. They all share this sign-in page. ',
+        h('a', { href: 'https://pitchtribe.media/docs/guest-wifi#bigger-venues', target: '_blank', rel: 'noopener' }, 'How to set them up')),
       h('div', { class: 'row-2' },
         h('label', { class: 'field' }, 'Session length', f.sessionMinutes, h('span', { class: 'hint' }, 'Guests tap “Connect” again afterwards.')),
         h('div', { class: 'row-2' }, h('label', { class: 'field' }, 'Download limit (Mbit/s)', f.downMbps), h('label', { class: 'field' }, 'Upload (Mbit/s)', f.upMbps))),
@@ -1451,14 +1484,41 @@ ${d(18, '14:00')} | Riverside FC v Northdale Athletic | County Cup | Home`;
       h('details', { class: 'help' }, h('summary', {}, 'How to switch the hardware on'),
         h('p', { style: 'margin-top:8px' }, 'The guest network runs on the Pi’s built-in Wi-Fi while its network cable stays plugged into the club router. Install the add-on once, from a terminal on the Pi (over SSH):'),
         h('pre', {}, 'curl -sSL https://pitchtribe.media/install.sh | sudo PITCHTRIBE_PORTAL=1 bash'),
-        h('p', {}, h('a', { href: 'https://pitchtribe.media/docs/guest-wifi/', target: '_blank', rel: 'noopener' }, 'Step-by-step guide')),
+        h('p', {}, h('a', { href: 'https://pitchtribe.media/docs/guest-wifi', target: '_blank', rel: 'noopener' }, 'Step-by-step guide')),
         h('p', {}, 'After that, the settings on this page apply by themselves.')));
 
+    syncRadio();
     return shell('wifi',
       h('div', { class: 'page-head' }, h('div', {}, h('h1', {}, 'Guest Wi-Fi'), h('p', {}, 'Free Wi-Fi for visitors, with your own sign-in page.'))),
       h('div', { class: 'editor-layout wifi-layout' },
         form,
-        h('aside', { class: 'stack' }, h('div', { class: 'card panel-box' }, h('h2', {}, 'Preview'), frame), stats)));
+        h('aside', { class: 'stack' }, h('div', { class: 'card panel-box' }, h('h2', {}, 'Preview'), frame), stats, hardwareCard(portal.hardware))));
+  }
+
+  /** What the Wi-Fi add-on found on the Pi the last time it applied the settings. */
+  function hardwareCard(hw) {
+    const head = h('h2', {}, 'Hardware');
+    if (!hw) {
+      return h('div', { class: 'card panel-box stack', style: 'gap:8px' }, head,
+        h('p', { class: 'small muted' }, 'Not checked yet. The Wi-Fi add-on lists the Pi’s radios and adapters here when it applies your settings.'));
+    }
+    const label = (d) => {
+      if (d.kind === 'wifi') return d.bus === 'usb' ? `USB Wi-Fi aerial${d.product ? ` (${d.product})` : ''}` : 'Built-in Wi-Fi';
+      if (d.bus === 'usb') return `USB network adapter${d.product ? ` (${d.product})` : ''}`;
+      return 'Network port';
+    };
+    const role = (d) => {
+      if (d.name === hw.wifi) return 'Broadcasting guest Wi-Fi';
+      if (d.name === hw.wired) return d.carrier ? 'Access points — cable connected' : 'Access points — no cable plugged in';
+      if (d.kind === 'ethernet' && d.bus === 'builtin') return d.carrier ? 'Internet — connected' : 'Internet — no cable plugged in';
+      return 'Not used';
+    };
+    return h('div', { class: 'card panel-box stack', style: 'gap:10px' }, head,
+      h('div', { class: 'stack', style: 'gap:8px' }, hw.devices.map((d) => h('div', {},
+        h('div', { style: 'font-weight:600' }, label(d)),
+        h('div', { class: 'small muted' }, role(d))))),
+      hw.problems.length ? h('div', { class: 'stack', style: 'gap:6px' }, hw.problems.map((t) => h('p', { class: 'small', style: 'color:var(--danger)' }, '⚠ ', t))) : null,
+      h('p', { class: 'small muted' }, `Checked ${new Date(hw.checkedAt).toLocaleString()}. Plugging an adapter in or out re-checks by itself.`));
   }
 
   // ============================================================== settings
