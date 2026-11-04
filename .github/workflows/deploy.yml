@@ -41,6 +41,12 @@ jobs:
         run: |
           test -s dist/index.html
           test -s dist/_headers
+          # The one-line installer the site tells people to pipe into a shell.
+          # If this is missing, that published command 404s and silently does
+          # nothing, so assert it is present and is the bootstrap script.
+          test -s dist/install.sh
+          grep -q 'deploy/install.sh' dist/install.sh
+          bash -n dist/install.sh
           # Asset filenames are content-hashed, so assert by pattern and then
           # check that every asset the HTML actually references exists. That
           # catches a fingerprint/rewrite mismatch, which would otherwise ship

@@ -15,3 +15,11 @@
 
 /*.html
   Cache-Control: public, max-age=0, must-revalidate
+
+# The one-line installer (deploy/bootstrap.sh, copied in by `npm run
+# copy:install`). Served as text/plain so anyone can read it in a browser before
+# piping it into a shell, and cached only briefly because, unlike /assets/*, its
+# filename is not content-hashed.
+/install.sh
+  Content-Type: text/plain; charset=utf-8
+  Cache-Control: public, max-age=300

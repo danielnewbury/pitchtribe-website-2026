@@ -299,5 +299,9 @@
   "355": "Com quem vai lidar",
   "356": "A PitchTribe é um empresário em nome individual no Reino Unido, registado e com seguro de responsabilidade civil. A maioria dos clubes pergunta isto antes de alguém trabalhar nas suas instalações, por isso enviamos os detalhes à direção com todo o gosto.",
   "357": "Daniel Newbury, a operar como PitchTribe",
-  "359": "Idioma"
+  "359": "Idioma",
+  "372": "Escreva o Raspberry Pi OS Lite (64 bits) no cartão com o Raspberry Pi Imager. Nas definições, defina um nome de anfitrião e ative o SSH antes de escrever — assim não precisa de ligar um teclado depois.",
+  "373": "Execute um comando",
+  "374": "Arranque o Pi com um ecrã HDMI ligado, entre por SSH e execute o instalador. A partir daí arranca em ecrã inteiro sempre que liga, sem teclado nem rato.",
+  "377": "Faça flash do Raspberry Pi OS, execute isto no Pi e o seu primeiro ecrã fica ativo em minutos. Grátis para sempre."
 }

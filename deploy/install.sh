@@ -3,6 +3,11 @@
 #
 #   git clone <this repo> pitchtribe && sudo pitchtribe/deploy/install.sh
 #
+# Or let deploy/bootstrap.sh fetch the checkout for you, which is the same thing
+# in one line and is what the website publishes:
+#
+#   curl -sSL https://pitchtribe.media/install.sh | sudo bash
+#
 # Installs:
 #   - Node.js 22 (NodeSource) if a recent Node isn't present
 #   - PitchTribe in /opt/pitchtribe (app/ + the signage-server sports engine it embeds),
@@ -20,6 +25,17 @@
 #                                 (the Pi must be connected to the club router by cable)
 set -euo pipefail
 
+log() { printf '\033[1;32m==>\033[0m %s\n' "$*"; }
+die() { printf '\033[1;31mError:\033[0m %s\n' "$*" >&2; exit 1; }
+
+# This script copies app/ and signage-server/ into /opt/pitchtribe, so it needs
+# the repository on disk and cannot be read from a pipe: when bash reads a script
+# from stdin BASH_SOURCE is unset, and SRC_DIR below would silently resolve to /.
+# deploy/bootstrap.sh is the pipeable entry point — it clones a checkout first.
+[[ -n "${BASH_SOURCE[0]:-}" ]] || die "this script cannot be piped into a shell — it needs a PitchTribe checkout on disk.
+Use the one-line installer, which fetches one for you:
+  curl -sSL https://pitchtribe.media/install.sh | sudo bash"
+
 APP_DIR=/opt/pitchtribe
 DATA_DIR=/var/lib/pitchtribe
 SVC_USER=pitchtribe
@@ -27,9 +43,6 @@ KIOSK_USER=pitchtribe-kiosk
 PORT="${PITCHTRIBE_PORT:-80}"
 SERVER="${PITCHTRIBE_SERVER:-}"
 SRC_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-
-log() { printf '\033[1;32m==>\033[0m %s\n' "$*"; }
-die() { printf '\033[1;31mError:\033[0m %s\n' "$*" >&2; exit 1; }
 
 [[ $EUID -eq 0 ]] || die "run with sudo"
 [[ -f "$SRC_DIR/app/server.js" && -f "$SRC_DIR/signage-server/package.json" ]] || die "run this script from a PitchTribe checkout (app/ and signage-server/ not found)"
