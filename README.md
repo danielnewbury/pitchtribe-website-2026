@@ -41,6 +41,7 @@ its own apex record and its email routing (MX/SPF/DKIM) untouched.
 | `html/_headers` | Cloudflare Pages response headers (CSP and cache policy) |
 | `src/styles.css` | Tailwind v4 entry point: design tokens, component classes |
 | `scripts/fingerprint.mjs` | Content-hashes built assets and rewrites HTML references |
+| `scripts/i18n-build.mjs`, `i18n/` | Builds `/fr/`, `/es/`, `/de/`, `/it/`, `/pt/`, `/pl/`, `/ru/`, `/zh/`, `/ja/` from the English pages and `i18n/<lang>.json`, plus hreflang tags and the sitemap |
 | `wrangler.toml` | Pages project config (`pages_build_output_dir = "./dist"`) |
 | `.github/workflows/deploy.yml` | CI: build on pull requests, build and deploy on push to `main` |
 | `signage-server/` | Sports fixtures/scores server: display page, JSON API, webhook push, MCP. Not part of the site build |
@@ -48,6 +49,24 @@ its own apex record and its email routing (MX/SPF/DKIM) untouched.
 | `app/` | Signage app: dashboard, player and server — see [`app/README.md`](app/README.md) |
 | `deploy/` | Raspberry Pi installer, systemd units and kiosk launcher for the app |
 | `.github/workflows/app.yml` | CI: tests the signage app when `app/` or `deploy/` change |
+
+## Languages
+
+The English pages in `html/` are the single source of truth. At build time `scripts/i18n-build.mjs` generates a copy of each page in nine more languages:
+
+- `i18n/source.json` lists every translatable English string: text, `alt`, `aria-label`, `title` and meta descriptions.
+- `i18n/<lang>.json` maps a string's position in that list to its translation.
+- A string with no translation shows in English, so the site never breaks.
+
+After editing English text:
+
+```bash
+npm run i18n:update   # append new English strings to i18n/source.json (positions never shift)
+npm run i18n:check    # list what still needs translating, per language
+```
+
+Translations are inserted as plain text: no HTML tags, and `&` must be written as `&amp;`. The build rejects anything else.
+The header has a language switcher that works without JavaScript. Every page gets hreflang alternates, and the sitemap lists all languages.
 
 ## Local development
 

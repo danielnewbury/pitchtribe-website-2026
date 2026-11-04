@@ -189,3 +189,9 @@ body::before {
 @media (prefers-reduced-motion: reduce) {
   .animate-ticker { animation: none; }
 }
+
+/* Language switcher (<details>, works without JavaScript) */
+.lang-menu > summary::-webkit-details-marker { display: none; }
+
+/* Japanese and Chinese: break headings between phrases, not mid-word (Chromium 119+). */
+:lang(ja) :is(h1, h2, h3), :lang(zh-Hans) :is(h1, h2, h3) { word-break: auto-phrase; }

@@ -3,6 +3,23 @@
 
   const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
+  /* ---- Labels set from script, in the page's language ---- */
+  const lang = (document.documentElement.lang || "en").slice(0, 2);
+  const L = {
+    en: ["Copy", "Copied!", "Selected", "Install command copied to clipboard"],
+    fr: ["Copier", "Copié !", "Sélectionné", "Commande d’installation copiée dans le presse-papiers"],
+    es: ["Copiar", "¡Copiado!", "Seleccionado", "Comando de instalación copiado al portapapeles"],
+    de: ["Kopieren", "Kopiert!", "Markiert", "Installationsbefehl in die Zwischenablage kopiert"],
+    it: ["Copia", "Copiato!", "Selezionato", "Comando di installazione copiato negli appunti"],
+    pt: ["Copiar", "Copiado!", "Selecionado", "Comando de instalação copiado para a área de transferência"],
+    pl: ["Kopiuj", "Skopiowano!", "Zaznaczono", "Polecenie instalacji skopiowane do schowka"],
+    ru: ["Копировать", "Скопировано!", "Выделено", "Команда установки скопирована в буфер обмена"],
+    zh: ["复制", "已复制！", "已选中", "安装命令已复制到剪贴板"],
+    ja: ["コピー", "コピーしました", "選択しました", "インストールコマンドをクリップボードにコピーしました"],
+  }[lang] || ["Copy", "Copied!", "Selected", "Install command copied to clipboard"];
+  const [COPY, COPIED, SELECTED, COPIED_STATUS] = L;
+  const locale = { en: "en-GB", pt: "pt-PT", zh: "zh-CN" }[lang] || lang;
+
   /* ---- Mobile navigation ---- */
   const toggle = document.getElementById("nav-toggle");
   const nav = document.getElementById("primary-nav");
@@ -27,7 +44,7 @@
   const clock = document.querySelector("[data-clock]");
   if (clock) {
     const tick = () => {
-      clock.textContent = new Date().toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" });
+      clock.textContent = new Date().toLocaleTimeString(locale, { hour: "2-digit", minute: "2-digit" });
     };
     tick();
     setInterval(tick, 10_000);
@@ -78,20 +95,20 @@
   if (copyBtn && cmd) {
     const flash = (label) => {
       copyBtn.textContent = label;
-      if (status) status.textContent = label === "Copied!" ? "Install command copied to clipboard" : "";
-      setTimeout(() => { copyBtn.textContent = "Copy"; }, 2000);
+      if (status) status.textContent = label === COPIED ? COPIED_STATUS : "";
+      setTimeout(() => { copyBtn.textContent = COPY; }, 2000);
     };
     copyBtn.addEventListener("click", async () => {
       try {
         await navigator.clipboard.writeText(cmd.textContent.trim());
-        flash("Copied!");
+        flash(COPIED);
       } catch {
         const range = document.createRange();
         range.selectNodeContents(cmd);
         const sel = window.getSelection();
         sel?.removeAllRanges();
         sel?.addRange(range);
-        flash("Selected");
+        flash(SELECTED);
       }
     });
   }
