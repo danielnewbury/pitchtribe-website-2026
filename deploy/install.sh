@@ -95,6 +95,7 @@ if [[ -z "$SERVER" ]]; then
   mv "$APP_DIR.new" "$APP_DIR"
   rm -rf "$APP_DIR.old"
 
+  install -m 0755 "$SRC_DIR/deploy/reset-password.sh" /usr/local/bin/pitchtribe-reset-password
   sed -e "s|@PORT@|$PORT|g" "$SRC_DIR/deploy/pitchtribe.service" >/etc/systemd/system/pitchtribe.service
   start_now daemon-reload
   systemctl enable pitchtribe.service

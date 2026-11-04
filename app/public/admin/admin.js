@@ -1449,8 +1449,9 @@ ${d(18, '14:00')} | Riverside FC v Northdale Athletic | County Cup | Home`;
             } }, icon('trash'), 'Delete list')))
         : null,
       h('details', { class: 'help' }, h('summary', {}, 'How to switch the hardware on'),
-        h('p', { style: 'margin-top:8px' }, 'The guest network runs on the Pi’s built-in Wi-Fi while its network cable stays plugged into the club router. Install the add-on once:'),
-        h('pre', {}, 'sudo PITCHTRIBE_PORTAL=1 pitchtribe/deploy/install.sh'),
+        h('p', { style: 'margin-top:8px' }, 'The guest network runs on the Pi’s built-in Wi-Fi while its network cable stays plugged into the club router. Install the add-on once, from a terminal on the Pi (over SSH):'),
+        h('pre', {}, 'curl -sSL https://pitchtribe.media/install.sh | sudo PITCHTRIBE_PORTAL=1 bash'),
+        h('p', {}, h('a', { href: 'https://pitchtribe.media/docs/guest-wifi/', target: '_blank', rel: 'noopener' }, 'Step-by-step guide')),
         h('p', {}, 'After that, the settings on this page apply by themselves.')));
 
     return shell('wifi',
