@@ -7,7 +7,7 @@
 // URL, so a long immutable cache is safe and changes land immediately.
 
 import { createHash } from 'node:crypto';
-import { readdirSync, readFileSync, renameSync, writeFileSync } from 'node:fs';
+import { readdirSync, readFileSync, renameSync, statSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 
 const DIST = 'dist';
@@ -22,7 +22,11 @@ const rewrites = ASSETS.map((asset) => {
   return { from: `/${asset}`, to: `/${hashed}` };
 });
 
-const pages = readdirSync(DIST).filter((f) => f.endsWith('.html'));
+// Every HTML page, including the translated copies in dist/<lang>/.
+const pages = readdirSync(DIST).flatMap((f) =>
+  statSync(join(DIST, f)).isDirectory()
+    ? readdirSync(join(DIST, f)).filter((g) => g.endsWith('.html')).map((g) => join(f, g))
+    : f.endsWith('.html') ? [f] : []);
 if (pages.length === 0) throw new Error('no HTML in dist/ to rewrite');
 
 for (const page of pages) {
