@@ -303,5 +303,11 @@
   "372": "Zapisz Raspberry Pi OS Lite (64-bit) na kartę za pomocą Raspberry Pi Imager. W jego ustawieniach ustaw nazwę hosta i włącz SSH przed zapisem — oszczędzi to podłączania klawiatury później.",
   "373": "Uruchom jedno polecenie",
   "374": "Uruchom Pi z podłączonym ekranem HDMI, połącz się przez SSH i uruchom instalator. Od tej pory startuje na pełnym ekranie przy każdym włączeniu, bez klawiatury i myszy.",
-  "377": "Nagraj Raspberry Pi OS, uruchom to na Pi i pierwszy ekran działa w kilka minut. Darmowe na zawsze."
+  "377": "Nagraj Raspberry Pi OS, uruchom to na Pi i pierwszy ekran działa w kilka minut. Darmowe na zawsze.",
+  "455": "Pobierz obraz PitchTribe — Raspberry Pi OS Lite z zainstalowanym już PitchTribe — i zapisz go na karcie za pomocą Raspberry Pi Imager (wybierz „Use custom”). Jeśli Pi nie będzie podłączone kablem sieciowym, przed zapisem dodaj swoją sieć Wi-Fi w ustawieniach Imagera.",
+  "456": "Pobierz obraz PitchTribe →",
+  "457": "Podłącz i włącz",
+  "458": "Podłącz ekran HDMI i zasilanie. Pi uruchamia się od razu na Twoim ekranie, przy każdym starcie, bez klawiatury i myszy. Masz już Raspberry Pi OS (Trixie lub Bookworm) na Pi? Pomiń obraz i uruchom zamiast tego:",
+  "460": "Zapisz obraz PitchTribe, a Twój pierwszy ekran ruszy w kilka minut — albo uruchom to na Pi, na którym jest już Raspberry Pi OS. Za darmo, na zawsze.",
+  "461": "Pobierz obraz"
 }

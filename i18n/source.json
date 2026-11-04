@@ -453,5 +453,12 @@
  "Screens are priced above, by size",
  "Screens and mounts",
  "Daniel Newbury, trading as PitchTribe · Bedfordshire, United Kingdom",
- "Registered trading address and insurance certificate on request."
+ "Registered trading address and insurance certificate on request.",
+ "Download the PitchTribe image — Raspberry Pi OS Lite with PitchTribe already installed — and write it to the card with Raspberry Pi Imager (choose “Use custom”). If the Pi won’t be on a network cable, add your Wi-Fi in Imager’s settings before you write.",
+ "Download the PitchTribe image →",
+ "Plug in and switch on",
+ "Connect the HDMI screen and power. The Pi boots straight to your display, and does on every boot, with no keyboard or mouse. Already have Raspberry Pi OS (Trixie or Bookworm) on the Pi? Skip the image and run this on it instead:",
+ "Raspberry Pi OS Lite (Trixie)",
+ "Flash the PitchTribe image and your first display is live in minutes — or run this on a Pi that already has Raspberry Pi OS. Free forever.",
+ "Download the image"
 ]

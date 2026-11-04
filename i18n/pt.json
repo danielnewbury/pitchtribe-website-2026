@@ -303,5 +303,11 @@
   "372": "Escreva o Raspberry Pi OS Lite (64 bits) no cartão com o Raspberry Pi Imager. Nas definições, defina um nome de anfitrião e ative o SSH antes de escrever — assim não precisa de ligar um teclado depois.",
   "373": "Execute um comando",
   "374": "Arranque o Pi com um ecrã HDMI ligado, entre por SSH e execute o instalador. A partir daí arranca em ecrã inteiro sempre que liga, sem teclado nem rato.",
-  "377": "Faça flash do Raspberry Pi OS, execute isto no Pi e o seu primeiro ecrã fica ativo em minutos. Grátis para sempre."
+  "377": "Faça flash do Raspberry Pi OS, execute isto no Pi e o seu primeiro ecrã fica ativo em minutos. Grátis para sempre.",
+  "455": "Transfira a imagem do PitchTribe — Raspberry Pi OS Lite com o PitchTribe já instalado — e grave-a no cartão com o Raspberry Pi Imager (escolha “Use custom”). Se o Pi não ficar ligado por cabo de rede, adicione o seu Wi-Fi nas definições do Imager antes de gravar.",
+  "456": "Transferir a imagem do PitchTribe →",
+  "457": "Ligue e arranque",
+  "458": "Ligue o ecrã HDMI e a alimentação. O Pi arranca diretamente no seu ecrã, em cada arranque, sem teclado nem rato. O Pi já tem o Raspberry Pi OS (Trixie ou Bookworm)? Salte a imagem e execute antes isto:",
+  "460": "Grave a imagem do PitchTribe e o seu primeiro ecrã fica ativo em minutos — ou execute isto num Pi que já tenha o Raspberry Pi OS. Gratuito para sempre.",
+  "461": "Transferir a imagem"
 }

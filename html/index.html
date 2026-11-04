@@ -473,13 +473,13 @@
       <li class="reveal flex min-w-0 flex-col gap-3.5">
         <span class="flex size-[46px] items-center justify-center rounded-full border-2 border-accent/30 bg-accent/10 font-head text-lg font-extrabold text-accent" aria-hidden="true">1</span>
         <h3 class="text-lg font-bold">Flash the SD card</h3>
-        <p class="text-[0.9375rem] text-muted">Write Raspberry Pi OS Lite (64-bit) to the card with Raspberry Pi Imager. In its settings, set a hostname and switch on SSH before you write — that saves plugging in a keyboard later.</p>
-        <code class="block overflow-x-auto whitespace-nowrap rounded-lg border border-line bg-surface-2 px-3.5 py-2.5 font-mono text-[0.76rem] text-accent">Raspberry Pi OS Lite (64-bit)</code>
+        <p class="text-[0.9375rem] text-muted">Download the PitchTribe image — Raspberry Pi OS Lite with PitchTribe already installed — and write it to the card with Raspberry Pi Imager (choose “Use custom”). If the Pi won’t be on a network cable, add your Wi-Fi in Imager’s settings before you write.</p>
+        <a href="https://github.com/pitchtribe/pitchtribe-display/releases/latest" class="block overflow-x-auto whitespace-nowrap rounded-lg border border-line bg-surface-2 px-3.5 py-2.5 font-mono text-[0.76rem] text-accent transition hover:border-accent" target="_blank" rel="noopener noreferrer">Download the PitchTribe image →</a>
       </li>
       <li class="reveal flex min-w-0 flex-col gap-3.5">
         <span class="flex size-[46px] items-center justify-center rounded-full border-2 border-accent/30 bg-accent/10 font-head text-lg font-extrabold text-accent" aria-hidden="true">2</span>
-        <h3 class="text-lg font-bold">Run one command</h3>
-        <p class="text-[0.9375rem] text-muted">Boot the Pi with an HDMI screen attached, connect over SSH and run the installer. From then on it starts full screen on every boot, with no keyboard or mouse.</p>
+        <h3 class="text-lg font-bold">Plug in and switch on</h3>
+        <p class="text-[0.9375rem] text-muted">Connect the HDMI screen and power. The Pi boots straight to your display, and does on every boot, with no keyboard or mouse. Already have Raspberry Pi OS (Trixie or Bookworm) on the Pi? Skip the image and run this on it instead:</p>
         <code class="block overflow-x-auto whitespace-nowrap rounded-lg border border-line bg-surface-2 px-3.5 py-2.5 font-mono text-[0.76rem] text-accent">curl -sSL https://pitchtribe.media/install.sh | sudo bash</code>
       </li>
       <li class="reveal flex min-w-0 flex-col gap-3.5">
@@ -519,7 +519,7 @@
       <p class="mb-6 text-[1.0625rem] text-muted">PitchTribe runs entirely on hardware you own. No cloud subscription, no third-party dependency and no data leaving your site. The software is MIT-licensed and on GitHub.</p>
       <dl class="divide-y divide-line text-[0.9rem]">
         <div class="flex items-baseline justify-between gap-3 py-2.5"><dt class="font-medium text-muted">Hardware</dt><dd class="text-right font-mono text-[0.78rem]">Raspberry Pi 5 (4 GB recommended)</dd></div>
-        <div class="flex items-baseline justify-between gap-3 py-2.5"><dt class="font-medium text-muted">OS</dt><dd class="text-right font-mono text-[0.78rem]">Raspberry Pi OS Lite (Bookworm)</dd></div>
+        <div class="flex items-baseline justify-between gap-3 py-2.5"><dt class="font-medium text-muted">OS</dt><dd class="text-right font-mono text-[0.78rem]">Raspberry Pi OS Lite (Trixie)</dd></div>
         <div class="flex items-baseline justify-between gap-3 py-2.5"><dt class="font-medium text-muted">Display output</dt><dd class="text-right font-mono text-[0.78rem]">HDMI 4K @ 60 Hz · dual display</dd></div>
         <div class="flex items-baseline justify-between gap-3 py-2.5"><dt class="font-medium text-muted">Dashboard</dt><dd class="text-right font-mono text-[0.78rem]">Node.js web app (LAN access)</dd></div>
         <div class="flex items-baseline justify-between gap-3 py-2.5"><dt class="font-medium text-muted">Kiosk renderer</dt><dd class="text-right font-mono text-[0.78rem]">Chromium (hardware-accelerated)</dd></div>
@@ -631,15 +631,16 @@
   <div class="mx-auto w-full max-w-6xl px-4 sm:px-6">
     <div class="reveal mx-auto max-w-[700px] rounded-3xl border border-line bg-surface px-6 py-10 sm:px-10 sm:py-14">
       <h2 class="section-title mb-3 text-[clamp(1.7rem,4vw,2.4rem)]">Ready to get started?</h2>
-      <p class="mx-auto mb-8 max-w-[46ch] text-[1.0625rem] text-muted">Flash Raspberry Pi OS, run this on the Pi and your first display is live in minutes. Free forever.</p>
+      <p class="mx-auto mb-8 max-w-[46ch] text-[1.0625rem] text-muted">Flash the PitchTribe image and your first display is live in minutes — or run this on a Pi that already has Raspberry Pi OS. Free forever.</p>
       <div class="mb-6 flex items-center gap-2.5 rounded-[10px] border border-line bg-bg px-4 py-3.5 text-left">
         <code id="install-cmd" class="min-w-0 flex-1 truncate font-mono text-sm text-accent">curl -sSL https://pitchtribe.media/install.sh | sudo bash</code>
         <button id="copy-btn" type="button" class="shrink-0 rounded-md border border-line bg-surface-2 px-3 py-1.5 text-[0.78rem] font-semibold text-muted transition hover:border-accent hover:text-accent" aria-describedby="install-cmd">Copy</button>
       </div>
       <p class="sr-only" role="status" aria-live="polite" id="copy-status"></p>
       <div class="flex flex-wrap justify-center gap-3">
+        <a href="https://github.com/pitchtribe/pitchtribe-display/releases/latest" class="btn btn-primary" target="_blank" rel="noopener noreferrer">Download the image</a>
         <a href="https://docs.pitchtribe.media" class="btn btn-ghost" target="_blank" rel="noopener noreferrer">Read the docs</a>
-        <a href="https://github.com/pitchtribe/pitchtribe-display" class="btn btn-primary" target="_blank" rel="noopener noreferrer">Star on GitHub</a>
+        <a href="https://github.com/pitchtribe/pitchtribe-display" class="btn btn-ghost" target="_blank" rel="noopener noreferrer">Star on GitHub</a>
       </div>
       <p class="mt-7 border-t border-line pt-6 text-[0.9375rem] text-muted">
         Would rather not build it yourself? We sell units ready to plug in, and we fit them on site —
