@@ -115,8 +115,13 @@ grep -q '^127\.0\.1\.1' "$MNT/etc/hosts" || printf '127.0.1.1\tpitchtribe\n' >>"
 # with no keyboard that wizard would sit there forever and hold the kiosk back,
 # so switch it off: the display and dashboard need no login account. Anyone who
 # wants SSH sets a user (and Wi-Fi) in Imager's customisation before writing.
-chroot "$MNT" systemctl disable userconfig.service 2>/dev/null || true
-chroot "$MNT" systemctl mask userconfig.service 2>/dev/null || true
+if [[ -e "$MNT/lib/systemd/system/userconfig.service" || -e "$MNT/usr/lib/systemd/system/userconfig.service" ]]; then
+  chroot "$MNT" systemctl disable userconfig.service || true
+  chroot "$MNT" systemctl mask userconfig.service
+  log "First-boot username wizard (userconfig.service) masked"
+else
+  log "No first-boot username wizard (userconfig.service) in this base image"
+fi
 
 cat >"$MNT/etc/pitchtribe-release" <<EOF
 PITCHTRIBE_VERSION=$VERSION
