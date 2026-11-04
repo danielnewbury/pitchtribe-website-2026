@@ -1595,7 +1595,7 @@ ${d(18, '14:00')} | Riverside FC v Northdale Athletic | County Cup | Home`;
             } }, icon('trash'), 'Delete list')))
         : null,
       h('details', { class: 'help' }, h('summary', {}, 'How to switch the hardware on'),
-        h('p', { style: 'margin-top:8px' }, 'The guest network runs on the Pi’s built-in Wi-Fi while its network cable stays plugged into the club router. Install the add-on once, from a terminal on the Pi (over SSH):'),
+        h('p', { style: 'margin-top:8px' }, 'The guest network runs on the Pi’s built-in Wi-Fi while its network cable stays plugged into the club router. Install the add-on once, from a terminal on the Pi over SSH (switch SSH on under Settings → Remote access):'),
         h('pre', {}, 'curl -sSL https://pitchtribe.media/install.sh | sudo PITCHTRIBE_PORTAL=1 bash'),
         h('p', {}, h('a', { href: 'https://pitchtribe.media/docs/guest-wifi', target: '_blank', rel: 'noopener' }, 'Step-by-step guide')),
         h('p', {}, 'After that, the settings on this page apply by themselves.')));
@@ -1680,6 +1680,7 @@ ${d(18, '14:00')} | Riverside FC v Northdale Athletic | County Cup | Home`;
     const sports = sportsCard();
     const widgetSettings = widgetsCard();
     const backupsBox = backupCard();
+    const remoteBox = remoteAccessCard();
 
     const about = h('div', { class: 'card panel-box stack', style: 'gap:10px' },
       h('h2', {}, 'About'),
@@ -1691,7 +1692,80 @@ ${d(18, '14:00')} | Riverside FC v Northdale Athletic | County Cup | Home`;
 
     return shell('settings',
       h('div', { class: 'page-head' }, h('div', {}, h('h1', {}, 'Settings'))),
-      h('div', { class: 'stack', style: 'max-width:640px' }, general, sports, widgetSettings, backupsBox, pw, about));
+      h('div', { class: 'stack', style: 'max-width:640px' }, general, sports, widgetSettings, backupsBox, remoteBox, pw, about));
+  }
+
+  // Settings → Remote access -----------------------------------------------------------
+  let remoteInfo = null; // GET /api/remote-access
+  let remoteBusy = false;
+
+  async function loadRemote() {
+    try { remoteInfo = await api('GET', '/remote-access'); } catch (err) { toast(err.message, 'error'); }
+    if (currentView === 'settings') render();
+  }
+
+  function remoteAccessCard() {
+    const head = [
+      h('h2', {}, 'Remote access (SSH)'),
+      h('p', { class: 'small muted' }, 'Lets you log in to the Pi from a computer — to update PitchTribe, add guest Wi-Fi, or reset a password — without a keyboard and screen.'),
+    ];
+    if (!remoteInfo) {
+      loadRemote();
+      return h('div', { class: 'card panel-box stack', style: 'gap:10px' }, ...head, h('p', { class: 'small muted' }, 'Loading…'));
+    }
+    if (!remoteInfo.available) {
+      return h('div', { class: 'card panel-box stack', style: 'gap:10px' }, ...head,
+        h('p', { class: 'small muted' }, 'Remote access is switched on from a Raspberry Pi running PitchTribe 0.2 or later.'));
+    }
+    const st = remoteInfo.status;
+    const on = st.sshActive;
+    const name = st.username || st.users[0] || 'clubadmin';
+    const enabled = h('input', { type: 'checkbox', checked: on });
+    const user = h('input', { type: 'text', value: name, maxlength: 31, autocomplete: 'off', autocapitalize: 'none', spellcheck: false, pattern: '[a-z][a-z0-9-]{2,30}' });
+    const pass = h('input', { type: 'password', autocomplete: 'new-password', minlength: 10, placeholder: on ? 'Leave empty to keep the current one' : '' });
+    const current = h('input', { type: 'password', autocomplete: 'current-password', required: true });
+    const loginRows = h('div', { class: 'stack', style: 'gap:10px' },
+      h('label', { class: 'field' }, 'Username', user, h('span', { class: 'hint' }, 'Small letters, numbers and hyphens. Use the name you set in Raspberry Pi Imager to give it a new password.')),
+      h('label', { class: 'field' }, on ? 'New SSH password' : 'SSH password', pass, h('span', { class: 'hint' }, 'At least 10 characters. Write it down somewhere safe — it isn’t the dashboard password.')));
+    const sync = () => { loginRows.hidden = !enabled.checked; };
+    enabled.addEventListener('change', sync);
+    sync();
+
+    const form = h('form', {
+      class: 'card panel-box form-grid',
+      onsubmit: async (e) => {
+        e.preventDefault();
+        const turningOn = enabled.checked;
+        if (turningOn && !pass.value && !on) { toast('Choose an SSH password', 'error'); return; }
+        if (turningOn && on && !pass.value && user.value === name) { toast('Nothing to change — enter a new password, or switch it off', 'error'); return; }
+        if (!turningOn && !on) { toast('Remote access is already off'); return; }
+        remoteBusy = true;
+        try {
+          const r = await api('POST', '/remote-access', { enabled: turningOn, username: user.value.trim(), password: pass.value, currentPassword: current.value });
+          current.value = pass.value = '';
+          let last = null;
+          for (let i = 0; i < 60 && !last; i++) {
+            await sleep(1000);
+            const now = await api('GET', '/remote-access').catch(() => null);
+            if (now?.status?.lastRequestId === r.requestId) { remoteInfo = now; last = now.status.last; }
+          }
+          toast(last ? last.message : 'The Pi hasn’t answered yet — check again in a minute', last && !last.ok ? 'error' : undefined);
+        } catch (err) { toast(err.message, 'error'); }
+        remoteBusy = false;
+        await loadRemote();
+      },
+    },
+      ...head,
+      h('p', { class: 'small' }, on
+        ? h('span', {}, 'SSH is ', h('strong', {}, 'on'), '. From a computer on the club network: ', h('code', {}, `ssh ${name}@${location.hostname}`))
+        : h('span', {}, 'SSH is ', h('strong', {}, 'off'), '.')),
+      h('label', { class: 'switch' }, enabled, 'Remote access on'),
+      loginRows,
+      h('label', { class: 'field' }, 'Your dashboard password', current, h('span', { class: 'hint' }, 'Needed to change remote access, because the SSH login can change anything on the Pi.')),
+      st.last && !st.last.ok ? h('p', { class: 'small', style: 'color:var(--danger)' }, `⚠ ${st.last.message}`) : null,
+      h('div', {}, h('button', { class: 'btn primary', type: 'submit', disabled: remoteBusy }, remoteBusy ? 'Working…' : 'Save')),
+      h('p', { class: 'small muted' }, 'Anyone with the SSH login can change anything on the Pi. Use a strong password, and switch it off when you don’t need it.'));
+    return form;
   }
 
   // Settings → Backups --------------------------------------------------------------

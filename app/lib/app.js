@@ -12,6 +12,7 @@ const { Hub } = require('./hub');
 const { DEFAULT_PORTAL, renderSplash, themeCss } = require('./portal-page');
 const { readPortalFiles } = require('./portal');
 const { mountBackupRoutes } = require('./backup-routes');
+const { mountRemoteAccessRoutes } = require('./remote-access-routes');
 const { Feeds, LEAGUE_KEY_RE, SHOW_OPTIONS } = require('./feeds');
 const auth = require('./auth');
 const v = require('./validate');
@@ -592,6 +593,9 @@ function createApp(opts = {}) {
     setupRequired: () => !data().settings.adminHash,
     onRestored: () => configureFeeds(),
   });
+
+  // Remote access: switch SSH on or off (via the root helper).
+  mountRemoteAccessRoutes({ api, dataDir, limiter, adminHash: () => data().settings.adminHash, hashPassword: opts.hashSshPassword });
 
   api.get('/state', (req, res) => {
     const d = data();
