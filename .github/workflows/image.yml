@@ -8,6 +8,8 @@ name: SD card image
 #   - a pushed version tag (v1.2.3): build it and attach it to that GitHub release,
 #     which is what the website's download link points at
 #   - run by hand from the Actions tab: build it as an artifact
+#   - called by the Release workflow (release.yml) with release_tag: build it
+#     from that tag and attach it to that release
 on:
   pull_request:
     branches: [main]
@@ -19,12 +21,18 @@ on:
       base_url:
         description: Raspberry Pi OS image (.img.xz) to build on — blank for the latest Lite 64-bit
         required: false
+  workflow_call:
+    inputs:
+      release_tag:
+        description: Build this tag and attach the image to its release
+        type: string
+        required: true
 
 permissions:
   contents: read
 
 concurrency:
-  group: image-${{ github.ref }}
+  group: image-${{ inputs.release_tag || github.ref }}
   cancel-in-progress: true
 
 jobs:
@@ -37,10 +45,13 @@ jobs:
       contents: write   # only used on tags, to attach the image to the release
     env:
       IMAGE_NAME: pitchtribe-rpi-arm64
+      # The release this build is for, if any: a pushed tag, or the Release workflow's.
+      RELEASE_TAG: ${{ inputs.release_tag || (startsWith(github.ref, 'refs/tags/') && github.ref_name) || '' }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
         with:
+          ref: ${{ inputs.release_tag || '' }}
           fetch-depth: 0   # for git describe
 
       - name: Install build tools
@@ -50,10 +61,11 @@ jobs:
         env:
           BASE_URL: ${{ inputs.base_url }}
           # Faster compression for checks; full compression for releases.
-          XZ_LEVEL: ${{ startsWith(github.ref, 'refs/tags/') && '9' || '3' }}
+          XZ_LEVEL: ${{ env.RELEASE_TAG != '' && '9' || '3' }}
         run: |
           [ -n "$BASE_URL" ] || unset BASE_URL
-          sudo --preserve-env=BASE_URL,XZ_LEVEL,IMAGE_NAME image/build.sh out
+          [ -z "$RELEASE_TAG" ] || export IMAGE_VERSION="$RELEASE_TAG"
+          sudo --preserve-env=BASE_URL,XZ_LEVEL,IMAGE_NAME,IMAGE_VERSION image/build.sh out
           sudo chown -R "$(id -u):$(id -g)" out
           ls -l out
 
@@ -65,7 +77,7 @@ jobs:
           python3 -m json.tool out/$IMAGE_NAME.json
 
       - name: Keep the image as an artifact
-        if: ${{ !startsWith(github.ref, 'refs/tags/') }}
+        if: ${{ env.RELEASE_TAG == '' }}
         uses: actions/upload-artifact@v4
         with:
           name: ${{ env.IMAGE_NAME }}
@@ -74,10 +86,10 @@ jobs:
           retention-days: 7
 
       - name: Attach to the release
-        if: startsWith(github.ref, 'refs/tags/')
+        if: ${{ env.RELEASE_TAG != '' }}
         env:
           GH_TOKEN: ${{ github.token }}
-          TAG: ${{ github.ref_name }}
+          TAG: ${{ env.RELEASE_TAG }}
         run: |
           set -euo pipefail
           url="https://github.com/${GITHUB_REPOSITORY}/releases/download/${TAG}/${IMAGE_NAME}.img.xz"

@@ -1,0 +1,14 @@
+[Unit]
+# %i is status (at boot) or request (pitchtribe-remote-access.path: the
+# dashboard's Settings → Remote access asked to switch SSH on or off).
+Description=PitchTribe remote access (%i)
+After=local-fs.target
+
+[Service]
+Type=oneshot
+Environment=DATA_DIR=/var/lib/pitchtribe
+# Root, because it creates the login and starts or stops SSH.
+ExecStart=/usr/bin/env node /opt/pitchtribe/app/bin/remote-access.js %i
+
+[Install]
+WantedBy=multi-user.target

@@ -21,7 +21,11 @@
 <p>In <a href="https://www.raspberrypi.com/software/" target="_blank" rel="noopener noreferrer">Raspberry Pi Imager</a>, choose your Pi, then <strong>Raspberry Pi OS (other) → Raspberry Pi OS Lite (64-bit)</strong>, then your card. In the customisation steps, set a <strong>hostname</strong> (such as <code>bar-tv</code>), a <strong>username and password</strong>, your <strong>Wi-Fi</strong>, and switch on <strong>SSH</strong>. Write the card, put it in the Pi and switch on. Give it a few minutes on first start.</p>
 
 <h2 id="ssh">Connecting to the Pi (SSH)</h2>
-<p>SSH lets you type commands on the Pi from your own computer, over the network. You need the username and password you set in Imager, and SSH switched on.</p>
+<p>SSH lets you type commands on the Pi from your own computer, over the network. It needs a username and password, and SSH switched on. There are two ways to get them:</p>
+<ul>
+  <li><strong>From the PitchTribe dashboard</strong> (PitchTribe 0.2 and later): open <strong>Settings → Remote access</strong>, switch it on, and choose a username and SSH password. Forgotten the password you set in Imager? Type that username here with a new password.</li>
+  <li><strong>In Raspberry Pi Imager</strong>, when you write the card: set a username and password, and switch on SSH, in its customisation steps.</li>
+</ul>
 <ol>
   <li>Open a terminal:
     <ul>

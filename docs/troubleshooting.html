@@ -64,8 +64,20 @@
 
 <h2 id="dashboard">The dashboard</h2>
 
+<h3 id="cant-ssh">I can’t connect with SSH</h3>
+<p>What the error says tells you what’s wrong:</p>
+<table>
+  <thead><tr><th>It says</th><th>What to do</th></tr></thead>
+  <tbody>
+    <tr><td><code>Connection refused</code></td><td>SSH is off. Switch it on in the dashboard under <strong>Settings → Remote access</strong>.</td></tr>
+    <tr><td><code>Permission denied</code></td><td>Wrong username or password. Set a new password for that username in <strong>Settings → Remote access</strong>. Nothing appears on screen as you type a password — that’s normal.</td></tr>
+    <tr><td><code>Could not resolve hostname</code></td><td>Your computer can’t find <code>pitchtribe.local</code>. Use the numbered address from <strong>Settings → About</strong> instead, e.g. <code>ssh clubadmin@192.168.1.50</code>.</td></tr>
+    <tr><td>A long pause, then <code>timed out</code></td><td>Wrong address, or your computer isn’t on the same network as the Pi.</td></tr>
+  </tbody>
+</table>
+
 <h3 id="forgot-password">I’ve forgotten the admin password</h3>
-<p>Anyone can reset it from a terminal on the Pi (see <a href="/docs/install-raspberry-pi-os#ssh">connecting with SSH</a>). Run:</p>
+<p>Anyone can reset it from a terminal on the Pi (see <a href="/docs/install-raspberry-pi-os#ssh">connecting with SSH</a> — Remote access has to have been switched on, or a username set in Imager, while you could still sign in). Run:</p>
 <pre data-copy><code>sudo pitchtribe-reset-password</code></pre>
 <p>Type the new password twice. Your content is untouched, and everyone signed in to the dashboard is signed out. (If the command isn’t found, <a href="/docs/updates-backups#update">update PitchTribe</a> first — it arrived in a later version.)</p>
 

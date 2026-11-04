@@ -132,6 +132,15 @@ The API token needs the **Cloudflare Pages: Edit** permission and nothing more.
 A deploy can also be run manually with `workflow_dispatch`, or from a workstation with
 `npx wrangler login && npm run deploy`.
 
+## Releases
+
+A release is a tag on `main` plus the SD card image attached to it, which the website's download links fetch from the latest release.
+
+- **To release:** open **Actions → Release → Run workflow** and enter the version (e.g. `v0.2.0`, matching `app/package.json`). The workflow tags `main`, creates the release and builds the image. That build runs `.github/workflows/image.yml` as a reusable workflow, and takes about 15 minutes.
+- **To redo a release that went wrong** (for example one whose tag points at the wrong commit): run it again with **replace** ticked. It deletes the old release and tag first.
+
+Publishing a release by hand on GitHub still works too: the tag push starts the same image build.
+
 ## Conventions worth knowing
 
 These are the three things that have caused real defects here.
