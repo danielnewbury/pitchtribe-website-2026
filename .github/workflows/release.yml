@@ -1,0 +1,89 @@
+name: Release
+
+# Publishes a PitchTribe release from main, with the SD card image attached:
+# Actions → Release → Run workflow, enter the version (e.g. v0.2.0).
+#
+# Tick "replace" to redo a release that went wrong — for example one whose tag
+# points at the wrong commit. That deletes the existing release and its tag
+# first, then tags main again. Without it, an existing version is refused.
+#
+# The tag is pushed with the workflow's own token, which doesn't trigger the
+# tag-push build in image.yml, so this workflow runs that build itself.
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: Version to release, like v0.2.0
+        required: true
+      replace:
+        description: Replace this release if it already exists (deletes its tag and files, then tags main again)
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+concurrency:
+  group: release-${{ inputs.version }}
+  cancel-in-progress: false
+
+jobs:
+  tag:
+    name: Tag main and create the release
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    env:
+      GH_TOKEN: ${{ github.token }}
+      VERSION: ${{ inputs.version }}
+      REPLACE: ${{ inputs.replace }}
+    steps:
+      - name: Checkout main
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+
+      - name: Check the version
+        run: |
+          set -euo pipefail
+          [[ "$VERSION" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]] || { echo "::error::Version must look like v1.2.3, not “$VERSION”"; exit 1; }
+          app_version="v$(node -p 'require("./app/package.json").version')"
+          if [[ "$app_version" != "$VERSION" ]]; then
+            echo "::warning::app/package.json says $app_version, but this release is $VERSION"
+          fi
+
+      - name: Remove the old release and tag
+        run: |
+          set -euo pipefail
+          exists_release=0; exists_tag=0
+          gh release view "$VERSION" >/dev/null 2>&1 && exists_release=1
+          git ls-remote --exit-code --tags origin "refs/tags/$VERSION" >/dev/null 2>&1 && exists_tag=1
+          if (( exists_release || exists_tag )); then
+            if [[ "$REPLACE" != true ]]; then
+              echo "::error::$VERSION already exists. Run again with “replace” ticked to redo it from main."
+              exit 1
+            fi
+            (( exists_release )) && gh release delete "$VERSION" --yes
+            (( exists_tag )) && git push origin ":refs/tags/$VERSION"
+            echo "Removed the old $VERSION"
+          fi
+
+      - name: Tag main and create the release
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git tag -a "$VERSION" -m "PitchTribe $VERSION" "$(git rev-parse HEAD)"
+          git push origin "refs/tags/$VERSION"
+          gh release create "$VERSION" --verify-tag --title "PitchTribe $VERSION" --generate-notes
+          echo "Tagged $(git rev-parse --short HEAD) as $VERSION" >> "$GITHUB_STEP_SUMMARY"
+
+  image:
+    name: SD card image
+    needs: tag
+    permissions:
+      contents: write
+    uses: ./.github/workflows/image.yml
+    with:
+      release_tag: ${{ inputs.version }}
