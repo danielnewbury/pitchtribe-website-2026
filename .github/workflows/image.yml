@@ -1,0 +1,95 @@
+name: SD card image
+
+# Builds the ready-to-flash PitchTribe image (Raspberry Pi OS Lite 64-bit with
+# PitchTribe installed) with image/build.sh.
+#
+#   - pull requests that touch the installer or image build: build it as a check
+#     and keep it as a workflow artifact for a few days, so it can be tried on a Pi
+#   - a pushed version tag (v1.2.3): build it and attach it to that GitHub release,
+#     which is what the website's download link points at
+#   - run by hand from the Actions tab: build it as an artifact
+on:
+  pull_request:
+    branches: [main]
+    paths: ['image/**', 'deploy/**', '.github/workflows/image.yml']
+  push:
+    tags: ['v*']
+  workflow_dispatch:
+    inputs:
+      base_url:
+        description: Raspberry Pi OS image (.img.xz) to build on — blank for the latest Lite 64-bit
+        required: false
+
+permissions:
+  contents: read
+
+concurrency:
+  group: image-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    name: Build image
+    # Native arm64, so the Raspberry Pi OS chroot runs without emulation.
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 60
+    permissions:
+      contents: write   # only used on tags, to attach the image to the release
+    env:
+      IMAGE_NAME: pitchtribe-rpi-arm64
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0   # for git describe
+
+      - name: Install build tools
+        run: sudo apt-get update -q && sudo apt-get install -y -q parted e2fsprogs xz-utils
+
+      - name: Build image
+        env:
+          BASE_URL: ${{ inputs.base_url }}
+          # Faster compression for checks; full compression for releases.
+          XZ_LEVEL: ${{ startsWith(github.ref, 'refs/tags/') && '9' || '3' }}
+        run: |
+          [ -n "$BASE_URL" ] || unset BASE_URL
+          sudo --preserve-env=BASE_URL,XZ_LEVEL,IMAGE_NAME image/build.sh out
+          sudo chown -R "$(id -u):$(id -g)" out
+          ls -l out
+
+      - name: Check the image
+        run: |
+          set -euo pipefail
+          xz -t out/$IMAGE_NAME.img.xz
+          (cd out && sha256sum -c $IMAGE_NAME.img.xz.sha256)
+          python3 -m json.tool out/$IMAGE_NAME.json
+
+      - name: Keep the image as an artifact
+        if: ${{ !startsWith(github.ref, 'refs/tags/') }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ env.IMAGE_NAME }}
+          path: out/
+          compression-level: 0   # already xz-compressed
+          retention-days: 7
+
+      - name: Attach to the release
+        if: startsWith(github.ref, 'refs/tags/')
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ github.ref_name }}
+        run: |
+          set -euo pipefail
+          url="https://github.com/${GITHUB_REPOSITORY}/releases/download/${TAG}/${IMAGE_NAME}.img.xz"
+          # A Raspberry Pi Imager repository listing just this image. Imager can
+          # load it (App options → Content repository) and then offers its usual
+          # customisation — hostname, Wi-Fi, user and SSH — before writing.
+          python3 - "$url" <<'PY'
+          import json, sys
+          entry = json.load(open(f"out/pitchtribe-rpi-arm64.json"))
+          entry["url"] = sys.argv[1]
+          json.dump({"os_list": [entry]}, open("out/pitchtribe-imager.json", "w"), indent=2)
+          PY
+          gh release view "$TAG" >/dev/null 2>&1 || gh release create "$TAG" --title "PitchTribe $TAG" --generate-notes
+          gh release upload "$TAG" --clobber \
+            out/$IMAGE_NAME.img.xz out/$IMAGE_NAME.img.xz.sha256 out/pitchtribe-imager.json

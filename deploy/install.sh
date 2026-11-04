@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
-# PitchTribe installer for Raspberry Pi OS (Bookworm, Lite or Desktop) on a Pi 4/5.
+# PitchTribe installer for Raspberry Pi OS (Trixie or Bookworm, Lite or Desktop)
+# on a Pi 4/5.
 #
 #   git clone <this repo> pitchtribe && sudo pitchtribe/deploy/install.sh
 #
@@ -23,6 +24,9 @@
 #   PITCHTRIBE_PORT=80            dashboard port
 #   PITCHTRIBE_PORTAL=1           also set up the guest Wi-Fi captive portal on wlan0
 #                                 (the Pi must be connected to the club router by cable)
+#   PITCHTRIBE_IMAGE_BUILD=1      used by image/build.sh: install into a mounted SD card
+#                                 image from a chroot. Services are enabled for the
+#                                 first boot but not started now.
 set -euo pipefail
 
 log() { printf '\033[1;32m==>\033[0m %s\n' "$*"; }
@@ -49,6 +53,11 @@ SRC_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 command -v apt-get >/dev/null || die "this installer supports Debian / Raspberry Pi OS only"
 
 export DEBIAN_FRONTEND=noninteractive
+
+IMAGE_BUILD="${PITCHTRIBE_IMAGE_BUILD:-0}"
+# Start or restart a unit now — except when building an image, where nothing runs
+# until the card boots (the units are enabled, so they start then).
+start_now() { [[ "$IMAGE_BUILD" == 1 ]] || systemctl "$@"; }
 
 if [[ -z "$SERVER" ]]; then
   # ---------------------------------------------------------------- server
@@ -87,16 +96,16 @@ if [[ -z "$SERVER" ]]; then
   rm -rf "$APP_DIR.old"
 
   sed -e "s|@PORT@|$PORT|g" "$SRC_DIR/deploy/pitchtribe.service" >/etc/systemd/system/pitchtribe.service
-  systemctl daemon-reload
+  start_now daemon-reload
   systemctl enable pitchtribe.service
-  systemctl restart pitchtribe.service
+  start_now restart pitchtribe.service
   SERVER="http://localhost$([[ "$PORT" == 80 ]] || echo ":$PORT")"
 fi
 
 if [[ "${PITCHTRIBE_PORTAL:-0}" == 1 ]]; then
   # ------------------------------------------------------------ guest Wi-Fi
   log "Installing the guest Wi-Fi captive portal (hostapd, dnsmasq, nftables)"
-  if ! ip -o link show eth0 >/dev/null 2>&1; then
+  if [[ "$IMAGE_BUILD" != 1 ]] && ! ip -o link show eth0 >/dev/null 2>&1; then
     die "the guest Wi-Fi needs the Pi's network cable (eth0) for its internet connection"
   fi
   apt-get install -y -q hostapd dnsmasq nftables
@@ -106,7 +115,7 @@ if [[ "${PITCHTRIBE_PORTAL:-0}" == 1 ]]; then
 [keyfile]
 unmanaged-devices=interface-name:wlan0
 NMCONF
-    systemctl reload NetworkManager 2>/dev/null || true
+    start_now reload NetworkManager 2>/dev/null || true
   fi
   rfkill unblock wlan 2>/dev/null || true
   # The default dnsmasq config must not grab every interface.
@@ -115,10 +124,10 @@ NMCONF
   install -m 0644 "$SRC_DIR/deploy/portal/pitchtribe-portal.service" /etc/systemd/system/
   install -m 0644 "$SRC_DIR/deploy/portal/pitchtribe-portal-apply.service" /etc/systemd/system/
   install -m 0644 "$SRC_DIR/deploy/portal/pitchtribe-portal-apply.path" /etc/systemd/system/
-  systemctl daemon-reload
+  start_now daemon-reload
   systemctl enable pitchtribe-portal.service pitchtribe-portal-apply.service pitchtribe-portal-apply.path
-  systemctl start pitchtribe-portal-apply.path
-  systemctl start pitchtribe-portal-apply.service || true
+  start_now start pitchtribe-portal-apply.path
+  start_now start pitchtribe-portal-apply.service || true
   log "Guest Wi-Fi installed — switch it on and design the sign-in page under Guest Wi-Fi in the dashboard"
 fi
 
@@ -134,20 +143,25 @@ if [[ "${PITCHTRIBE_NO_KIOSK:-0}" != 1 ]]; then
   id -u "$KIOSK_USER" >/dev/null 2>&1 || useradd --create-home --shell /usr/sbin/nologin "$KIOSK_USER"
   usermod -a -G video,render,input,audio "$KIOSK_USER"
 
-  SCREEN_ID="$(hostname | tr -c 'a-zA-Z0-9_\n-' '-')"
   install -m 0755 "$SRC_DIR/deploy/kiosk.sh" /usr/local/bin/pitchtribe-kiosk
   cat >/etc/default/pitchtribe-kiosk <<EOF
-# Read by pitchtribe-kiosk.service
-PITCHTRIBE_URL=${SERVER%/}/player/?screen=${SCREEN_ID}
+# Read by pitchtribe-kiosk.service. @HOSTNAME@ becomes this Pi's hostname when the
+# kiosk starts, so each Pi shows its own screen (and an SD card image works on any Pi).
+PITCHTRIBE_URL=${SERVER%/}/player/?screen=@HOSTNAME@
 CHROMIUM=${CHROMIUM}
 EOF
   install -m 0644 "$SRC_DIR/deploy/pitchtribe-kiosk.service" /etc/systemd/system/pitchtribe-kiosk.service
-  systemctl daemon-reload
+  start_now daemon-reload
   # The kiosk takes over the first console; boot to the console, not a desktop.
   systemctl set-default multi-user.target
   systemctl disable getty@tty1.service 2>/dev/null || true
   systemctl enable pitchtribe-kiosk.service
-  systemctl restart pitchtribe-kiosk.service || true
+  start_now restart pitchtribe-kiosk.service || true
+fi
+
+if [[ "$IMAGE_BUILD" == 1 ]]; then
+  log "Done — PitchTribe is installed in the image and starts on first boot"
+  exit 0
 fi
 
 HOST="$(hostname).local"
