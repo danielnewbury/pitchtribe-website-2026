@@ -1,0 +1,3 @@
+# Look for USB sticks (and PitchTribe backups on them) whenever one is plugged in
+# or taken out, so the dashboard shows it straight away.
+ACTION=="add|remove", SUBSYSTEM=="block", ENV{ID_BUS}=="usb", RUN+="/usr/bin/systemctl --no-block start pitchtribe-backup@scan.service"

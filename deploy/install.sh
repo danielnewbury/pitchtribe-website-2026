@@ -17,6 +17,7 @@
 #   - pitchtribe-kiosk.service  — full-screen Chromium (in the cage Wayland
 #                                 kiosk) on the HDMI output, showing this Pi's screen
 #   - avahi so the dashboard is reachable at http://<hostname>.local
+#   - USB stick backups: pitchtribe-backup.{path,timer} and pitchtribe-backup@.service
 #
 # Options (environment variables):
 #   PITCHTRIBE_NO_KIOSK=1         server only (e.g. a headless "hub" Pi)
@@ -96,10 +97,18 @@ if [[ -z "$SERVER" ]]; then
   rm -rf "$APP_DIR.old"
 
   install -m 0755 "$SRC_DIR/deploy/reset-password.sh" /usr/local/bin/pitchtribe-reset-password
+  # USB stick backups (Settings → Backups in the dashboard): a root helper run
+  # nightly, on request from the dashboard, and when a stick is plugged in.
+  install -m 0644 "$SRC_DIR/deploy/backup/pitchtribe-backup@.service" "$SRC_DIR/deploy/backup/pitchtribe-backup.path" \
+    "$SRC_DIR/deploy/backup/pitchtribe-backup.timer" /etc/systemd/system/
+  install -m 0644 "$SRC_DIR/deploy/backup/91-pitchtribe-backup.rules" /etc/udev/rules.d/
+  [[ "$IMAGE_BUILD" == 1 ]] || udevadm control --reload 2>/dev/null || true
   sed -e "s|@PORT@|$PORT|g" "$SRC_DIR/deploy/pitchtribe.service" >/etc/systemd/system/pitchtribe.service
   start_now daemon-reload
-  systemctl enable pitchtribe.service
+  systemctl enable pitchtribe.service pitchtribe-backup.path pitchtribe-backup.timer pitchtribe-backup@scan.service
   start_now restart pitchtribe.service
+  start_now start pitchtribe-backup.path pitchtribe-backup.timer
+  start_now start --no-block pitchtribe-backup@scan.service || true
   SERVER="http://localhost$([[ "$PORT" == 80 ]] || echo ":$PORT")"
 fi
 
