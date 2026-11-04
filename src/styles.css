@@ -6,8 +6,9 @@
    .inline and .static). All real markup lives in html/, so scan only that. */
 @import "tailwindcss" source(none);
 
-/* Scan the static root for class names. */
+/* Scan the static root and the docs sources for class names. */
 @source "../html";
+@source "../docs";
 
 /* ---- Design tokens (dark default, light via OS preference or data-theme) ---- */
 :root {
@@ -146,6 +147,60 @@
     content: "✓";
     @apply shrink-0 font-bold text-accent;
   }
+
+  /* ---- Docs (/docs/) ---- */
+  .doc { @apply max-w-[72ch] text-[1rem] leading-[1.7] text-muted; }
+  .doc > * + * { @apply mt-4; }
+  .doc h1 { @apply text-[clamp(2rem,5vw,2.75rem)] font-extrabold leading-[1.08] text-balance text-fg; }
+  .doc .lede { @apply mt-3 text-[1.125rem] text-muted; }
+  .doc h2 { @apply mt-12 scroll-mt-24 border-t border-line pt-8 text-[1.6rem] font-bold leading-tight text-fg; }
+  .doc h3 { @apply mt-8 scroll-mt-24 text-[1.2rem] font-bold text-fg; }
+  .doc strong { @apply font-semibold text-fg; }
+  .doc a { @apply font-medium text-accent underline decoration-accent/40 underline-offset-4 transition hover:decoration-accent; }
+  .doc ul { @apply list-disc space-y-1.5 pl-6 marker:text-dim; }
+  .doc ol { @apply list-decimal space-y-1.5 pl-6 marker:font-semibold marker:text-accent; }
+  .doc li > ul, .doc li > ol { @apply mt-1.5; }
+  .doc :not(pre) > code { @apply rounded border border-line bg-surface-2 px-1.5 py-0.5 font-mono text-[0.85em] text-fg; }
+  .doc kbd { @apply rounded border border-line-hi bg-surface px-1.5 py-0.5 font-mono text-[0.8em] text-fg; }
+  .doc pre { @apply relative overflow-x-auto rounded-lg border border-line bg-surface-2 px-4 py-3 font-mono text-[0.85rem] leading-relaxed text-accent; }
+  .doc pre.has-copy { @apply pr-20; }
+  .doc .copy-btn { @apply absolute right-2 top-2 rounded-md border border-line bg-surface px-2.5 py-1 font-sans text-[0.75rem] font-semibold text-muted transition hover:border-accent hover:text-accent; }
+  .doc figure { @apply my-6; }
+  .doc figure img { @apply h-auto max-w-full rounded-xl border border-line; }
+  .doc figure.phone img { @apply max-w-[300px]; }
+  .doc figcaption { @apply mt-2 text-sm text-dim; }
+  .doc table { @apply block w-full overflow-x-auto text-left text-[0.92rem]; }
+  .doc th { @apply border-b border-line-hi px-3 py-2 font-semibold whitespace-nowrap text-fg; }
+  .doc td { @apply border-b border-line px-3 py-2 align-top; }
+  .doc td code, .doc th code { @apply whitespace-nowrap; }
+  .doc .callout { @apply rounded-xl border border-line border-l-4 border-l-sky bg-surface px-5 py-4; }
+  .doc .callout.tip { @apply border-l-accent; }
+  .doc .callout.warn { @apply border-l-amber; }
+  .doc .callout > * + * { @apply mt-2; }
+  .doc .callout-title { @apply font-semibold text-fg; }
+  .doc details { @apply rounded-xl border border-line bg-surface px-5 py-3; }
+  .doc details > summary { @apply cursor-pointer font-semibold text-fg; }
+  .doc details[open] > summary { @apply mb-3; }
+  .doc details > * + * { @apply mt-3; }
+  .doc .steps { @apply list-none space-y-0 pl-0; counter-reset: step; }
+  .doc .steps > li { @apply relative border-l-2 border-line pb-8 pl-10 last:border-transparent last:pb-0; counter-increment: step; }
+  .doc .steps > li::before {
+    content: counter(step);
+    @apply absolute -left-[17px] top-0 flex size-8 items-center justify-center rounded-full border-2 border-accent/40 bg-bg font-head text-sm font-extrabold text-accent;
+  }
+  .doc .steps > li > h3:first-child { @apply mt-0.5; }
+  .doc .cards { @apply grid gap-4 sm:grid-cols-2; }
+  .doc .card { @apply block rounded-xl border border-line bg-surface p-5 no-underline transition hover:border-accent; }
+  .doc .card strong { @apply block font-head text-lg text-fg; }
+  .doc .card span { @apply mt-1 block text-sm font-normal text-muted; }
+  .doc-nav-head { @apply mb-2 mt-5 text-xs font-bold uppercase tracking-[0.11em] text-dim first:mt-0; }
+  .doc-nav ul { @apply space-y-0.5; }
+  .doc-nav a { @apply block rounded-md px-2.5 py-1.5 text-[0.9rem] text-muted transition hover:bg-surface-2 hover:text-fg; }
+  .doc-nav a[aria-current="page"] { @apply bg-accent/10 font-semibold text-accent; }
+  .doc-pager { @apply mt-12 grid gap-4 sm:grid-cols-2; }
+  .doc-pager a { @apply block rounded-xl border border-line px-5 py-4 font-semibold text-fg transition hover:border-accent; }
+  .doc-pager a span { @apply block text-xs font-normal text-dim; }
+  .doc-pager-next { @apply text-right sm:col-start-2; }
 
   /* Display mockup: only the active screen is visible. */
   .scr { @apply absolute inset-0 hidden flex-col font-head; }

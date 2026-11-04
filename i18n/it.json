@@ -309,5 +309,8 @@
   "457": "Collega e accendi",
   "458": "Collega lo schermo HDMI e l’alimentazione. Il Pi si avvia direttamente sul tuo display, a ogni avvio, senza tastiera né mouse. Il Pi ha già Raspberry Pi OS (Trixie o Bookworm)? Salta l’immagine ed esegui invece questo:",
   "460": "Scrivi l’immagine di PitchTribe e il tuo primo schermo è attivo in pochi minuti — oppure esegui questo su un Pi che ha già Raspberry Pi OS. Gratis per sempre.",
-  "461": "Scarica l’immagine"
+  "461": "Scarica l’immagine",
+  "462": "Non hai mai usato un Raspberry Pi?",
+  "463": "Segui la guida passo passo per principianti",
+  "464": "— ogni clic spiegato, nessun comando da digitare."
 }

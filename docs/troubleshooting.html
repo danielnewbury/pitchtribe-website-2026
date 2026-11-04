@@ -1,0 +1,86 @@
+<!-- {"title": "Troubleshooting", "description": "Fixes for common PitchTribe problems: no picture on the TV, can’t open pitchtribe.local, the Pi not joining Wi-Fi, a forgotten dashboard password, cut-off edges and random restarts."} -->
+<p class="eyebrow">Looking after it</p>
+<h1>Troubleshooting</h1>
+<p class="lede">The usual problems and how to fix them, roughly in the order people run into them. The first thing to try for almost anything: unplug the Pi’s power, wait ten seconds, and plug it back in.</p>
+
+<h2 id="tv">The TV</h2>
+
+<h3 id="no-picture">No picture at all</h3>
+<ul>
+  <li>Check the TV is on the right <strong>HDMI input</strong> — the one the Pi is plugged into.</li>
+  <li>On a Pi 5, use the micro-HDMI socket <strong>nearest the power socket</strong> (HDMI0).</li>
+  <li>Check the Pi has power: a small light on it should be on. Use the official power supply.</li>
+  <li>Push the memory card fully in. If you’ve just written it, write it again — a card that didn’t finish writing won’t start.</li>
+  <li>Try another HDMI cable or another TV, to rule them out.</li>
+</ul>
+
+<h3 id="stuck-starting">Stuck on white text or a black screen</h3>
+<p>The very first start can take up to five minutes and may restart once — give it time. If it’s still stuck after ten minutes, unplug the power and plug it back in. If that doesn’t help, write the card again; it may have been corrupted.</p>
+
+<h3 id="no-playlist">“This screen has no playlist yet”</h3>
+<p>PitchTribe is running; it just hasn’t been given anything to show. If you haven’t set up the dashboard yet, open the address shown on the TV and <a href="/docs/setup#password">choose a password</a>. If you have, open <strong>Screens</strong> in the dashboard and pick a playlist for this screen.</p>
+
+<h3 id="edges-cut-off">The edges are cut off, or there are black bars</h3>
+<p>Most TVs zoom in slightly by default (“overscan”). In the TV’s picture settings, look for <em>Just Scan</em>, <em>Screen Fit</em>, <em>Full Pixel</em>, <em>1:1</em> or <em>Aspect ratio: Original</em>, and choose it for this HDMI input. For black bars around a particular photo, change its <strong>Sizing</strong> to <em>Fill screen</em> in the dashboard.</p>
+
+<h3 id="sideways">The picture is sideways</h3>
+<p>If the TV is mounted portrait, open <strong>Screens</strong> in the dashboard and set the screen’s <strong>Rotation</strong>.</p>
+
+<h3 id="tv-sleeps">The TV switches itself off</h3>
+<p>Many TVs have an eco or “auto power off” setting that turns them off after a few hours without the remote being pressed. Switch it off in the TV’s settings — the Pi keeps the picture changing, but some TVs don’t count that.</p>
+
+<h3 id="restarts">The Pi restarts on its own, or shows a lightning bolt</h3>
+<p>That’s nearly always the power supply not providing enough power. Use the official Raspberry Pi supply for your model, plugged straight into the wall rather than an extension with lots of other things on it.</p>
+
+<h3 id="old-content">The TV isn’t showing my latest changes</h3>
+<p>Check the screen shows as <strong>Online</strong> under Screens and that it’s playing the playlist you changed. Check the item’s <strong>Timing</strong> allows it to show now — its badge should say <em>Live now</em>. Then use <strong>Reload</strong> on the Screens page. If the screen is offline, check the Pi’s network connection.</p>
+
+<h2 id="network">The network</h2>
+
+<h3 id="cant-open-dashboard">I can’t open <code>pitchtribe.local</code></h3>
+<ol>
+  <li>Make sure your phone is on the <strong>same Wi-Fi network as the Pi</strong>. Guest networks and mobile data won’t work. Switch off any VPN.</li>
+  <li>Type <code>http://</code> at the start, and use the name you gave the Pi in Imager if you changed it.</li>
+  <li>Use the <strong>numbers</strong> instead: the address is shown at the bottom of the TV until the dashboard is set up, and always under <strong>Settings → About</strong>. Your router’s admin page also lists the Pi under connected devices.</li>
+</ol>
+<p>Some Android phones and some routers don’t understand <code>.local</code> addresses at all. The numbered address always works; bookmark it. Ask whoever looks after the router to give the Pi a fixed (“reserved”) address so the number never changes.</p>
+
+<h3 id="no-wifi">The Pi doesn’t join the Wi-Fi</h3>
+<ul>
+  <li>The Wi-Fi name and password must be exactly right — they’re case-sensitive. The only way to change them is to write the card again with the correct details in Imager.</li>
+  <li>Networks with a sign-in page (like many guest networks) won’t work. Use the club’s main network.</li>
+  <li>If the router is far away or behind thick walls, use a network cable instead.</li>
+</ul>
+
+<h3 id="imager-customise">Imager didn’t offer to customise the card</h3>
+<p>Some versions of Raspberry Pi Imager don’t offer the customisation steps (Wi-Fi, hostname, username) for a file chosen with <strong>Use custom</strong>. You can either use a network cable and skip them, or load the PitchTribe list into Imager, which brings them back:</p>
+<ol>
+  <li>In Imager, open its settings (<strong>App options</strong>) and find the <strong>content repository</strong> setting.</li>
+  <li>Choose to use a custom repository and enter this address:
+    <pre data-copy><code>https://github.com/pitchtribe/pitchtribe-display/releases/latest/download/pitchtribe-imager.json</code></pre>
+  </li>
+  <li>PitchTribe now appears in Imager’s operating system list. Choose it instead of <em>Use custom</em>, and the customisation steps appear as usual.</li>
+</ol>
+
+<h2 id="dashboard">The dashboard</h2>
+
+<h3 id="forgot-password">I’ve forgotten the admin password</h3>
+<p>Anyone can reset it from a terminal on the Pi (see <a href="/docs/install-raspberry-pi-os#ssh">connecting with SSH</a>). Run:</p>
+<pre data-copy><code>sudo pitchtribe-reset-password</code></pre>
+<p>Type the new password twice. Your content is untouched, and everyone signed in to the dashboard is signed out. (If the command isn’t found, <a href="/docs/updates-backups#update">update PitchTribe</a> first — it arrived in a later version.)</p>
+
+<h3 id="no-scores">Live scores or weather are blank</h3>
+<ul>
+  <li>Both need the Pi to be online.</li>
+  <li>For scores, check <strong>Settings → Sports feeds</strong> is switched on with at least one competition ticked. Off-season, there may simply be no matches.</li>
+  <li>For weather, set your ground’s location in <strong>Settings → Widgets</strong>.</li>
+</ul>
+
+<h3 id="upload-fails">An upload fails</h3>
+<p>Check the file type (JPG, PNG, GIF, WebP, SVG, MP4 or WebM). Videos from iPhones are sometimes in a format the screen can’t play; export them as MP4 (“Most Compatible” in the iPhone’s camera settings) or convert them first. Very large videos can also take a long time over Wi-Fi — try from a computer on a cable.</p>
+
+<h2 id="start-again">Starting again from scratch</h2>
+<p>If all else fails, write the PitchTribe image to the card again with the <a href="/docs/setup">beginner’s guide</a>. That wipes the card, including your content — <a href="/docs/updates-backups#backup">take a backup first</a> if you can.</p>
+
+<h2 id="still-stuck">Still stuck?</h2>
+<p><a href="https://github.com/pitchtribe/pitchtribe-display/issues" target="_blank" rel="noopener noreferrer">Open an issue on GitHub</a>. Say which Pi you have, how you installed PitchTribe, and exactly what the TV shows — a photo of the screen helps a lot. If you’re comfortable with a terminal, the last lines of <code>sudo journalctl -u pitchtribe -u pitchtribe-kiosk -n 100</code> are very useful too.</p>

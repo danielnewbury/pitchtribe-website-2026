@@ -309,5 +309,8 @@
   "457": "Einstecken und einschalten",
   "458": "Schließe den HDMI-Bildschirm und den Strom an. Der Pi startet direkt in deine Anzeige, bei jedem Hochfahren, ohne Tastatur und Maus. Läuft auf dem Pi schon Raspberry Pi OS (Trixie oder Bookworm)? Dann überspringe das Image und führe stattdessen dies aus:",
   "460": "Flashe das PitchTribe-Image und dein erster Bildschirm läuft in wenigen Minuten — oder führe dies auf einem Pi aus, auf dem schon Raspberry Pi OS läuft. Für immer kostenlos.",
-  "461": "Image herunterladen"
+  "461": "Image herunterladen",
+  "462": "Noch nie einen Raspberry Pi benutzt?",
+  "463": "Folge der Schritt-für-Schritt-Anleitung für Einsteiger",
+  "464": "— jeder Klick erklärt, keine Befehle zu tippen."
 }

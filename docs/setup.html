@@ -1,0 +1,126 @@
+<!-- {"title": "Beginner’s setup guide", "description": "Set up a PitchTribe club screen from scratch, step by step, with no technical knowledge: what to buy, how to copy the PitchTribe image to a memory card, and how to open the dashboard on your phone."} -->
+<p class="eyebrow">Start here</p>
+<h1>Beginner’s setup guide</h1>
+<p class="lede">From a box of parts to your club’s first notice on the TV. You won’t type a single command. Allow about 30 minutes, most of it waiting for things to download and copy.</p>
+
+<div class="callout tip">
+  <p class="callout-title">The short version</p>
+  <p>Download the PitchTribe image → copy it to a memory card with Raspberry Pi Imager → put the card in the Pi, plug the Pi into the TV and switch it on → open <code>pitchtribe.local</code> on your phone and choose a password.</p>
+</div>
+
+<h2 id="you-need">What you need</h2>
+<h3>For the screen</h3>
+<ul>
+  <li><strong>A Raspberry Pi 5</strong> with 4 GB of memory or more. A Raspberry Pi 4 works too.</li>
+  <li><strong>The official Raspberry Pi power supply</strong> for your model (the 27 W USB-C one for a Pi 5). Phone chargers often aren’t powerful enough and cause random restarts.</li>
+  <li><strong>A microSD memory card</strong>, 32 GB or bigger. Cards marked <strong>A2</strong> are faster. Everything on the card will be wiped.</li>
+  <li><strong>A micro-HDMI to HDMI cable.</strong> The Pi has the small <em>micro</em>-HDMI sockets, not full-size ones, so an ordinary HDMI cable won’t fit.</li>
+  <li><strong>A case</strong> for the Pi, ideally one with a fan or heatsink.</li>
+  <li><strong>A TV or monitor</strong> with a spare HDMI socket, and a mains socket near it.</li>
+  <li><strong>Internet for the Pi:</strong> the club’s Wi-Fi name and password, <em>or</em> a network cable to the club router. A cable is more reliable if the router is close.</li>
+</ul>
+<p>The <a href="/buy#parts">parts list on the Buy page</a> has every item with a price.</p>
+
+<h3>For setting it up (once)</h3>
+<ul>
+  <li><strong>A computer</strong> — Windows, Mac, ChromeOS or Linux — that can read a microSD card. Many laptops have a slot; if yours doesn’t, a USB card reader costs a few pounds.</li>
+  <li><strong>A phone, tablet or laptop</strong> on the club’s Wi-Fi, to open the dashboard at the end.</li>
+</ul>
+<p>You don’t need a keyboard or mouse for the Pi.</p>
+
+<h2 id="steps">Step by step</h2>
+<ol class="steps">
+  <li>
+    <h3 id="imager">Install Raspberry Pi Imager on your computer</h3>
+    <p>Raspberry Pi Imager is the free program that copies the PitchTribe software onto the memory card. Download it from <a href="https://www.raspberrypi.com/software/" target="_blank" rel="noopener noreferrer">raspberrypi.com/software</a> and install it like any other program.</p>
+  </li>
+  <li>
+    <h3 id="download">Download the PitchTribe image</h3>
+    <p>Go to the <a href="https://github.com/pitchtribe/pitchtribe-display/releases/latest" target="_blank" rel="noopener noreferrer">latest PitchTribe release</a> and, under <strong>Assets</strong>, click <code>pitchtribe-rpi-arm64.img.xz</code>. It’s about 1.2 GB, so it may take a few minutes.</p>
+    <p>An “image” is simply a complete copy of everything that goes on the memory card: Raspberry Pi’s own operating system with PitchTribe already installed and set up. <strong>Don’t unzip it</strong> — Imager reads the <code>.xz</code> file as it is.</p>
+  </li>
+  <li>
+    <h3 id="write">Copy the image to the memory card</h3>
+    <p>Put the microSD card in your computer and open Raspberry Pi Imager. It walks you through a few choices:</p>
+    <ol>
+      <li><strong>Device:</strong> choose your Pi — Raspberry Pi 5 (or 4).</li>
+      <li><strong>Operating system:</strong> scroll to the bottom of the list, choose <strong>Use custom</strong>, and pick the <code>pitchtribe-rpi-arm64.img.xz</code> file you downloaded.</li>
+      <li><strong>Storage:</strong> choose the microSD card. Check the size matches your card — whatever you choose here is wiped.</li>
+    </ol>
+    <p>Imager then offers to <strong>customise</strong> the card. These settings are worth filling in:</p>
+    <table>
+      <thead><tr><th>Setting</th><th>What to put</th></tr></thead>
+      <tbody>
+        <tr><td><strong>Hostname</strong></td><td>A name for this screen, like <code>bar-tv</code> or <code>clubhouse</code>: small letters, numbers and hyphens only — no capitals or spaces. It becomes the dashboard’s address (<code>bar-tv.local</code>) and the screen’s name in the dashboard. Leave it blank and the Pi is called <code>pitchtribe</code>.</td></tr>
+        <tr><td><strong>Wi-Fi</strong></td><td>The club’s Wi-Fi name and password, exactly as written (they’re case-sensitive). Skip this if you’ll use a network cable.</td></tr>
+        <tr><td><strong>Localisation</strong></td><td>Your time zone (e.g. Europe/London), so clocks and fixtures show the right time.</td></tr>
+        <tr><td><strong>User</strong> and <strong>SSH</strong></td><td>Optional. Only needed if you later want to add guest Wi-Fi or update from the command line. If you set them, write the username and password down somewhere safe.</td></tr>
+      </tbody>
+    </table>
+    <p>Then choose <strong>Write</strong> and confirm. Copying and checking the card takes 5–15 minutes. When Imager says it’s finished, take the card out.</p>
+    <div class="callout">
+      <p class="callout-title">Imager didn’t offer to customise?</p>
+      <p>Some versions of Imager skip the customisation for a file you picked with “Use custom”. The Pi still works, but it won’t know your Wi-Fi, so use a network cable — or <a href="/docs/troubleshooting#imager-customise">give Imager the PitchTribe list instead</a>, which brings the customisation back.</p>
+    </div>
+  </li>
+  <li>
+    <h3 id="plug-in">Plug everything in</h3>
+    <ol>
+      <li>Push the microSD card into the slot on the underside of the Pi, contacts facing the board, until it’s fully in.</li>
+      <li>Connect the HDMI cable from the Pi to the TV. On a Pi 5 use the micro-HDMI socket <strong>nearest the power socket</strong> (marked HDMI0).</li>
+      <li>If you’re using a network cable, plug it into the Pi’s network socket and the club router.</li>
+      <li>Switch the TV on and set it to the HDMI input the Pi is plugged into.</li>
+      <li>Plug in the power supply last. There’s no on/off switch — the Pi starts as soon as it has power.</li>
+    </ol>
+  </li>
+  <li>
+    <h3 id="first-boot">Wait for the first start-up</h3>
+    <p>The first start takes longer than usual — <strong>allow up to 5 minutes</strong>. You’ll see lines of white text, the screen may go black for a while, and the Pi may restart once by itself while it finishes setting up the card. That’s all normal; don’t unplug it.</p>
+    <p>When it’s ready, the TV shows the PitchTribe logo and the address of the dashboard:</p>
+    <figure>
+      <img src="/docs/img/tv-first-boot.jpg" width="1280" height="720" alt="The TV showing the PitchTribe logo, the words “This screen has no playlist yet”, and the screen’s name and dashboard address." loading="lazy">
+      <figcaption>What the TV shows the first time. The address at the bottom will be different on yours — make a note of it.</figcaption>
+    </figure>
+    <p>From now on, the Pi goes straight to this screen every time the power comes on, so after a power cut it sorts itself out. Leave the Pi switched on: turning it off at the wall every night can, over time, damage the memory card. Switch the TV off instead.</p>
+  </li>
+  <li>
+    <h3 id="dashboard">Open the dashboard on your phone</h3>
+    <p>Connect your phone to the <strong>same network as the Pi</strong> (the club Wi-Fi), open the web browser and type:</p>
+    <pre data-copy><code>http://pitchtribe.local</code></pre>
+    <p>If you chose a different hostname in step 3, use that instead — for example <code>http://bar-tv.local</code>.</p>
+    <p>If the page won’t open, type the address shown at the bottom of the TV instead (it looks like <code>http://192.168.1.50/</code>). Some Android phones and some routers don’t understand <code>.local</code> addresses; the numbers always work.</p>
+  </li>
+  <li>
+    <h3 id="password">Name your club and choose a password</h3>
+    <p>The first time you open the dashboard it asks for your club’s name and an admin password. Choose a password of at least 8 characters and share it only with the volunteers who will manage the screens — anyone with it can change what’s on the TV.</p>
+    <figure class="phone">
+      <img src="/docs/img/phone-setup.jpg" width="1170" height="1992" alt="The “Set up PitchTribe” form on a phone, with boxes for club name, admin password and confirm password, and a “Create dashboard” button." loading="lazy">
+    </figure>
+    <p>Tap <strong>Create dashboard</strong>. Within a second or two the TV changes to a welcome message with your club’s name. <strong>That’s it — your screen is working.</strong></p>
+    <figure>
+      <img src="/docs/img/tv-welcome.jpg" width="1280" height="720" alt="The TV showing “Welcome to Riverside FC” with the time in the corner." loading="lazy">
+    </figure>
+    <div class="callout tip">
+      <p class="callout-title">Bookmark it</p>
+      <p>Add the dashboard to your phone’s home screen (in the browser’s share or ⋮ menu) so it opens like an app next time.</p>
+    </div>
+  </li>
+  <li>
+    <h3 id="first-notice">Put your first notice on the TV</h3>
+    <ol>
+      <li>In the dashboard, open <strong>Content</strong> and tap <strong>Notice</strong>.</li>
+      <li>Write a headline and a message — say, this Saturday’s kick-off time — and pick a colour.</li>
+      <li>Leave <strong>Add to playlist</strong> set to <strong>Main</strong> and tap <strong>Create</strong>.</li>
+    </ol>
+    <p>The TV now takes turns between the welcome message and your notice. To remove the welcome message, open <strong>Playlists → Main</strong> and switch it off.</p>
+    <p>Photos and videos work the same way: tap <strong>Upload</strong> on the Content page, then add them in <strong>Playlists → Main → Add content</strong>. <a href="/docs/dashboard">Using the dashboard</a> covers menus, fixtures, live scores, timings and everything else.</p>
+  </li>
+</ol>
+
+<h2 id="next">What next?</h2>
+<ul>
+  <li><a href="/docs/dashboard">Using the dashboard</a> — menus, fixtures, live scores, widgets, and showing things only at certain times.</li>
+  <li><a href="/docs/more-screens">Adding more screens</a> — a second TV in the bar, the function room or the changing rooms.</li>
+  <li><a href="/docs/guest-wifi">Guest Wi-Fi</a> — free Wi-Fi for visitors, with your club’s sign-in page.</li>
+  <li><a href="/docs/troubleshooting">Troubleshooting</a> — if anything above didn’t go to plan.</li>
+</ul>

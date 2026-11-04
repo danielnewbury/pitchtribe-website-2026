@@ -309,5 +309,8 @@
   "457": "Podłącz i włącz",
   "458": "Podłącz ekran HDMI i zasilanie. Pi uruchamia się od razu na Twoim ekranie, przy każdym starcie, bez klawiatury i myszy. Masz już Raspberry Pi OS (Trixie lub Bookworm) na Pi? Pomiń obraz i uruchom zamiast tego:",
   "460": "Zapisz obraz PitchTribe, a Twój pierwszy ekran ruszy w kilka minut — albo uruchom to na Pi, na którym jest już Raspberry Pi OS. Za darmo, na zawsze.",
-  "461": "Pobierz obraz"
+  "461": "Pobierz obraz",
+  "462": "Nigdy nie używałeś Raspberry Pi?",
+  "463": "Skorzystaj z przewodnika krok po kroku dla początkujących",
+  "464": "— każde kliknięcie wyjaśnione, bez wpisywania poleceń."
 }

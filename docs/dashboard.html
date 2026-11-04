@@ -1,0 +1,130 @@
+<!-- {"title": "Using the dashboard", "description": "How to use the PitchTribe dashboard: add notices, menus, fixtures, photos, videos, widgets and live scores, build playlists, set when things show, and manage your screens."} -->
+<p class="eyebrow">Running your screens</p>
+<h1>Using the dashboard</h1>
+<p class="lede">The dashboard is where you decide what the TVs show. Open it on any phone, tablet or laptop on the club’s network — at <code>http://pitchtribe.local</code>, or whatever name you gave the Pi — and sign in with the admin password.</p>
+
+<p>It has five sections, along the top:</p>
+<table>
+  <thead><tr><th>Section</th><th>What it’s for</th></tr></thead>
+  <tbody>
+    <tr><td><strong><a href="#content">Content</a></strong></td><td>Everything that can appear on a screen: photos, videos, notices, menus, fixtures, widgets, live scores and web pages.</td></tr>
+    <tr><td><strong><a href="#playlists">Playlists</a></strong></td><td>The running order for a screen, how long each item shows, and when.</td></tr>
+    <tr><td><strong><a href="#screens">Screens</a></strong></td><td>Every TV connected to PitchTribe, and which playlist each one plays.</td></tr>
+    <tr><td><strong><a href="/docs/guest-wifi">Wi-Fi</a></strong></td><td>The optional guest Wi-Fi portal.</td></tr>
+    <tr><td><strong><a href="#settings">Settings</a></strong></td><td>Club name, screen language, sports feeds, weather location and the admin password.</td></tr>
+  </tbody>
+</table>
+<p>Changes reach the screens within a second or two. You never need to touch the Pi.</p>
+
+<figure class="phone">
+  <img src="/docs/img/phone-content.jpg" width="1170" height="1992" alt="The Content page of the dashboard on a phone, with buttons for Upload, Notice, Menu, Fixtures, Widgets, Live scores and Web page, and the welcome notice below." loading="lazy">
+  <figcaption>The Content page on a phone.</figcaption>
+</figure>
+
+<h2 id="content">Content</h2>
+<p>Use the buttons at the top of the Content page to add something new. Notices, menus, fixture lists, widgets, live scores and web pages have an <strong>Add to playlist</strong> box — leave it on your playlist and the item goes straight on the screens.</p>
+
+<h3 id="photos-videos">Photos and videos</h3>
+<p>Tap <strong>Upload</strong> (or drag files onto the page on a computer). JPG, PNG, GIF, WebP and SVG pictures work, and MP4 and WebM videos. Then add them to a playlist (below).</p>
+<ul>
+  <li>Make pictures <strong>landscape, 1920 × 1080</strong> for a normal TV. Canva and PowerPoint both have a 16:9 size.</li>
+  <li>Each item has a <strong>Sizing</strong> choice: <em>Fit whole picture</em> (may leave bars at the sides) or <em>Fill screen</em> (may crop the edges).</li>
+  <li>For a video, set <strong>Show for</strong> to <code>0</code> to play the whole thing, and choose whether to <strong>mute</strong> it.</li>
+</ul>
+
+<h3 id="notices">Notices</h3>
+<p>A headline and a message in big, clear type, in one of five colours. Good for opening times, events and reminders. Your club name appears on the slide.</p>
+
+<h3 id="menus">Menu boards</h3>
+<p>Type or paste your menu, one item per line, as <em>name | price | notes</em>. Start each section with <code>#</code>, and add <code>| sold out</code> to grey an item out. You can paste straight from a spreadsheet.</p>
+<pre><code># Draught
+Lager (pint) | £4.50
+Real ale (pint) | £4.80 | Ask for today’s guest ale
+
+# Food
+Beef burger &amp; chips | £8.50 | Contains gluten
+Chicken &amp; mushroom pie | £7.00 | | sold out</code></pre>
+
+<h3 id="fixtures">Fixture lists</h3>
+<p>One match per line: <em>date and time | match | competition | venue</em>. Dates can be written <code>09/11/2026 14:00</code> or <code>2026-11-09 14:00</code>. Matches disappear by themselves three hours after kick-off, and the next one gets a countdown.</p>
+<pre><code>09/11/2026 14:00 | Riverside FC v Rovers United | League | Home
+12/11/2026 19:30 | Training · Astroturf Pitch A
+16/11/2026 15:00 | City Athletic v Riverside FC | League | Away</code></pre>
+
+<h3 id="live-scores">Live scores</h3>
+<p>Fixtures, live scores and results from the Premier League, Championship, Scottish Premiership, Champions League, NFL and NBA. First choose the competitions in <a href="#settings">Settings → Sports feeds</a>, then add a <strong>Live scores</strong> item. Scores update every minute while matches are on.</p>
+<p class="text-sm">The scores come from a free public feed meant for personal and non-commercial use. See <a href="https://github.com/pitchtribe/pitchtribe-display/blob/main/signage-server/DATA_SOURCES.md" target="_blank" rel="noopener noreferrer">data sources and licences</a>.</p>
+
+<h3 id="widgets">Widgets</h3>
+<p>Ready-made slides that fill themselves in. Tap <strong>Widgets</strong> to see them all, including:</p>
+<ul>
+  <li><strong>Time and weather:</strong> clock or countdown to kick-off, world clocks, weather for your ground, sunrise and sunset.</li>
+  <li><strong>Out and about:</strong> a transport hub (buses, trains, London tube and roads, planes overhead), flood warnings, bank holidays, how green the electricity is right now.</li>
+  <li><strong>Quizzes and fun:</strong> multiple-choice quiz, emoji quiz, flags and capitals, jokes, club phrases, and spot the ball with your own photo.</li>
+  <li><strong>Knowledge:</strong> did you know?, on this day, born on this day, country of the day, news headlines and calendar events.</li>
+</ul>
+<p>Quizzes, jokes and trivia are built in and work without the internet; a fresh selection is picked each day. Weather needs a location, set in <a href="#settings">Settings → Widgets</a>.</p>
+
+<h3 id="web-pages">Web pages</h3>
+<p>Shows any web page full screen — your club website, a league table, a live stream page. Some websites refuse to be shown inside another page; if yours stays blank, that site doesn’t allow it.</p>
+
+<h2 id="playlists">Playlists</h2>
+<p>A playlist is the running order for a screen. Your dashboard starts with one called <strong>Main</strong>, and every new screen plays it. Open it from <strong>Playlists</strong>.</p>
+<ul>
+  <li><strong>Add content</strong> adds items from your Content library.</li>
+  <li><strong>Drag</strong> items to reorder them (on a phone, use the up and down arrows).</li>
+  <li>Change the <strong>seconds</strong> next to an item to show it for longer or shorter.</li>
+  <li>The <strong>on/off switch</strong> takes an item off the screens without deleting it.</li>
+  <li><strong>On-screen extras</strong> adds a clock in the corner and a scrolling ticker along the bottom — one message per line.</li>
+  <li><strong>Preview</strong> shows what the screen will look like.</li>
+</ul>
+<p>When you’ve made changes, tap <strong>Save changes</strong>.</p>
+
+<h3 id="timings">Showing things only at certain times</h3>
+<p>Open an item’s <strong>Timing</strong> to choose when it’s allowed to show:</p>
+<ul>
+  <li><strong>Dates</strong> — from and until (for an event, or an offer that ends).</li>
+  <li><strong>Days</strong> of the week — none selected means every day.</li>
+  <li><strong>Times</strong> of day — these can run past midnight, like 18:00 to 01:00.</li>
+</ul>
+<p>The shortcut buttons fill these in for you: <em>Always</em>, <em>Weekdays</em>, <em>Weekends</em>, <em>Lunch 12–2</em>, <em>Evenings 5pm–close</em> and <em>Today only</em>. Each item then shows whether it’s <strong>Live now</strong>, <strong>Scheduled</strong>, <strong>Off-hours</strong> or <strong>Expired</strong>. A typical use: the lunch menu shows 12–2, the evening menu from 5pm, and the match-day notice only on Saturdays.</p>
+
+<h3 id="several-playlists">Different screens, different content</h3>
+<p>Create another playlist with <strong>New playlist</strong> — say “Bar” and “Changing rooms” — and assign each screen the one it should play (below).</p>
+
+<h2 id="screens">Screens</h2>
+<p>Every TV running PitchTribe appears here by itself the first time it starts, named after its Pi. For each screen you can:</p>
+<ul>
+  <li>see whether it’s <strong>Online</strong>, and its resolution and address;</li>
+  <li>choose its <strong>Playlist</strong>;</li>
+  <li>set its <strong>Rotation</strong> if the TV is mounted on its side (portrait);</li>
+  <li>set its <strong>Language</strong> — dates, times and built-in labels in English, French, Spanish, German, Italian, Portuguese, Polish, Russian, Chinese or Japanese;</li>
+  <li><strong>Identify</strong> it — flashes its name on the TV, handy when you have several;</li>
+  <li><strong>Reload</strong> it remotely, or <strong>Remove</strong> one you no longer use.</li>
+</ul>
+<figure class="phone">
+  <img src="/docs/img/phone-screens.jpg" width="1170" height="1992" alt="The Screens page on a phone, showing one screen called pitchtribe, online, with its playlist, rotation and language settings." loading="lazy">
+</figure>
+<p>The <strong>Add a screen</strong> box at the top explains how to add a TV that isn’t a Pi — see <a href="/docs/more-screens">Adding more screens</a>.</p>
+
+<h2 id="settings">Settings</h2>
+<table>
+  <thead><tr><th>Setting</th><th>What it does</th></tr></thead>
+  <tbody>
+    <tr><td><strong>Club name</strong></td><td>Shown on notices, menus and fixture slides.</td></tr>
+    <tr><td><strong>Playlist for new screens</strong></td><td>What a newly connected TV plays until you change it.</td></tr>
+    <tr><td><strong>Screen language</strong></td><td>The default language for dates, times and built-in labels. Your own notices and menus show exactly as you write them.</td></tr>
+    <tr><td><strong>Sports feeds</strong></td><td>Switch on live scores, choose competitions, and set the time zone for kick-off times.</td></tr>
+    <tr><td><strong>Widgets</strong></td><td>Your ground’s location for weather (type a town or postcode and tap <strong>Find</strong>), mph or km/h, and optional keys for the bus and train widgets.</td></tr>
+    <tr><td><strong>Admin password</strong></td><td>Change the dashboard password. Forgotten it? See <a href="/docs/troubleshooting#forgot-password">Troubleshooting</a>.</td></tr>
+    <tr><td><strong>About</strong></td><td>The PitchTribe version and the dashboard address.</td></tr>
+  </tbody>
+</table>
+
+<h2 id="tips">Tips from clubs</h2>
+<ul>
+  <li><strong>Less is more.</strong> 4–6 items of 10–15 seconds each keeps people watching. Nobody reads a 40-second notice.</li>
+  <li><strong>Big text.</strong> If you can’t read it from across the bar, it’s too small.</li>
+  <li><strong>Use timings</strong> rather than deleting and re-adding things: the Christmas notice can sit there all year and only appear in December.</li>
+  <li><strong>Several volunteers</strong> can use the dashboard at the same time from their own phones.</li>
+</ul>

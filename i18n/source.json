@@ -460,5 +460,8 @@
  "Connect the HDMI screen and power. The Pi boots straight to your display, and does on every boot, with no keyboard or mouse. Already have Raspberry Pi OS (Trixie or Bookworm) on the Pi? Skip the image and run this on it instead:",
  "Raspberry Pi OS Lite (Trixie)",
  "Flash the PitchTribe image and your first display is live in minutes — or run this on a Pi that already has Raspberry Pi OS. Free forever.",
- "Download the image"
+ "Download the image",
+ "Never used a Raspberry Pi?",
+ "Follow the step-by-step beginner’s guide",
+ "— every click explained, no commands to type."
 ]

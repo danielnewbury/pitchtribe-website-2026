@@ -309,5 +309,8 @@
   "457": "Branchez et allumez",
   "458": "Branchez l’écran HDMI et l’alimentation. Le Pi démarre directement sur votre affichage, à chaque démarrage, sans clavier ni souris. Raspberry Pi OS (Trixie ou Bookworm) est déjà sur le Pi ? Passez l’image et lancez plutôt ceci :",
   "460": "Flashez l’image PitchTribe et votre premier écran tourne en quelques minutes — ou lancez ceci sur un Pi qui a déjà Raspberry Pi OS. Gratuit pour toujours.",
-  "461": "Télécharger l’image"
+  "461": "Télécharger l’image",
+  "462": "Jamais utilisé de Raspberry Pi ?",
+  "463": "Suivez le guide pas à pas pour débutants",
+  "464": "— chaque clic expliqué, aucune commande à taper."
 }

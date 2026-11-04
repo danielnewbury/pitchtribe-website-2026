@@ -309,5 +309,8 @@
   "457": "Ligue e arranque",
   "458": "Ligue o ecrã HDMI e a alimentação. O Pi arranca diretamente no seu ecrã, em cada arranque, sem teclado nem rato. O Pi já tem o Raspberry Pi OS (Trixie ou Bookworm)? Salte a imagem e execute antes isto:",
   "460": "Grave a imagem do PitchTribe e o seu primeiro ecrã fica ativo em minutos — ou execute isto num Pi que já tenha o Raspberry Pi OS. Gratuito para sempre.",
-  "461": "Transferir a imagem"
+  "461": "Transferir a imagem",
+  "462": "Nunca usou um Raspberry Pi?",
+  "463": "Siga o guia passo a passo para principiantes",
+  "464": "— cada clique explicado, sem comandos para escrever."
 }

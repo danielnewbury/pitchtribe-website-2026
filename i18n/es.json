@@ -309,5 +309,8 @@
   "457": "Conecta y enciende",
   "458": "Conecta la pantalla HDMI y la alimentación. La Pi arranca directamente en tu pantalla, en cada arranque, sin teclado ni ratón. ¿La Pi ya tiene Raspberry Pi OS (Trixie o Bookworm)? Sáltate la imagen y ejecuta esto en ella:",
   "460": "Graba la imagen de PitchTribe y tu primera pantalla estará funcionando en minutos — o ejecuta esto en una Pi que ya tenga Raspberry Pi OS. Gratis para siempre.",
-  "461": "Descargar la imagen"
+  "461": "Descargar la imagen",
+  "462": "¿Nunca has usado una Raspberry Pi?",
+  "463": "Sigue la guía paso a paso para principiantes",
+  "464": "— cada clic explicado, sin comandos que escribir."
 }
