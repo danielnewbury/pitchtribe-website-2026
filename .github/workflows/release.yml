@@ -74,6 +74,9 @@ jobs:
           set -euo pipefail
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          # The checkout fetched every tag, including any old copy of this one that
+          # the previous step deleted on GitHub: drop it here too before re-tagging.
+          git tag -d "$VERSION" >/dev/null 2>&1 || true
           git tag -a "$VERSION" -m "PitchTribe $VERSION" "$(git rev-parse HEAD)"
           git push origin "refs/tags/$VERSION"
           gh release create "$VERSION" --verify-tag --title "PitchTribe $VERSION" --generate-notes
