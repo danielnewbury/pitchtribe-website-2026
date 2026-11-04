@@ -1,0 +1,61 @@
+<!-- {"title": "Updates and backups", "description": "How to update PitchTribe and Raspberry Pi OS, back up your club’s content and settings, and move everything to a new memory card or Pi."} -->
+<p class="eyebrow">Looking after it</p>
+<h1>Updates and backups</h1>
+<p class="lede">A PitchTribe screen can run for months untouched. Two things are worth doing now and then: updating the software, and keeping a copy of your content in case the memory card fails.</p>
+<p>Both need a terminal on the Pi — see <a href="/docs/install-raspberry-pi-os#ssh">connecting with SSH</a>. That’s why the setup guide suggests setting a username and switching on SSH in Imager.</p>
+
+<h2 id="update">Updating PitchTribe</h2>
+<p>Check which version you have in the dashboard under <strong>Settings → About</strong>, and what’s new on the <a href="https://github.com/pitchtribe/pitchtribe-display/releases" target="_blank" rel="noopener noreferrer">releases page</a>. To update, connect to the Pi and run the installer again:</p>
+<pre data-copy><code>curl -sSL https://pitchtribe.media/install.sh | sudo bash</code></pre>
+<p>Your content, playlists, screens and password are all kept. The screen goes blank for a moment while PitchTribe restarts.</p>
+<div class="callout">
+  <p class="callout-title">Using guest Wi-Fi or several screens?</p>
+  <p>Repeat the options you installed with, or they’ll be left out. For example, on a Pi with guest Wi-Fi: <code>curl -sSL https://pitchtribe.media/install.sh | sudo PITCHTRIBE_PORTAL=1 bash</code>. On an extra screen: <code>… | sudo PITCHTRIBE_SERVER=http://clubhouse.local bash</code>.</p>
+</div>
+
+<h2 id="os-updates">Updating Raspberry Pi OS</h2>
+<p>Raspberry Pi OS gets security fixes regularly. Every few months, connect to the Pi and run:</p>
+<pre data-copy><code>sudo apt update &amp;&amp; sudo apt full-upgrade -y &amp;&amp; sudo reboot</code></pre>
+<p>The Pi restarts and the screen comes back by itself after a minute or two.</p>
+
+<h2 id="backup">Backing up</h2>
+<p>Everything that makes your PitchTribe yours — content, uploaded photos and videos, playlists, screens, settings and the password — is in one folder on the Pi, <code>/var/lib/pitchtribe</code>. Copy it somewhere safe after any big change.</p>
+<ol class="steps">
+  <li>
+    <h3>Pack it into one file, on the Pi</h3>
+    <p>Connect to the Pi and run:</p>
+    <pre data-copy><code>sudo tar czf ~/pitchtribe-backup.tar.gz -C /var/lib pitchtribe &amp;&amp; sudo chown $USER ~/pitchtribe-backup.tar.gz</code></pre>
+  </li>
+  <li>
+    <h3>Copy the file to your computer</h3>
+    <p>Type <code>exit</code> to leave the Pi. Then, in the same terminal on your own computer (Windows, Mac or Linux), run this with your own username and Pi name:</p>
+    <pre data-copy><code>scp yourname@pitchtribe.local:pitchtribe-backup.tar.gz .</code></pre>
+    <p>The file lands in the folder the terminal is in — usually your home folder. Keep it somewhere safe, like the club’s shared drive.</p>
+  </li>
+</ol>
+
+<h2 id="restore">Restoring, or moving to a new card or Pi</h2>
+<ol class="steps">
+  <li>
+    <h3>Set up the new card</h3>
+    <p>Follow the <a href="/docs/setup">beginner’s guide</a> up to step 5, using the same hostname as before and a username with SSH on. You don’t need to set up the dashboard.</p>
+  </li>
+  <li>
+    <h3>Copy the backup to the Pi</h3>
+    <p>From the folder with your backup file:</p>
+    <pre data-copy><code>scp pitchtribe-backup.tar.gz yourname@pitchtribe.local:</code></pre>
+  </li>
+  <li>
+    <h3>Unpack it</h3>
+    <p>Connect to the Pi and run:</p>
+    <pre data-copy><code>sudo systemctl stop pitchtribe
+sudo tar xzf ~/pitchtribe-backup.tar.gz -C /var/lib
+sudo chown -R pitchtribe:pitchtribe /var/lib/pitchtribe
+sudo systemctl start pitchtribe</code></pre>
+    <p>Open the dashboard: your content and password are back, and the TV picks up its playlist again.</p>
+  </li>
+</ol>
+<div class="callout tip">
+  <p class="callout-title">Memory cards wear out</p>
+  <p>A good-quality A2 card in a Pi that runs all day usually lasts years, but cheap cards can fail sooner. A spare card with PitchTribe already on it, kept in the club office, gets you back up in minutes.</p>
+</div>

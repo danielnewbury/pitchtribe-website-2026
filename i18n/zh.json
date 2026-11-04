@@ -303,5 +303,14 @@
   "372": "用 Raspberry Pi Imager 将 Raspberry Pi OS Lite（64 位）写入存储卡。写入前在其设置中设好主机名并开启 SSH，这样之后就不必外接键盘。",
   "373": "运行一条命令",
   "374": "接好 HDMI 屏幕启动 Pi，通过 SSH 登录并运行安装程序。此后每次开机都会自动全屏运行，无需键盘和鼠标。",
-  "377": "烧写 Raspberry Pi OS，在 Pi 上运行这条命令，几分钟内第一块屏幕就能上线。永久免费。"
+  "377": "烧写 Raspberry Pi OS，在 Pi 上运行这条命令，几分钟内第一块屏幕就能上线。永久免费。",
+  "455": "下载 PitchTribe 镜像（已预装 PitchTribe 的 Raspberry Pi OS Lite），用 Raspberry Pi Imager 写入存储卡（选择“Use custom”）。如果 Pi 不接网线，请在写入前在 Imager 设置中填入 Wi-Fi。",
+  "456": "下载 PitchTribe 镜像 →",
+  "457": "插上电源即可使用",
+  "458": "连接 HDMI 屏幕和电源。Pi 每次开机都会直接进入您的显示画面，无需键盘或鼠标。Pi 上已经装有 Raspberry Pi OS（Trixie 或 Bookworm）？跳过镜像，改为在 Pi 上运行：",
+  "460": "写入 PitchTribe 镜像，几分钟内即可点亮第一块屏幕——或者在已装有 Raspberry Pi OS 的 Pi 上运行这条命令。永久免费。",
+  "461": "下载镜像",
+  "462": "从没用过 Raspberry Pi？",
+  "463": "请按照新手分步指南操作",
+  "464": "——每一步点击都有说明，无需输入任何命令。"
 }

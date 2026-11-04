@@ -303,5 +303,14 @@
   "372": "Écrivez Raspberry Pi OS Lite (64 bits) sur la carte avec Raspberry Pi Imager. Dans ses réglages, définissez un nom d’hôte et activez SSH avant l’écriture — cela évite de brancher un clavier plus tard.",
   "373": "Lancez une commande",
   "374": "Démarrez le Pi avec un écran HDMI branché, connectez-vous en SSH et lancez l’installateur. Ensuite, il démarre en plein écran à chaque allumage, sans clavier ni souris.",
-  "377": "Flashez Raspberry Pi OS, lancez ceci sur le Pi et votre premier écran est en ligne en quelques minutes. Gratuit à vie."
+  "377": "Flashez Raspberry Pi OS, lancez ceci sur le Pi et votre premier écran est en ligne en quelques minutes. Gratuit à vie.",
+  "455": "Téléchargez l’image PitchTribe — Raspberry Pi OS Lite avec PitchTribe déjà installé — et écrivez-la sur la carte avec Raspberry Pi Imager (choisissez « Use custom »). Si le Pi ne sera pas relié par câble réseau, ajoutez votre Wi-Fi dans les réglages d’Imager avant l’écriture.",
+  "456": "Télécharger l’image PitchTribe →",
+  "457": "Branchez et allumez",
+  "458": "Branchez l’écran HDMI et l’alimentation. Le Pi démarre directement sur votre affichage, à chaque démarrage, sans clavier ni souris. Raspberry Pi OS (Trixie ou Bookworm) est déjà sur le Pi ? Passez l’image et lancez plutôt ceci :",
+  "460": "Flashez l’image PitchTribe et votre premier écran tourne en quelques minutes — ou lancez ceci sur un Pi qui a déjà Raspberry Pi OS. Gratuit pour toujours.",
+  "461": "Télécharger l’image",
+  "462": "Jamais utilisé de Raspberry Pi ?",
+  "463": "Suivez le guide pas à pas pour débutants",
+  "464": "— chaque clic expliqué, aucune commande à taper."
 }

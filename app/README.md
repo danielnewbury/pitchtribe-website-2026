@@ -41,7 +41,7 @@ It appears under **Screens**, already playing the default playlist.
 
 ## Install on a Raspberry Pi
 
-On Raspberry Pi OS Bookworm (Lite is fine), on a Pi 4 or Pi 5:
+The easiest way is the ready-made SD card image, or the one-line installer. Both are described in the [setup guide](https://pitchtribe.media/docs/setup). To install by hand on Raspberry Pi OS Trixie or Bookworm (Lite is fine), on a Pi 4 or Pi 5:
 
 ```bash
 sudo apt-get install -y git
@@ -67,6 +67,8 @@ sudo PITCHTRIBE_SERVER=http://clubhouse.local pitchtribe/deploy/install.sh
 ```
 
 Use `PITCHTRIBE_NO_KIOSK=1` for a headless server. Re-run the installer to upgrade; your data is kept.
+
+Forgotten the dashboard password? `sudo pitchtribe-reset-password` on the Pi sets a new one and signs everyone out. Content is kept.
 
 ## How it works
 

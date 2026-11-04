@@ -1,0 +1,83 @@
+<!-- {"title": "Install on Raspberry Pi OS", "description": "Add PitchTribe to a Raspberry Pi that already runs Raspberry Pi OS (Trixie or Bookworm) with one command, including how to connect to the Pi over SSH from Windows or a Mac."} -->
+<p class="eyebrow">Start here</p>
+<h1>Install on Raspberry Pi OS</h1>
+<p class="lede">If your Pi already runs Raspberry Pi OS, one command turns it into a PitchTribe screen. If you’re starting with an empty memory card, the <a href="/docs/setup">beginner’s guide</a> is quicker — the PitchTribe image has everything below already done.</p>
+
+<pre data-copy><code>curl -sSL https://pitchtribe.media/install.sh | sudo bash</code></pre>
+
+<h2 id="before">Before you start</h2>
+<ul>
+  <li>A <strong>Raspberry Pi 5 or 4</strong> running <strong>Raspberry Pi OS, 64-bit</strong> — the current version (Trixie) or the previous one (Bookworm). The Lite version (no desktop) is best.</li>
+  <li>The Pi is connected to the <strong>internet</strong>. The installer downloads about 400 MB.</li>
+  <li>An <strong>HDMI screen</strong> attached to the Pi.</li>
+  <li>A way to type commands on the Pi: a keyboard plugged into it, or <a href="#ssh">SSH from another computer</a>.</li>
+</ul>
+<div class="callout warn">
+  <p class="callout-title">Use a Pi that does nothing else</p>
+  <p>PitchTribe takes over the HDMI output and starts the Pi to its own screen instead of a desktop. If your Pi has the desktop version of Raspberry Pi OS, you won’t see the desktop after installing.</p>
+</div>
+
+<h3 id="fresh-card">Starting with an empty card?</h3>
+<p>In <a href="https://www.raspberrypi.com/software/" target="_blank" rel="noopener noreferrer">Raspberry Pi Imager</a>, choose your Pi, then <strong>Raspberry Pi OS (other) → Raspberry Pi OS Lite (64-bit)</strong>, then your card. In the customisation steps, set a <strong>hostname</strong> (such as <code>bar-tv</code>), a <strong>username and password</strong>, your <strong>Wi-Fi</strong>, and switch on <strong>SSH</strong>. Write the card, put it in the Pi and switch on. Give it a few minutes on first start.</p>
+
+<h2 id="ssh">Connecting to the Pi (SSH)</h2>
+<p>SSH lets you type commands on the Pi from your own computer, over the network. You need the username and password you set in Imager, and SSH switched on.</p>
+<ol>
+  <li>Open a terminal:
+    <ul>
+      <li><strong>Windows 10 or 11:</strong> right-click the Start button and choose <strong>Terminal</strong> (or <strong>Windows PowerShell</strong>).</li>
+      <li><strong>Mac:</strong> open <strong>Terminal</strong> from Applications → Utilities.</li>
+      <li><strong>ChromeOS:</strong> switch on Linux in Settings → Developers, then open the Terminal app.</li>
+    </ul>
+  </li>
+  <li>Type the following, using your own username and hostname, and press <kbd>Enter</kbd>:
+    <pre data-copy><code>ssh yourname@bar-tv.local</code></pre>
+  </li>
+  <li>The first time, it asks whether you trust this computer. Type <code>yes</code> and press <kbd>Enter</kbd>.</li>
+  <li>Type your password and press <kbd>Enter</kbd>. <strong>Nothing appears on screen as you type</strong> — that’s normal, it’s still working.</li>
+</ol>
+<p>When the line starts with something like <code>yourname@bar-tv:~ $</code>, you’re connected. Anything you type now runs on the Pi.</p>
+<p>If <code>bar-tv.local</code> isn’t found, use the Pi’s IP address instead (for example <code>ssh yourname@192.168.1.50</code>). Your router’s admin page lists it under connected devices.</p>
+
+<h2 id="install">Run the installer</h2>
+<p>Paste this and press <kbd>Enter</kbd> (in most terminals, right-click pastes):</p>
+<pre data-copy><code>curl -sSL https://pitchtribe.media/install.sh | sudo bash</code></pre>
+<p>It may ask for your password again. Then it runs on its own for <strong>10–20 minutes</strong>, printing what it’s doing. When it finishes it shows the dashboard address:</p>
+<pre><code>==> Done!
+
+  Dashboard:  http://bar-tv.local/
+              http://192.168.1.50/
+
+  Open it on your phone (same network) to create the admin password.</code></pre>
+<p>The TV switches to the PitchTribe screen. Open the address on your phone and carry on from <a href="/docs/setup#password">step 7 of the beginner’s guide</a>.</p>
+
+<div class="callout">
+  <p class="callout-title">Is it safe to pipe a script into <code>sudo bash</code>?</p>
+  <p>It’s a fair question: the command runs whatever the website sends as the administrator. You can <a href="https://pitchtribe.media/install.sh" target="_blank" rel="noopener noreferrer">read the script first</a> — it’s short, and all it does is download PitchTribe’s source code from GitHub and run the installer in it, <a href="https://github.com/pitchtribe/pitchtribe-display/blob/main/deploy/install.sh" target="_blank" rel="noopener noreferrer"><code>deploy/install.sh</code></a>. Or do the same yourself:</p>
+  <pre data-copy><code>sudo apt-get install -y git
+git clone https://github.com/pitchtribe/pitchtribe-display pitchtribe
+sudo pitchtribe/deploy/install.sh</code></pre>
+</div>
+
+<h2 id="what-it-installs">What it installs</h2>
+<ul>
+  <li><strong>Node.js 22</strong>, if the Pi doesn’t already have Node 20 or newer.</li>
+  <li><strong>PitchTribe</strong> in <code>/opt/pitchtribe</code>, running as the <code>pitchtribe</code> service: the dashboard and the screens’ server, on port 80. Your content and settings go in <code>/var/lib/pitchtribe</code>.</li>
+  <li><strong>The kiosk</strong>: Chromium, full screen, in the <code>cage</code> kiosk, as the <code>pitchtribe-kiosk</code> service. It shows this Pi’s screen and restarts itself if anything goes wrong.</li>
+  <li><strong>Avahi</strong>, which makes the <code>hostname.local</code> address work.</li>
+</ul>
+<p>Nothing is sent anywhere. Running it again later updates PitchTribe and keeps your content — see <a href="/docs/updates-backups">Updates and backups</a>.</p>
+
+<h2 id="options">Options</h2>
+<p>Put options between <code>sudo</code> and <code>bash</code>, like this:</p>
+<pre data-copy><code>curl -sSL https://pitchtribe.media/install.sh | sudo PITCHTRIBE_PORTAL=1 bash</code></pre>
+<table>
+  <thead><tr><th>Option</th><th>What it does</th></tr></thead>
+  <tbody>
+    <tr><td><code>PITCHTRIBE_PORTAL=1</code></td><td>Also set up the <a href="/docs/guest-wifi">guest Wi-Fi portal</a>. The Pi must be on a network cable.</td></tr>
+    <tr><td><code>PITCHTRIBE_SERVER=http://clubhouse.local</code></td><td>Make this Pi a screen only, showing content from another PitchTribe Pi. See <a href="/docs/more-screens">Adding more screens</a>.</td></tr>
+    <tr><td><code>PITCHTRIBE_NO_KIOSK=1</code></td><td>Install the dashboard and server only, with nothing on the HDMI output — for a Pi tucked away in a cupboard that serves other screens.</td></tr>
+    <tr><td><code>PITCHTRIBE_PORT=8080</code></td><td>Run the dashboard on a different port (default 80).</td></tr>
+    <tr><td><code>PITCHTRIBE_REF=v0.1.0</code></td><td>Install a particular release instead of the latest code.</td></tr>
+  </tbody>
+</table>

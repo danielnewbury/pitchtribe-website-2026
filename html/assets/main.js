@@ -113,6 +113,31 @@
     });
   }
 
+  /* ---- Copy buttons on docs code blocks (<pre data-copy>) ---- */
+  document.querySelectorAll("pre[data-copy]").forEach((pre) => {
+    const btn = document.createElement("button");
+    btn.type = "button";
+    btn.className = "copy-btn";
+    btn.textContent = COPY;
+    pre.classList.add("has-copy");
+    pre.append(btn);
+    btn.addEventListener("click", async () => {
+      const text = pre.querySelector("code")?.textContent ?? pre.firstChild?.textContent ?? "";
+      try {
+        await navigator.clipboard.writeText(text.trim());
+        btn.textContent = COPIED;
+      } catch {
+        const range = document.createRange();
+        range.selectNodeContents(pre.querySelector("code") || pre);
+        const sel = window.getSelection();
+        sel?.removeAllRanges();
+        sel?.addRange(range);
+        btn.textContent = SELECTED;
+      }
+      setTimeout(() => { btn.textContent = COPY; }, 2000);
+    });
+  });
+
   /* ---- Scroll reveal ---- */
   const revealEls = document.querySelectorAll(".reveal");
   if ("IntersectionObserver" in window && !reduceMotion) {

@@ -4,7 +4,7 @@
 #   curl -sSL https://pitchtribe.media/install.sh | sudo bash
 #
 # Run this on a Raspberry Pi that is already booted into Raspberry Pi OS
-# (Bookworm, Lite or Desktop). It does not write an SD card — flash the card
+# (Trixie or Bookworm, Lite or Desktop). It does not write an SD card — flash the card
 # with Raspberry Pi Imager first, boot the Pi, then run this.
 #
 # All it does is fetch a checkout and hand over to deploy/install.sh, which does

@@ -3,7 +3,10 @@
 # Wayland kiosk compositor, pointed at this screen's player page.
 set -euo pipefail
 
-URL="${PITCHTRIBE_URL:-http://localhost/player/}"
+URL="${PITCHTRIBE_URL:-http://localhost/player/?screen=@HOSTNAME@}"
+# Each Pi shows the screen named after its hostname (lounge-tv.local → lounge-tv).
+SCREEN_ID="$(hostname | tr -c 'a-zA-Z0-9_\n-' '-')"
+URL="${URL//@HOSTNAME@/$SCREEN_ID}"
 CHROMIUM="${CHROMIUM:-$(command -v chromium || command -v chromium-browser)}"
 PROFILE="${HOME}/.config/pitchtribe-chromium"
 mkdir -p "$PROFILE"

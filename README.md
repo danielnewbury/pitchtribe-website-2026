@@ -38,6 +38,8 @@ its own apex record and its email routing (MX/SPF/DKIM) untouched.
 | `html/` | Static root, copied verbatim into `dist/`. Add a page here. |
 | `html/index.html` | Landing page |
 | `html/buy.html` | `/buy` — parts list, ready-built units, installation |
+| `docs/` | `/docs/` — the user documentation (setup guide, dashboard, troubleshooting…). Built by `scripts/docs-build.mjs`; see [Documentation](#documentation) |
+| `image/build.sh` | Builds the ready-to-flash SD card image (Raspberry Pi OS Lite + PitchTribe); `.github/workflows/image.yml` runs it |
 | `html/_headers` | Cloudflare Pages response headers (CSP and cache policy) |
 | `src/styles.css` | Tailwind v4 entry point: design tokens, component classes |
 | `scripts/fingerprint.mjs` | Content-hashes built assets and rewrites HTML references |
@@ -67,6 +69,18 @@ npm run i18n:check    # list what still needs translating, per language
 
 Translations are inserted as plain text: no HTML tags, and `&` must be written as `&amp;`. The build rejects anything else.
 The header has a language switcher that works without JavaScript. Every page gets hreflang alternates, and the sitemap lists all languages.
+
+## Documentation
+
+The docs at [pitchtribe.media/docs](https://pitchtribe.media/docs/) are written for club volunteers, not developers, and live in `docs/`:
+
+- `docs/_layout.html` is the page shell (header, sidebar, footer).
+- `docs/<slug>.html` is one page's content. It starts with a front-matter comment: `<!-- {"title": "…", "description": "…"} -->`.
+- `docs/img/` holds pictures, served at `/docs/img/`.
+
+To add a page, create the file and add it to `NAV` in `scripts/docs-build.mjs`, which sets the sidebar order. The build writes `dist/docs/<slug>.html`, which Pages serves at `/docs/<slug>`. It adds the pages to the sitemap, and it fails if a `/docs/` link points at a page that doesn't exist. Code blocks written as `<pre data-copy>` get a Copy button.
+
+The docs are English only for now. Screenshots of the dashboard come from the real app, so retake them when its screens change.
 
 ## Local development
 

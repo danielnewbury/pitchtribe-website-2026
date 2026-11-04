@@ -1,0 +1,68 @@
+<!-- {"title": "Guest Wi-Fi", "description": "Give visitors free Wi-Fi from the PitchTribe Pi, with your club’s own sign-in page, time and speed limits, and optional email sign-up — kept apart from the club’s own network."} -->
+<p class="eyebrow">Running your screens</p>
+<h1>Guest Wi-Fi</h1>
+<p class="lede">The Pi behind your TV can also give visitors free Wi-Fi. Guests join an open network, see a sign-in page with your club’s logo and terms, tap <strong>Connect</strong>, and get internet for a set time. It’s optional and switched off until you add it.</p>
+
+<h2 id="how">How it works</h2>
+<ul>
+  <li>The Pi’s <strong>network cable</strong> goes to the club router and provides the internet.</li>
+  <li>The Pi’s <strong>built-in Wi-Fi</strong> becomes the guest network. It no longer connects to the club Wi-Fi.</li>
+  <li>Guests can reach the internet <strong>only</strong> — never the club’s own computers, tills, cameras or the PitchTribe dashboard.</li>
+  <li>Each device gets a speed limit and a session length that you choose. Up to 60 devices can be connected at once.</li>
+</ul>
+<div class="callout warn">
+  <p class="callout-title">You need a network cable</p>
+  <p>Guest Wi-Fi only works when the Pi is plugged into the club router with a cable. If the Pi currently uses Wi-Fi to get online, run a cable to it first.</p>
+</div>
+
+<h2 id="install">Switch it on</h2>
+<p>This part is done once, from a terminal on the Pi. You need the username and password you set in Raspberry Pi Imager, with SSH switched on.</p>
+<ol class="steps">
+  <li>
+    <h3>Plug in the network cable</h3>
+    <p>Connect the Pi to the club router with a cable and check the TV still shows your content.</p>
+  </li>
+  <li>
+    <h3>Connect to the Pi</h3>
+    <p><a href="/docs/install-raspberry-pi-os#ssh">Connect with SSH</a> — for example <code>ssh yourname@pitchtribe.local</code>.</p>
+  </li>
+  <li>
+    <h3>Install the guest Wi-Fi add-on</h3>
+    <pre data-copy><code>curl -sSL https://pitchtribe.media/install.sh | sudo PITCHTRIBE_PORTAL=1 bash</code></pre>
+    <p>This re-runs the PitchTribe installer with guest Wi-Fi added. Your content and settings are kept. It takes 5–15 minutes.</p>
+  </li>
+</ol>
+<p>Didn’t set a username in Imager? The simplest fix is to write a fresh card with the PitchTribe image and a username, then restore your content — see <a href="/docs/updates-backups#backup">Updates and backups</a>. Or ask us to set it up for you.</p>
+
+<h2 id="set-up">Design your sign-in page</h2>
+<p>Everything else happens in the dashboard, under <strong>Wi-Fi</strong>. A live preview on the right shows exactly what guests will see.</p>
+<table>
+  <thead><tr><th>Setting</th><th>What to choose</th></tr></thead>
+  <tbody>
+    <tr><td><strong>Guest Wi-Fi on</strong></td><td>Switches the network on and off.</td></tr>
+    <tr><td><strong>Network name</strong></td><td>What guests see in their Wi-Fi list, such as <code>RiversideFC-Guest</code>.</td></tr>
+    <tr><td><strong>Radio channel</strong></td><td>Leave on channel 1 unless the signal is poor; then try 6 or 11.</td></tr>
+    <tr><td><strong>Session length</strong></td><td>30 minutes to 24 hours. Afterwards, guests tap Connect again.</td></tr>
+    <tr><td><strong>Download and upload limits</strong></td><td>Per device, in Mbit/s, so one person streaming can’t slow everyone else down.</td></tr>
+    <tr><td><strong>Headline, message, logo, colour</strong></td><td>Your branding. <code>{club}</code> in the headline becomes your club’s name. For the logo, upload a PNG with a transparent background on the Content page first.</td></tr>
+    <tr><td><strong>Terms of use</strong></td><td>A sensible starting point is filled in. Have someone at the club check it suits you.</td></tr>
+    <tr><td><strong>After connecting, offer a link to</strong></td><td>For example your website or social media page.</td></tr>
+    <tr><td><strong>Email addresses</strong></td><td><em>Don’t ask</em>, <em>Ask (optional)</em> or <em>Required to connect</em>.</td></tr>
+  </tbody>
+</table>
+<p>Tap <strong>Save</strong>, and the Pi applies the settings by itself within a few seconds. The <strong>Status</strong> box shows whether the guest network is running and how many devices are connected now, today and over the last week.</p>
+
+<h2 id="emails">Collecting email addresses</h2>
+<p>If you ask for emails, guests also see a separate box asking whether you may contact them. It is <strong>never ticked in advance</strong>, as UK and EU law requires. On the Wi-Fi page you can download the list as a spreadsheet (CSV), which shows who agreed, or delete it.</p>
+<ul>
+  <li>Only send marketing to people who ticked the box.</li>
+  <li>Say in your terms what you’ll use the addresses for.</li>
+  <li>Delete the list when you no longer need it.</li>
+</ul>
+
+<h2 id="problems">If guests can’t connect</h2>
+<ul>
+  <li><strong>The network doesn’t appear:</strong> check <em>Guest Wi-Fi on</em> is ticked and the Status box says the service is running. Try a different radio channel.</li>
+  <li><strong>It connects but the sign-in page doesn’t appear:</strong> open any web page — <code>http://neverssl.com</code> is a good one — and the sign-in page should load.</li>
+  <li><strong>Signed in but no internet:</strong> check the Pi’s network cable, and that the club router itself is online.</li>
+</ul>

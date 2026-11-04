@@ -1,0 +1,51 @@
+<!-- {"title": "Adding more screens", "description": "Run several PitchTribe screens from one dashboard: a Pi per TV joined to a main Pi, or a smart TV or PC showing a screen in its web browser."} -->
+<p class="eyebrow">Running your screens</p>
+<h1>Adding more screens</h1>
+<p class="lede">One dashboard can run as many TVs as you like — the bar, the function room, the changing rooms — each with its own playlist. Here’s how to add them.</p>
+
+<h2 id="how">How it fits together</h2>
+<p>One Pi is the <strong>main Pi</strong>. It holds your content and the dashboard. Every other TV is a <strong>screen</strong> that shows content from the main Pi over the club network. Whatever you change in the dashboard reaches all the screens at once, and each screen keeps playing its last playlist if the network drops for a while.</p>
+<p>The main Pi is usually the first one you set up. Keep it on a network cable if you can, and give it a clear name such as <code>clubhouse</code>.</p>
+
+<h2 id="another-pi">Option 1: another Raspberry Pi (recommended)</h2>
+<p>The neatest way: a Pi behind each TV, starting by itself like the first one.</p>
+<ol class="steps">
+  <li>
+    <h3>Write a card with its own name</h3>
+    <p>Follow the <a href="/docs/setup">beginner’s guide</a> steps 1–5, but in Imager give this Pi a <strong>different hostname</strong> — for example <code>function-room</code>. Also set a <strong>username and password</strong> and switch on <strong>SSH</strong>; you need them for the next step.</p>
+    <div class="callout warn">
+      <p class="callout-title">Every Pi needs its own name</p>
+      <p>If two Pis are both called <code>pitchtribe</code>, they fight over the address and the dashboard can’t tell their screens apart.</p>
+    </div>
+  </li>
+  <li>
+    <h3>Point it at the main Pi</h3>
+    <p>When the new Pi has started, <a href="/docs/install-raspberry-pi-os#ssh">connect to it with SSH</a> and run this, replacing <code>clubhouse</code> with your main Pi’s name:</p>
+    <pre data-copy><code>curl -sSL https://pitchtribe.media/install.sh | sudo PITCHTRIBE_SERVER=http://clubhouse.local bash</code></pre>
+    <p>Then switch off the new Pi’s own, unused dashboard:</p>
+    <pre data-copy><code>sudo systemctl disable --now pitchtribe</code></pre>
+  </li>
+  <li>
+    <h3>Choose its playlist</h3>
+    <p>The TV restarts its display and shows the main Pi’s content. In the dashboard, open <strong>Screens</strong>: the new screen is listed under its name. Choose its playlist, and use <strong>Identify</strong> if you’re not sure which TV is which.</p>
+  </li>
+</ol>
+<p>If you installed on plain Raspberry Pi OS rather than from the PitchTribe image, step 2 is simply the same command with <code>PITCHTRIBE_SERVER</code> — there’s no extra dashboard to switch off.</p>
+
+<h2 id="browser">Option 2: a smart TV, PC or tablet</h2>
+<p>Anything with a modern web browser can be a screen — a smart TV’s built-in browser, a mini PC, an old laptop or a tablet on a stand.</p>
+<ol>
+  <li>In the dashboard, open <strong>Screens</strong>. The <strong>Add a screen</strong> box at the top has a <strong>Screen id</strong> field and an address.</li>
+  <li>Type a name for the screen, such as <code>reception</code>. The address updates to match.</li>
+  <li>Open that address on the TV or computer, and make the browser full screen (usually <kbd>F11</kbd> on a computer).</li>
+  <li>It appears in the Screens list. Choose its playlist.</li>
+</ol>
+<p>The address looks like this:</p>
+<pre><code>http://clubhouse.local/player/?screen=reception</code></pre>
+<div class="callout">
+  <p class="callout-title">Browsers aren’t as dependable as a Pi</p>
+  <p>Smart TV browsers often go to sleep, show pop-ups or forget the page after an update, and some don’t understand <code>.local</code> addresses (use the main Pi’s IP address instead). For a screen that runs unattended for months, a Pi is worth the money.</p>
+</div>
+
+<h2 id="separate">Or: completely separate screens</h2>
+<p>Every Pi set up from the PitchTribe image has its own dashboard. If two TVs are in different buildings and never share content, you can simply leave them as two independent PitchTribes, each with its own address and password. Most clubs find one shared dashboard easier.</p>
