@@ -4,7 +4,7 @@ import { readFileSync } from 'node:fs';
 import { spawn } from 'node:child_process';
 import { resolve, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { normalizeEspn, scoreboardUrl } from '../src/sources/espn.js';
+import { fetchEspn, normalizeEspn, scoreboardMonths, scoreboardUrl } from '../src/sources/espn.js';
 import { Store } from '../src/store.js';
 import { renderDisplay } from '../src/render.js';
 import { pushToTargets } from '../src/push.js';
@@ -14,6 +14,22 @@ import { createHttpServer } from '../src/http.js';
 const here = dirname(fileURLToPath(import.meta.url));
 const espnFixture = JSON.parse(readFileSync(resolve(here, 'fixtures/espn-eng1.json'), 'utf8'));
 const quiet = () => {};
+
+// The fixture is written around its live match (2026-11-03T20:00Z). Shift every date by the same
+// amount so that match is "now": the store trims fixtures to config.daysBack/daysAhead, so a
+// fixture pinned to fixed dates would fall out of the window as the real clock moves on.
+function fixtureAroundNow(now = Date.now()) {
+  const delta = now - Date.parse('2026-11-03T20:00Z');
+  const shift = (iso) => new Date(Date.parse(iso) + delta).toISOString().replace('.000Z', 'Z');
+  return {
+    ...espnFixture,
+    events: espnFixture.events.map((ev) => ({
+      ...ev,
+      date: shift(ev.date),
+      competitions: (ev.competitions ?? []).map((c) => (c.date ? { ...c, date: shift(c.date) } : c)),
+    })),
+  };
+}
 
 const config = {
   title: 'Test Club', timezone: 'Europe/London', publicUrl: 'http://screen.test:8090',
@@ -26,8 +42,11 @@ const config = {
   pushTargets: [],
 };
 
+// Shifted once, so repeated refreshes see identical data and can detect "nothing changed".
+const espnNow = fixtureAroundNow();
+
 const fakeFetch = async (url) => {
-  if (url.includes('/soccer/eng.1/')) return new Response(JSON.stringify(espnFixture), { status: 200 });
+  if (url.includes('/soccer/eng.1/')) return new Response(JSON.stringify(espnNow), { status: 200 });
   return new Response('nope', { status: 500 });
 };
 
@@ -44,9 +63,46 @@ test('ESPN normalisation maps status, sides and scores', () => {
   assert.equal(byId['eng.1:1004'].status, 'postponed');
 });
 
-test('scoreboard URL uses a date range', () => {
-  const url = scoreboardUrl({ path: 'soccer/eng.1' }, { daysBack: 1, daysAhead: 2, now: new Date('2026-11-03T12:00Z') });
-  assert.match(url, /soccer\/eng\.1\/scoreboard\?dates=20261102-20261105/);
+test('scoreboard URL asks for a whole month (ESPN rejects day ranges)', () => {
+  const url = scoreboardUrl({ path: 'soccer/eng.1' }, '202611');
+  assert.match(url, /soccer\/eng\.1\/scoreboard\?dates=202611&limit=300$/);
+});
+
+test('scoreboard months cover the window, including across a month end', () => {
+  const opts = { daysBack: 1, daysAhead: 2, now: new Date('2026-11-03T12:00Z') };
+  assert.deepEqual(scoreboardMonths(opts), ['202611']);
+  assert.deepEqual(scoreboardMonths({ ...opts, now: new Date('2026-11-30T12:00Z') }), ['202611', '202612']);
+  assert.deepEqual(scoreboardMonths({ ...opts, now: new Date('2026-12-31T12:00Z') }), ['202612', '202701']);
+});
+
+test('fetchEspn trims a month of fixtures back to the configured window', async () => {
+  const now = new Date('2026-11-15T12:00Z');
+  const month = {
+    leagues: [{ name: 'Premier League' }],
+    events: [
+      { id: '1', date: '2026-11-02T15:00Z', competitions: [{ competitors: [] }] }, // before the window
+      { id: '2', date: '2026-11-14T15:00Z', competitions: [{ competitors: [] }] }, // inside
+      { id: '3', date: '2026-11-20T15:00Z', competitions: [{ competitors: [] }] }, // inside
+      { id: '4', date: '2026-11-29T15:00Z', competitions: [{ competitors: [] }] }, // after the window
+    ],
+  };
+  const urls = [];
+  const fetchImpl = (u) => {
+    urls.push(u);
+    return Promise.resolve({ ok: true, json: () => Promise.resolve(month) });
+  };
+  const out = await fetchEspn({ key: 'eng.1', path: 'soccer/eng.1' }, { fetchImpl, daysBack: 3, daysAhead: 7, now });
+  assert.deepEqual(urls, ['https://site.api.espn.com/apis/site/v2/sports/soccer/eng.1/scoreboard?dates=202611&limit=300']);
+  assert.deepEqual(out.events.map((e) => e.id), ['eng.1:2', 'eng.1:3']);
+  assert.equal(out.name, 'Premier League');
+});
+
+test('fetchEspn fails the league when a month request fails', async () => {
+  const fetchImpl = () => Promise.resolve({ ok: false, status: 400 });
+  await assert.rejects(
+    fetchEspn({ key: 'eng.1', path: 'soccer/eng.1' }, { fetchImpl, now: new Date('2026-11-15T12:00Z') }),
+    /ESPN soccer\/eng\.1: HTTP 400/
+  );
 });
 
 test('store refreshes, sorts, filters, keeps last good data on failure', async () => {

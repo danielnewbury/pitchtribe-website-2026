@@ -137,6 +137,10 @@ with the bearer token.
 | `espn` | `"path": "soccer/eng.1"` | ESPN's public scoreboard JSON. No key needed. Football leagues worldwide (`soccer/esp.1`, `soccer/uefa.champions`, `soccer/sco.1`, …), `football/nfl`, `basketball/nba`, `hockey/nhl`, `baseball/mlb`, and more |
 | `manual` | `"file": "data/club-fixtures.json"` | Your club's own teams. Edit the file and the next refresh picks it up |
 
+Each ESPN refresh asks for a whole calendar month per league (`?dates=YYYYMM`) and then trims the
+result to `daysBack`/`daysAhead` — normally one request per league, two when the window crosses a
+month end. ESPN answers `HTTP 400` to the day-range form (`?dates=YYYYMMDD-YYYYMMDD`).
+
 The ESPN feed is unofficial and undocumented. It is widely used, but it can change without notice
 and it is meant for personal and non-commercial use. Check the terms before you use it on paid
 signage. If a source fails, the screen keeps showing the last good data and the error appears in

@@ -4,22 +4,61 @@
 
 const BASE = 'https://site.api.espn.com/apis/site/v2/sports';
 
-const ymd = (d) => d.toISOString().slice(0, 10).replaceAll('-', '');
 const addDays = (d, n) => new Date(d.getTime() + n * 86_400_000);
+const yyyymm = (d) => `${d.getUTCFullYear()}${String(d.getUTCMonth() + 1).padStart(2, '0')}`;
 
-export function scoreboardUrl(league, { daysBack = 3, daysAhead = 7, now = new Date() } = {}) {
-  const range = `${ymd(addDays(now, -daysBack))}-${ymd(addDays(now, daysAhead))}`;
-  return `${BASE}/${league.path}/scoreboard?dates=${range}&limit=300`;
+/** The [from, to] window of matches we want on screen. */
+export function scoreboardWindow({ daysBack = 3, daysAhead = 7, now = new Date() } = {}) {
+  return { from: addDays(now, -daysBack), to: addDays(now, daysAhead) };
+}
+
+/** The `YYYYMM` months the window touches — one request each, usually one, two across a month end.
+    ESPN rejects a `dates=YYYYMMDD-YYYYMMDD` range with HTTP 400, but accepts a whole month. */
+export function scoreboardMonths(opts = {}) {
+  const { from, to } = scoreboardWindow(opts);
+  const months = [];
+  const cur = new Date(Date.UTC(from.getUTCFullYear(), from.getUTCMonth(), 1));
+  const last = Date.UTC(to.getUTCFullYear(), to.getUTCMonth(), 1);
+  while (cur.getTime() <= last) {
+    months.push(yyyymm(cur));
+    cur.setUTCMonth(cur.getUTCMonth() + 1);
+  }
+  return months;
+}
+
+export function scoreboardUrl(league, month) {
+  return `${BASE}/${league.path}/scoreboard?dates=${month}&limit=300`;
 }
 
 export async function fetchEspn(league, { fetchImpl = fetch, ...opts } = {}) {
-  const url = scoreboardUrl(league, opts);
-  const res = await fetchImpl(url, {
-    headers: { accept: 'application/json', 'user-agent': 'PitchTribe-Signage/1.0' },
-    signal: AbortSignal.timeout(15_000),
-  });
-  if (!res.ok) throw new Error(`ESPN ${league.path}: HTTP ${res.status}`);
-  return normalizeEspn(await res.json(), league);
+  const at = { ...opts, now: opts.now ?? new Date() }; // one clock reading for both the window and the months
+  const { from, to } = scoreboardWindow(at);
+  // Any month failing is a league error: the store then keeps the last good data on screen
+  // rather than quietly showing half the window.
+  const pages = await Promise.all(
+    scoreboardMonths(at).map(async (month) => {
+      const res = await fetchImpl(scoreboardUrl(league, month), {
+        headers: { accept: 'application/json', 'user-agent': 'PitchTribe-Signage/1.0' },
+        signal: AbortSignal.timeout(15_000),
+      });
+      if (!res.ok) throw new Error(`ESPN ${league.path}: HTTP ${res.status}`);
+      return normalizeEspn(await res.json(), league);
+    })
+  );
+
+  // A month returns the whole month, so trim it back to the window the config asked for.
+  const seen = new Set();
+  const events = [];
+  for (const page of pages) {
+    for (const ev of page.events) {
+      if (seen.has(ev.id)) continue;
+      const at = ev.start ? Date.parse(ev.start) : NaN;
+      if (Number.isFinite(at) && (at < from.getTime() || at > to.getTime())) continue;
+      seen.add(ev.id);
+      events.push(ev);
+    }
+  }
+  return { key: league.key, name: pages[0]?.name ?? league.name ?? league.key, events };
 }
 
 function mapStatus(type = {}) {
